@@ -17,13 +17,17 @@ collect = foldl collect' ([],[],[])
       | valid 'l' word = (xxNxx,xxAxx,word:xxLxx)
       | otherwise = (xxNxx,xxAxx,xxLxx)
 
-solves :: String -> String -> String -> String -> Bool
-solves [_,l12,_,l14,l15] [l21,_,_,l24,l25] [l41,l42,_,_,l45] [l51,l52,_,l54,_] = l12 == l21 && l14 == l41 && l15 == l51 && l24 == l42 && l25 == l52 && l45 == l54
-
 main :: IO ()
 main = do
     (n,a,l) <- fmap (collect . lines) (readFile "/usr/share/dict/words")
-    print [w1 ++ "/" ++ w2 ++ "/nasal/" ++ w4 ++ "/" ++ w5 | w1 <- n, w2 <- a, w4 <- a, w5 <- l, solves w1 w2 w4 w5]
+    print [w1 ++ "/" ++ w2 ++ "/nasal/" ++ w4 ++ "/" ++ w5 | w1 <- n, w2 <- a, m12 w1 w2, w4 <- a, m14 w1 w4, m24 w2 w4, w5 <- l, m15 w1 w5, m25 w2 w5, m45 w4 w5]
+  where
+    m12 [_,l12,_,_,_] [l21,_,_,_,_] = l12 == l21
+    m14 [_,_,_,l14,_] [l41,_,_,_,_] = l14 == l41
+    m24 [_,_,_,l24,_] [_,l42,_,_,_] = l24 == l42
+    m15 [_,_,_,_,l15] [l51,_,_,_,_] = l15 == l51
+    m25 [_,_,_,_,l25] [_,l52,_,_,_] = l25 == l52
+    m45 [_,_,_,_,l45] [_,_,_,l54,_] = l45 == l54
 
 -- PANDA
 -- APART

@@ -21,4 +21,4 @@ collect6 word set = (map cons . filter has7) ['a' .. 'z']
 main :: IO ()
 main = readFile "/usr/share/dict/words" >>= mapM_ print . collect empty . lines
 
-// f actual factual
+-- f actual factual

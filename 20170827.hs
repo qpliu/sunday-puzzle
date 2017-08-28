@@ -26,6 +26,6 @@ find (_,set6) = [w2 ++ " " ++ w6 | w2 <- set2, w6 <- set6,
             "or","se","si","so","to","te","up","us","we"]
 
 main :: IO ()
-main = readFile "/usr/share/dict/words" >>= mapM_ print . find . foldl collect ([],[]) . lines
+main = readFile "/usr/share/dict/words" >>= mapM_ print . find . foldl collect ([],["revoir"]) . lines
 
--- au soleil
+-- au revoir

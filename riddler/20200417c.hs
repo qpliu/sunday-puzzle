@@ -25,4 +25,4 @@ returnsWithin nsteps grid = r nsteps (step grid)
           | otherwise = r (n-1) (step g)
 
 solution :: Array (Integer,Integer) Bool
-solution = head $ filter (returnsWithin 10) $ states 5
+solution = head $ filter (returnsWithin 10) $ states 4

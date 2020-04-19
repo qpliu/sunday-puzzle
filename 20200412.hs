@@ -67,3 +67,11 @@ main :: IO ()
 main = readFile "/usr/share/dict/words" >>= mapM_ print . find "large" "small" . S.fromList . filter (not . weird) . filter ((== 5) . length) . lines
 
 -- ["large","barge","badge","budge","pudge","purge","puree","purer","parer","payer","sayer","shyer","sheer","shear","sheaf","shelf","shell","smell","small"]
+
+solution :: IO ()
+solution = readFile "/usr/share/dict/words" >>= mapM_ print . find "large" "small" . S.fromList . ("sarge":) . filter (not . weird) . filter ((== 5) . length) . lines
+-- ["large","sarge","serge","verge","verse","terse","tease","cease","chase","chose","whose","whole","whale","shale","shall","small"]
+
+seave :: IO ()
+seave = readFile "/usr/share/dict/words" >>= mapM_ print . find "large" "small" . S.fromList . ("sarge":) . filter ((== 5) . length) . lines
+-- ["large","sarge","serge","serve","seave","stave","stale","stall","small"]

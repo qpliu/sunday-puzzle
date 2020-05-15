@@ -40,3 +40,12 @@ main = do
         aofd = win (adv (dis fair)) 20 n
         dofa = win (dis (adv fair)) 20 n
         highest = maximum [s,aofd,dofa]
+
+retroactiveDofA :: [(Integer,Rational)]
+retroactiveDofA = [(n,wins n) | n <- [1..sides]]
+  where
+    sides = 20
+    wins n = singleWins n + singleLoses n*retroDofA n
+    singleWins n = sum [fair sides i | i <- [n..sides]]
+    singleLoses n = toRational (1 % 1) - singleWins n
+    retroDofA n = singleWins n * win (adv fair) sides n

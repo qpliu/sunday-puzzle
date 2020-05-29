@@ -35,3 +35,6 @@ main :: IO ()
 main = do
   readFile "word.list" >>= print . maximum . map (\ w -> (length w,w,head (noShareds w))) . filter mackerel . filter ((> 20) . length) . lines
   readFile "word.list" >>= print . maximumBy (\ a b -> compare (snd a) (snd b)) . toList . foldl collect empty . lines
+
+  putStr "Correction: "
+  readFile "word.list" >>= print . map (\ w -> (length w,w,head (noShareds w))) . filter mackerel . filter ((> 22) . length) . lines

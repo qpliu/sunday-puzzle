@@ -13,7 +13,7 @@ atleast :: Integer -> Integer -> Rational
 atleast hits atbats = sum [exactly h atbats | h <- [hits..atbats]]
 
 h :: Rational
-h = product (take 4 (repeat (1%1 - ba)))
+h = 1%1 - product (take 4 (repeat (1%1 - ba)))
 
 s :: Int -> Int -> Rational
 s n m
@@ -26,9 +26,9 @@ main = do
     let c60 = atleast 96 240
     print c60
     print (fromRational c60 :: Double)
-    -- let c162 = atleast 260 648
-    -- print c162
-    -- print (fromRational c162 :: Double)
+    let c162 = atleast 260 648
+    print c162
+    print (fromRational c162 :: Double)
     let s60 = s 56 60
     print s60
     print (fromRational s60 :: Double)

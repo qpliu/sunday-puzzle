@@ -1,0 +1,18 @@
+2020-07-31 Riddler Classic
+==========================
+Let _p<sub>i<sub> = i_ mean student _i_ being in the right place
+and let _p<sub>i</sub> - p<sub>j</sub> = i - j_ mean student _i_ being
+in the right place relative to student _j_ and vice versa.
+
+If there are an odd number of students, reversing the order of students
+2 to _N_, i.e. swapping 2 and _N_, swapping 3 and _N-1_, etc. would make
+every student except student 1 would be in the wrong place and every pair
+of students would be in the wrong place relative to each other, so if
+there is necessarily at least one pair in the right place relative to
+each other, _N_ must be even, so a lower bound for the minimum _N_
+is 102.
+
+I don't know what Val's reasoning was.
+
+If it turns out that _N-1_ has to be prime, then the minimum _N_ would be 102,
+but I have no reason for that to be the case.

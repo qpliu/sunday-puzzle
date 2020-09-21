@@ -2,8 +2,7 @@ import Data.Ratio((%))
 
 expected :: Rational -> Integer -> Integer -> Rational
 expected chance guessNumber guessOptions
-  | guessOptions == 1 = chance * (guessNumber % 1)
-  | guessOptions == 2 = chance * ((guessNumber % 2) + ((guessNumber + 1) % 2))
+  | guessOptions == 0 = 0
   | guessOptions `mod` 2 == 1 =
       chance * (guessNumber % guessOptions)
           + expected (chance * ((guessOptions - 1) % guessOptions))
@@ -20,4 +19,4 @@ main = do
     print answer
     print (fromRational answer :: Double)
   where
-    answer = expected (1 % 1) 1 267751
+    answer = expected 1 1 267751

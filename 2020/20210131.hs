@@ -23,6 +23,9 @@ main = readFile "/usr/share/dict/words" >>= print . map addPath . filter (flip m
 
 -- animator: ar tn mo ia
 -- condense: co ne sd ne
+-- condemns: co ne sd mn
+-- diamonds: mo ia sd nd
+-- dioramas: ar mo ia sd
 -- flagrant: ar tn ga fl
 -- moleskin: il mo ne ks
 -- moralism: il mo ar ms
@@ -38,6 +41,16 @@ main = readFile "/usr/share/dict/words" >>= print . map addPath . filter (flip m
 -- alkalinity: al tn ky il ia
 -- immolation: ia il mo tn mo
 -- ornamental: al tn ar mo ne
+
+-- 6-letter words:
+-- amidst: ia sd mt
+-- amoral: la ar mo
+-- cutout: ut co ut
+-- damped: de md pa
+-- enamor: ar mo ne
+-- matron: ar mo tn
+-- monkey: ky mo ne
+-- second: co ne sd
 
 usa :: Map String [String]
 usa = fromList [
@@ -71,7 +84,7 @@ usa = fromList [
     ("ga",["al","tn","nc","sc","fl"]),
     ("sc",["nc","ga"]),
     ("nc",["tn","va","sc"]),
-    ("va",["ky","wv","md","nc","tn"]),
+    ("va",["ky","wv","md","nc","tn","dc"]),
     ("wv",["oh","pa","md","va","ky"]),
     ("wi",["mn","mi","il","ia"]),
     ("mi",["wi","oh","in"]),
@@ -79,14 +92,15 @@ usa = fromList [
     ("in",["il","mi","oh","ky"]),
     ("oh",["in","mi","pa","wv","ky"]),
     ("pa",["oh","ny","nj","de","md","wv"]),
-    ("md",["wv","pa","de","va"]),
+    ("md",["wv","pa","de","va","dc"]),
     ("de",["md","pa","nj"]),
     ("nj",["pa","ny","de"]),
     ("ny",["vt","ma","ct","nj","pa"]),
     ("ct",["ny","ma","ri"]),
     ("ri",["ct","ma"]),
-    ("ma",["ny","ma","ri","ct"]),
+    ("ma",["ny","vt","nh","ri","ct"]),
     ("vt",["ny","nh","ma"]),
     ("nh",["vt","me","ma"]),
-    ("me",["nh"])
+    ("me",["nh"]),
+    ("dc",["va","md"])
     ]

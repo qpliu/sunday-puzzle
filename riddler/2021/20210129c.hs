@@ -1,5 +1,6 @@
 import Data.List(delete,nub)
 import Data.Map(Map,adjust,alter,empty,fromList,size)
+import Data.Time(getCurrentTime)
 
 data Mark = Correct | Misplaced | Wrong deriving (Eq,Ord,Show)
 
@@ -26,56 +27,30 @@ victoryChance initialGuesses = chances (foldr tabulate empty wordList)
     chances :: Map a Int -> Rational
     chances table = fromIntegral (size table) / fromIntegral (sum table)
 
-bruteforce :: Int -> Int -> (Rational,[String])
-bruteforce taken dropped = maximum $ take taken $ drop dropped [(victoryChance [w1,w2,w3,w4],[w1,w2,w3,w4]) |
-    w1@[a1,b1,c1,d1,e1] <- wds,
-    w2@[a2,b2,c2,d2,e2] <- wds,
-    a2 > a1,  a2 /= b1, a2 /= c1, a2 /= d1, a2 /= e1,
-    b2 /= a1, b2 /= b1, b2 /= c1, b2 /= d1, b2 /= e1,
-    c2 /= a1, c2 /= b1, c2 /= c1, c2 /= d1, c2 /= e1,
-    d2 /= a1, d2 /= b1, d2 /= c1, d2 /= d1, d2 /= e1,
-    e2 /= a1, e2 /= b1, e2 /= c1, e2 /= d1, e2 /= e1,
-    w3@[a3,b3,c3,d3,e3] <- wds,
-    a3 > a2,  a3 /= b2, a3 /= c2, a3 /= d2, a3 /= e2,
-    b3 /= a2, b3 /= b2, b3 /= c2, b3 /= d2, b3 /= e2,
-    c3 /= a2, c3 /= b2, c3 /= c2, c3 /= d2, c3 /= e2,
-    d3 /= a2, d3 /= b2, d3 /= c2, d3 /= d2, d3 /= e2,
-    e3 /= a2, e3 /= b2, e3 /= c2, e3 /= d2, e3 /= e2,
-    a3 /= a1, a3 /= b1, a3 /= c1, a3 /= d1, a3 /= e1,
-    b3 /= a1, b3 /= b1, b3 /= c1, b3 /= d1, b3 /= e1,
-    c3 /= a1, c3 /= b1, c3 /= c1, c3 /= d1, c3 /= e1,
-    d3 /= a1, d3 /= b1, d3 /= c1, d3 /= d1, d3 /= e1,
-    e3 /= a1, e3 /= b1, e3 /= c1, e3 /= d1, e3 /= e1,
-    w4@[a4,b4,c4,d4,e4] <- wds,
-    a4 > a3,  a4 /= b3, a4 /= c3, a4 /= d3, a4 /= e3,
-    b4 /= a3, b4 /= b3, b4 /= c3, b4 /= d3, b4 /= e3,
-    c4 /= a3, c4 /= b3, c4 /= c3, c4 /= d3, c4 /= e3,
-    d4 /= a3, d4 /= b3, d4 /= c3, d4 /= d3, d4 /= e3,
-    e4 /= a3, e4 /= b3, e4 /= c3, e4 /= d3, e4 /= e3,
-    a4 /= a2, a4 /= b2, a4 /= c2, a4 /= d2, a4 /= e2,
-    b4 /= a2, b4 /= b2, b4 /= c2, b4 /= d2, b4 /= e2,
-    c4 /= a2, c4 /= b2, c4 /= c2, c4 /= d2, c4 /= e2,
-    d4 /= a2, d4 /= b2, d4 /= c2, d4 /= d2, d4 /= e2,
-    e4 /= a2, e4 /= b2, e4 /= c2, e4 /= d2, e4 /= e2,
-    a4 /= a1, a4 /= b1, a4 /= c1, a4 /= d1, a4 /= e1,
-    b4 /= a1, b4 /= b1, b4 /= c1, b4 /= d1, b4 /= e1,
-    c4 /= a1, c4 /= b1, c4 /= c1, c4 /= d1, c4 /= e1,
-    d4 /= a1, d4 /= b1, d4 /= c1, d4 /= d1, d4 /= e1,
-    e4 /= a1, e4 /= b1, e4 /= c1, e4 /= d1, e4 /= e1]
+searchSpace :: String -> [[String]]
+searchSpace start = s 4 (filter ((== 5) . length . nub) (dropWhile (< start) wordList))
   where
-    wds = filter subset $ filter ((== 5) . length . nub) wordList
-    -- A more complete brute force search is very expensive,
-    -- so just search over a small subset.
-    subset [l1,l2,l3,l4,l5] = l1 `elem` "cbpftd" && l2 `elem` "aiou" && l3 `elem` "rnltsmdcpgbv" && l4 `elem` "etnlrskdg" && l5 `elem` "sydrtnlh"
+    s n wds
+      | n <= 0 = [[]]
+      | otherwise = concat [map (wd:) (s (n-1) (filteredWds wd wds)) | wd <- wds]
+    filteredWds [a1,a2,a3,a4,a5] = filter (\ [b1,b2,b3,b4,b5] ->
+        b1 > a1  && b1 /= a2 && b1 /= a3 && b1 /= a4 && b1 /= a5 &&
+        b2 /= a1 && b2 /= a2 && b2 /= a3 && b2 /= a4 && b2 /= a5 &&
+        b3 /= a1 && b3 /= a2 && b3 /= a3 && b3 /= a4 && b3 /= a5 &&
+        b4 /= a1 && b4 /= a2 && b4 /= a3 && b4 /= a4 && b4 /= a5 &&
+        b5 /= a1 && b5 /= a2 && b5 /= a3 && b5 /= a4 && b5 /= a5)
 
-search :: Int -> Int -> Int -> (Rational,[String]) -> IO ()
-search limit start blockSize best
-  | start >= limit = return ()
-  | otherwise = print (start,max best next,head (snd next)) >> search limit (start+blockSize) blockSize (max best next)
-  where next = bruteforce blockSize start
+search :: String -> Int -> IO ()
+search start blockSize = s 0 (splitAt blockSize (searchSpace start)) (0,[])
+  where
+    s i (block,rest) best | null block = return () | otherwise = do
+      getCurrentTime >>= print
+      let next = maximum (map (\ initial4 -> (victoryChance initial4,initial4)) block)
+      print (i,max next best,take 2 (snd next))
+      s (i+blockSize) (splitAt blockSize rest) (max next best)
 
 main :: IO ()
-main = search 100 0 100 (0,[])
+main = search "" 100
 
 wordList :: [String]
 wordList = ["aahed","aalii","aargh","abaca","abaci","aback","abaft","abaka",

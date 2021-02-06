@@ -1,20 +1,22 @@
-import Data.List(intersperse,subsequences)
-import Data.Set(Set,delete,difference,elems,findMin,fromList,size)
+import Data.List(intersperse,maximumBy,subsequences)
+import Data.Map(Map,(!))
+import qualified Data.Map
+import Data.Set(Set,delete,difference,elems,findMin)
 import qualified Data.Set
 
 states :: Int -> Int -> [[Set Int]]
-states npoles ndiscs = construct npoles (fromList [1..ndiscs])
+states npoles ndiscs = construct npoles (Data.Set.fromList [1..ndiscs])
   where
     construct :: Int -> Set Int -> [[Set Int]]
     construct n items
       | n <= 1 = [[items]]
-      | otherwise = concatMap cons (map fromList (subsequences (elems items)))
+      | otherwise = concatMap cons (map Data.Set.fromList (subsequences (elems items)))
       where
         cons :: Set Int -> [[Set Int]]
         cons first = map (first:) (construct (n-1) (difference items first))
 
 moves :: [Set Int] -> Set [Set Int]
-moves start = fromList $ filter (/= start) $ concatMap add1 $ concatMap remove1 start
+moves start = Data.Set.fromList $ filter (/= start) $ concatMap add1 $ concatMap remove1 start
   where
     remove1 :: Set Int -> [Int]
     remove1 pole | Data.Set.null pole = [] | otherwise = [findMin pole]
@@ -32,10 +34,13 @@ isStart (startPole:poles) = all Data.Set.null poles
 isEnd :: [Set Int] -> Bool
 isEnd (startPole:poles) = Data.Set.null startPole && length (filter (not . Data.Set.null) poles) == 1
 
-equation :: ([Set Int] -> [Set Int]) -> [Set Int] -> String
-equation canon state
+isParticularEnd :: [Set Int] -> Bool
+isParticularEnd (startPole:poles) = all Data.Set.null (startPole:drop 1 poles)
+
+renderEquation :: ([Set Int] -> [Set Int]) -> [Set Int] -> String
+renderEquation canon state
   | isEnd state = name state ++ " = 0"
-  | otherwise = name state ++ concatMap (nameNext (size nexts)) nexts ++ " = 1"
+  | otherwise = name state ++ concatMap (nameNext (Data.Set.size nexts)) nexts ++ " = 1"
   where
     nexts = moves state
     nameNext n s = " - " ++ name s ++ "/" ++ show n
@@ -47,13 +52,64 @@ canon3 [a,b,c] = [a,max b c,min b c]
 isCanon3 :: [Set Int] -> Bool
 isCanon3 s = s == canon3 s
 
+equation :: Map [Set Int] Int -> [Set Int] -> ([Rational],Rational)
+equation table state = (map getCoeff [1 .. Data.Map.size table],1)
+  where
+    -- table should not include end states
+    nexts = moves state
+    thisi = table!state
+    nextis = concatMap (maybe [] (:[]) . flip Data.Map.lookup table) nexts
+    nextCoeff = -1 / fromIntegral (length nexts)
+    getCoeff i | i == thisi = 1
+               | i `elem` nextis = nextCoeff
+               | otherwise = 0
+
+equations :: ([Set Int] -> Bool) -> [[Set Int]] -> [([Rational],Rational)]
+equations isEnd states = map (equation (Data.Map.fromList (zip nonEndStates [1..]))) nonEndStates
+  where
+    -- make sure the start state is at the end
+    nonEndStates = filter (not . isStart) (filter (not . isEnd) states) ++ filter isStart states
+
+upperTriangularize :: [([Rational],Rational)] -> [([Rational],Rational)]
+upperTriangularize eqns = ut 0 eqns
+  where
+    n = length $ fst $ head eqns
+    ut i eqs
+      | i >= n = eqs
+      | otherwise = ut (i+1) (map subPivot eqs)
+      where
+        subPivot row@(coefs,rhs)
+          | row == pivotRow = row
+          | otherwise = (zipWith (-) coefs (map (*factor) pivotRowCoefs),rhs - factor*pivotRowRhs)
+          where
+            factor = head (drop i coefs) / pivotCoef
+        pivotCoef = head (drop i pivotRowCoefs)
+        pivotRow@(pivotRowCoefs,pivotRowRhs) = maximumBy compareForPivot (filter (all (== 0) . take i . fst) eqs)
+        compareForPivot (coefs1,_) (coefs2,_) = compare (abs (head (drop i coefs1))) (abs (head (drop i coefs2)))
+
+findAnswer :: [([Rational],Rational)] -> Rational
+findAnswer eqns = rhs / last coefs
+  where
+    n = length eqns
+    ((coefs,rhs):_) = filter (all (== 0) . take (n-1) . fst) eqns
+
 main :: IO ()
 main = do
     putStrLn "3-disc equations:"
-    mapM_ putStrLn (map (equation id) (states 3 3))
+    mapM_ putStrLn (map (renderEquation id) (states 3 3))
     putStrLn "3-disc equations removing symmetry:"
-    mapM_ putStrLn (map (equation canon3) (filter isCanon3 (states 3 3)))
+    mapM_ putStrLn (map (renderEquation canon3) (filter isCanon3 (states 3 3)))
     putStrLn "4-disc equations removing symmetry:"
-    mapM_ putStrLn (map (equation canon3) (filter isCanon3 (states 3 4)))
-    putStrLn "5-disc equations removing symmetry:"
-    mapM_ putStrLn (map (equation canon3) (filter isCanon3 (states 3 5)))
+    mapM_ putStrLn (map (renderEquation canon3) (filter isCanon3 (states 3 4)))
+    putStr "3-disc solution: "
+    print (findAnswer $ upperTriangularize $ equations isEnd (states 3 3))
+    putStr "4-disc solution: "
+    print (findAnswer $ upperTriangularize $ equations isEnd (states 3 4))
+    putStr "3-disc and 4 poles solution: "
+    print (findAnswer $ upperTriangularize $ equations isEnd (states 4 3))
+    putStr "3-disc solution for particular target pole: "
+    print (findAnswer $ upperTriangularize $ equations isParticularEnd (states 3 3))
+    putStr "4-disc solution for particular target pole: "
+    print (findAnswer $ upperTriangularize $ equations isParticularEnd (states 3 4))
+    putStr "3-disc and 4 poles solution for particular target pole: "
+    print (findAnswer $ upperTriangularize $ equations isParticularEnd (states 4 3))

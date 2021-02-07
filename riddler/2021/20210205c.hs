@@ -31,6 +31,9 @@ moves start = Data.Set.fromList $ filter (/= start) $ concatMap add1 $ concatMap
 isStart :: [Set Int] -> Bool
 isStart (startPole:poles) = all Data.Set.null poles
 
+isLast :: [Set Int] -> Bool
+isLast (startPole:onePole:poles) = all Data.Set.null poles && Data.Set.size onePole == 1 && maximum onePole < minimum startPole
+
 isEnd :: [Set Int] -> Bool
 isEnd (startPole:poles) = Data.Set.null startPole && length (filter (not . Data.Set.null) poles) == 1
 
@@ -64,8 +67,8 @@ equation table state = (map getCoeff [1 .. Data.Map.size table],1)
                | i `elem` nextis = nextCoeff
                | otherwise = 0
 
-equations :: ([Set Int] -> Bool) -> [[Set Int]] -> [([Rational],Rational)]
-equations isEnd states = map (equation (Data.Map.fromList (zip nonEndStates [1..]))) nonEndStates
+equations :: ([Set Int] -> Bool) -> ([Set Int] -> Bool) -> [[Set Int]] -> [([Rational],Rational)]
+equations isStart isEnd states = map (equation (Data.Map.fromList (zip nonEndStates [1..]))) nonEndStates
   where
     -- make sure the start state is at the end
     nonEndStates = filter (not . isStart) (filter (not . isEnd) states) ++ filter isStart states
@@ -101,15 +104,25 @@ main = do
     mapM_ putStrLn (map (renderEquation canon3) (filter isCanon3 (states 3 3)))
     putStrLn "4-disc equations removing symmetry:"
     mapM_ putStrLn (map (renderEquation canon3) (filter isCanon3 (states 3 4)))
+    putStr "2-disc solution: "
+    print (findAnswer $ upperTriangularize $ equations isStart isEnd (states 3 2))
     putStr "3-disc solution: "
-    print (findAnswer $ upperTriangularize $ equations isEnd (states 3 3))
+    print (findAnswer $ upperTriangularize $ equations isStart isEnd (states 3 3))
     putStr "4-disc solution: "
-    print (findAnswer $ upperTriangularize $ equations isEnd (states 3 4))
+    print (findAnswer $ upperTriangularize $ equations isStart isEnd (states 3 4))
     putStr "3-disc and 4 poles solution: "
-    print (findAnswer $ upperTriangularize $ equations isEnd (states 4 3))
+    print (findAnswer $ upperTriangularize $ equations isStart isEnd (states 4 3))
     putStr "3-disc solution for particular target pole: "
-    print (findAnswer $ upperTriangularize $ equations isParticularEnd (states 3 3))
+    print (findAnswer $ upperTriangularize $ equations isStart isParticularEnd (states 3 3))
     putStr "4-disc solution for particular target pole: "
-    print (findAnswer $ upperTriangularize $ equations isParticularEnd (states 3 4))
+    print (findAnswer $ upperTriangularize $ equations isStart isParticularEnd (states 3 4))
     putStr "3-disc and 4 poles solution for particular target pole: "
-    print (findAnswer $ upperTriangularize $ equations isParticularEnd (states 4 3))
+    print (findAnswer $ upperTriangularize $ equations isStart isParticularEnd (states 4 3))
+    putStr "5-disc solution: "
+    print (findAnswer $ upperTriangularize $ equations isStart isEnd (states 3 5))
+    putStr "m_last,2: "
+    print (findAnswer $ upperTriangularize $ equations isLast isStart (states 3 2))
+    putStr "m_last,3: "
+    print (findAnswer $ upperTriangularize $ equations isLast isStart (states 3 3))
+    putStr "m_last,4: "
+    print (findAnswer $ upperTriangularize $ equations isLast isStart (states 3 4))

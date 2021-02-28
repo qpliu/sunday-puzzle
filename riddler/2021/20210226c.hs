@@ -28,5 +28,10 @@ addBlockWays nstairs ways = unionsWith (+) (map (fromList . add) (toList ways))
 ways :: Int -> Integer
 ways nstairs = sum (head (drop (blockCount nstairs) (iterate (addBlockWays nstairs) (fromList [([],1)]))))
 
+a005118 :: Integer -> Integer
+a005118 n = product [1..n*(n-1)`div`2] `div` product [(2*i+1)^(n-i-1) | i <- [1..n-2]]
+
 main :: IO ()
-main = mapM_ (print . ways) [1..10]
+main = do
+    mapM_ (print . ways) [1..10]
+    mapM_ (print . a005118) [2..11]

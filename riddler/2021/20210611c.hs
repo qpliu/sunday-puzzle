@@ -1,4 +1,4 @@
-import Data.Map(Map,delete,empty,fold,fromList,insert,member,(!))
+import Data.Map(Map,delete,empty,fold,fromList,insert,keys,member,(!))
 import qualified Data.Map
 
 data State = State String Int [String]
@@ -64,26 +64,53 @@ checkGraph = all ok states
   where ok (State st _ borders) = all (has st) (map (states!) borders)
         has st (State st2 _ borders) = st `elem` borders
 
-area :: Map a State -> Int
-area states = fold addArea 0 states
+area :: Foldable t => t State -> Int
+area states = foldr addArea 0 states
   where addArea (State _ area _) total = area + total
 
 contiguousFrom :: Map String State -> String -> Map String State
-contiguousFrom states state = walk empty (states!state)
-  where walk contig s@(State st _ borders)
-         | st `member` contig = contig
-         | otherwise = foldl walk (insert st s contig) (map (states!) borders)
+contiguousFrom states state = walk empty (Data.Map.lookup state states)
+  where walk contig Nothing = contig
+        walk contig (Just s@(State st _ borders))
+          | st `member` contig = contig
+          | otherwise = foldl walk (insert st s contig) (map (flip Data.Map.lookup states) borders)
 
 test :: [String] -> (Int,Int,Int)
 test removals = (west,east,(10000*min east west) `div` t48)
   where
     west = area (contiguousFrom newStates "WA")
-    east = area (contiguousFrom newStates "FL")
+    east = area (contiguousFrom newStates "ME")
     t48 = area (contiguousFrom states "WA")
     newStates = Data.Map.map rm (foldr delete states removals)
     rm (State st area borders) = State st area (filter (not . (`elem` removals)) borders)
 
+subsetsOf :: Int -> [a] -> [[a]]
+subsetsOf 0 _ = [[]]
+subsetsOf n [] = []
+subsetsOf n (a:as) = map (a:) (subsetsOf (n-1) as) ++ subsetsOf n as
+
 main :: IO ()
 main = do
+    let area48 = area (contiguousFrom states "WA")
+        lbound = area (contiguousFrom (rm states ["IL","MO","OK","NM"]) "ME")
+        ubound = area48 - 2*lbound
+        rm states removals = Data.Map.map (rmGraph removals) (foldr delete states removals)
+        rmGraph removals (State st area borders) = State st area (filter (not . (`elem` removals)) borders)
+    print (area48,lbound,ubound)
     print (test ["IL","MO","OK","NM"])
     print (test ["MN","IA","MO","OK","NM"])
+    let candidates = ["ND","SD","NE","WY","CO","NM","OK","KS","AR","LA","MS","MO","IL","IA","MN","TN","AL","GA","KY","ID","NC","VA","IN"]
+    let search n = do
+        print ("search "++show n)
+        let subsets = subsetsOf n candidates
+            subsets1 = filter ((<= ubound) . area . map (states!)) subsets
+            subsets2 = filter (ok . area . flip contiguousFrom "ME" . rm states) subsets1
+            ok a = a*2 < area48 && a >= lbound
+        print (length subsets,length subsets1,length subsets2)
+        let ans = maximum $ map (\ s -> (min (area (contiguousFrom (rm states s) "ME")) (area (contiguousFrom (rm states s) "WA")),s)) subsets2
+        print ans
+        print (test (snd ans))
+    search 4
+    search 5
+    search 6
+    search 7

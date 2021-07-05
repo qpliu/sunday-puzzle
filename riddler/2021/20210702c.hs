@@ -17,17 +17,17 @@ joinDots dots a b = start dots []
 pairs :: Ord a => [a] -> [(a,a)]
 pairs [] = []
 pairs [_] = []
-pairs [a,b] = [(a,b)]
-pairs as = p as ++ p (filter (/= maximum as) as)
-  where p as = map ((,) (maximum as)) (filter (/= maximum as) as)
+pairs as = map ((,) (maximum as)) (filter (/= maximum as) as)
 
 maxScore :: (Num a, Ord a) => [a] -> (a,[(a,a)])
 maxScore [] = (0,[])
 maxScore [_] = (0,[])
 maxScore [a,b] = (a*b,[(a,b)])
 maxScore dots =
-    maximum [maxSubscores a b (joinDots dots a b) | (a,b) <- pairs dots]
+    maximum ([maxSubscores a b (joinDots dots a b)  | (a,b) <- pairs dots] ++
+             [maxSubscores a b (joinDots dots2 a b) | (a,b) <- pairs dots2])
   where
+    dots2 = filter (/= maximum dots) dots
     maxSubscores a b (loop1,loop2) = (a*b+s1+s2,(a,b):p1++p2)
       where
         (s1,p1) = maxScore loop1

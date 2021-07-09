@@ -1,34 +1,14 @@
 import Data.List(permutations)
 import Data.Time(getCurrentTime)
 
-joinDots :: Eq a => [a] -> a -> a -> ([a],[a])
-joinDots dots a b = start dots []
-  where
-    start [] _ = error "Missing both"
-    start (dot:dots) collected
-      | dot == a = continue dots collected b []
-      | dot == b = continue dots collected a []
-      | otherwise = start dots (dot:collected)
-    continue [] _ _ _ = error "Missing one"
-    continue (dot:dots) collected target opposite
-      | dot == target = (reverse dots ++ collected,opposite)
-      | otherwise = continue dots collected target (dot:opposite)
-
-pairs :: Ord a => [a] -> [(a,a)]
-pairs [] = []
-pairs [_] = []
-pairs as = map ((,) (maximum as)) (filter (/= maximum as) as)
-
 maxScore :: (Num a, Ord a) => [a] -> (a,[(a,a)])
 maxScore [] = (0,[])
 maxScore [_] = (0,[])
 maxScore [a,b] = (a*b,[(a,b)])
-maxScore dots =
-    maximum ([maxSubscores a b (joinDots dots a b)  | (a,b) <- pairs dots] ++
-             [maxSubscores a b (joinDots dots2 a b) | (a,b) <- pairs dots2])
+maxScore (a:dots) =
+    maximum (maxScore dots:[scoreSplit (splitAt i dots) | i <- [0..length dots-1]])
   where
-    dots2 = filter (/= maximum dots) dots
-    maxSubscores a b (loop1,loop2) = (a*b+s1+s2,(a,b):p1++p2)
+    scoreSplit (loop1,b:loop2) = (a*b+s1+s2,(a,b):p1++p2)
       where
         (s1,p1) = maxScore loop1
         (s2,p2) = maxScore loop2

@@ -5,6 +5,8 @@ maxScore :: (Num a, Ord a) => [a] -> (a,[(a,a)])
 maxScore [] = (0,[])
 maxScore [_] = (0,[])
 maxScore [a,b] = (a*b,[(a,b)])
+maxScore [a,b,c] | a < min b c = (b*c,[(b,c)])
+                 | otherwise = let d = max b c in (a*d,[(a,d)])
 maxScore (a:dots) =
     maximum (maxScore dots:[scoreSplit (splitAt i dots) | i <- [0..length dots-1]])
   where

@@ -21,5 +21,19 @@ bestWinChance nseries npredict = maximum [win nseries npredict prediction | pred
 bestWins :: Int -> Int -> [[Bool]]
 bestWins nseries npredict = [prediction | prediction <- predictions nseries [], win nseries npredict prediction == bestWinChance nseries npredict]
 
+ecPrediction :: [Bool] -> [Bool]
+ecPrediction games = p 0
+  where
+    p i | i >= length games = []
+        | otherwise = (length (filter id (take i games)) >= length (filter not (take i games))) : p (i+1)
+
+ecWin :: Int -> [Bool] -> Bool
+ecWin npredict games = length (filter id (zipWith (==) games (ecPrediction games))) >= npredict
+
+ecWinChance :: Int -> Int -> Rational
+ecWinChance nseries npredict = sum [chance | (chance,games) <- series nseries, ecWin npredict games]
+
 main :: IO ()
-main = print (bestWinChance 7 2)
+main = do
+  print (bestWinChance 7 2)
+  print (ecWinChance 7 2)

@@ -1,70 +1,54 @@
-import Data.Time(getCurrentTime)
+import Data.Map(Map,alter,empty,toList)
 
-data Hat = R | Y | B deriving (Eq,Show)
+data Hat = R | Y | B | NoGuess deriving (Eq,Ord,Show)
 
-data Strategy = S Strategy1 Strategy2
+type Strategy = Hat -> Hat -> Hat
 
-data Strategy1 = S1 String (Hat -> Hat)
+test :: Strategy -> Strategy -> Strategy -> Strategy -> [(Hat,Hat,Hat,Hat)]
+test ns es ss ws = [(n,e,s,w) | n <- [R,Y,B], e <- [R,Y,B], s <- [R,Y,B], w <- [R,Y,B], n /= ns e w && e /= es s n && s /= ss w e && w /= ws n s]
 
-data Strategy2 = S2 String ((Hat,Hat) -> Hat)
+noguess :: Strategy
+noguess _ _ = NoGuess
 
-instance Show Strategy where
-    show (S s1 s2) = show s1 ++ "/" ++ show s2
+strategyE1 :: Strategy
+strategyE1 s n
+  | s == R || n == R = R
+  | s == Y || n == Y = Y
+  | otherwise = B
 
-instance Show Strategy1 where
-    show (S1 name _) = name
+strategyW1 :: Strategy
+strategyW1 n s
+  | n == B || s == B = B
+  | n == Y || s == Y = Y
+  | otherwise = R
 
-instance Show Strategy2 where
-    show (S2 name _) = name
+strategyW2 :: Strategy
+strategyW2 n s
+  | n == Y || s == Y = Y
+  | n == B || s == B = B
+  | otherwise = R
 
-rot :: Hat -> Hat
-rot R = Y
-rot Y = B
-rot B = R
+strategyW3 :: Strategy
+strategyW3 n s
+  | n == s = R
+  | n > s = Y
+  | otherwise = B
 
-add :: (Hat,Hat) -> Hat
-add (R,Y) = B
-add (Y,B) = R
-add (B,R) = Y
-add (Y,R) = B
-add (B,Y) = R
-add (R,B) = Y
-add (a,b) | a == b = a | otherwise = error "Should not happen"
+strategyW4 :: Strategy
+strategyW4 n s
+  | n == s = R
+  | n == R = Y
+  | otherwise = B
 
-baseStrategies1 :: [Strategy1]
-baseStrategies1 = [S1 "I" id,S1 "C" (const R)]
-
-baseStrategies2 :: [Strategy2]
-baseStrategies2 = [S2 "+" add, S2 "L" fst, S2 "R" snd, S2 "C" (const R)]
-
-rot1s :: Strategy1 -> [Strategy1]
-rot1s s@(S1 name f) = [s,S1 ("r"++name) (rot . f),S1 ("r2"++name) (rot . rot . f)]
-
-rot2s :: Strategy2 -> [Strategy2]
-rot2s s@(S2 name f) = [s,S2 ("r"++name) (rot . f),S2 ("r2"++name) (rot . rot . f)]
-
-strategies :: [Strategy]
-strategies = [S s1 s2 | s1 <- concatMap rot1s baseStrategies1, s2 <- concatMap rot2s baseStrategies2]
-
-strategyCombinations :: [(Strategy,Strategy,Strategy,Strategy)]
-strategyCombinations = [(sn,se,ss,sw) | sn <- strategies, se <- strategies, ss <- strategies, sw <- strategies]
-
-escapes :: (Strategy,Strategy,Strategy,Strategy) -> Bool
-escapes (S (S1 _ f1n) (S2 _ f2n),S (S1 _ f1e) (S2 _ f2e),S (S1 _ f1s) (S2 _ f2s),S (S1 _ f1w) (S2 _ f2w)) =
-    and [ok f1n f2n n e w || ok f1e f2e e s n || ok f1s f2s s w e || ok f1w f2w w n s | n <- [R,Y,B], e <- [R,Y,B], s <- [R,Y,B], w <- [R,Y,B]]
+gather :: [(Hat,Hat,Hat,Hat)] -> Map (Hat,Hat) [(Hat,Hat)]
+gather = foldl collect empty
   where
-    ok f1 f2 me left right | left == right = me == f1 left
-                           | otherwise = me == f2 (left,right)
+    collect m (n,e,s,w) = alter (Just . maybe [(n,s)] ((n,s):)) (e,w) m
 
-search :: Int -> Int -> [(Strategy,Strategy,Strategy,Strategy)] -> IO ()
-search blockSize start combos
-  | null combos = print "done"
-  | otherwise = do
-      getCurrentTime >>= print . ((,) start)
-      let found = filter escapes (take blockSize combos) in
-          if null found
-              then search blockSize (start+blockSize) (drop blockSize combos)
-              else print (length found,take 1 found)
+guessable :: [(Hat,Hat)] -> (Bool,[(Hat,Hat)])
+guessable cases = (or [all (ok a b) cases | a <- [R,Y,B], b <- [R,Y,B]],cases)
+  where
+    ok a b (c,d) = a == c || b == d
 
-main :: IO ()
-main = search 1000000 0 strategyCombinations
+check :: Strategy -> Strategy -> Strategy -> Strategy -> IO ()
+check ns es ss ws = mapM_ (print . fmap guessable) $ toList $ gather $ test ns es ss ws

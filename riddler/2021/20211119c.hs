@@ -1,54 +1,61 @@
+import Data.List(nub,permutations)
 import Data.Map(Map,alter,empty,toList)
+import Data.Time(getCurrentTime)
 
-data Hat = R | Y | B | NoGuess deriving (Eq,Ord,Show)
+data Hat = R | Y | B deriving (Eq,Ord,Show)
 
 type Strategy = Hat -> Hat -> Hat
 
-test :: Strategy -> Strategy -> Strategy -> Strategy -> [(Hat,Hat,Hat,Hat)]
-test ns es ss ws = [(n,e,s,w) | n <- [R,Y,B], e <- [R,Y,B], s <- [R,Y,B], w <- [R,Y,B], n /= ns e w && e /= es s n && s /= ss w e && w /= ws n s]
+applyEW :: Strategy -> Strategy -> [(Hat,Hat,Hat,Hat)]
+applyEW es ws = [(n,e,s,w) | n <- [R,Y,B], e <- [R,Y,B], s <- [R,Y,B], w <- [R,Y,B], e /= es n s && w /= ws n s]
 
-noguess :: Strategy
-noguess _ _ = NoGuess
-
-strategyE1 :: Strategy
-strategyE1 s n
-  | s == R || n == R = R
-  | s == Y || n == Y = Y
-  | otherwise = B
-
-strategyW1 :: Strategy
-strategyW1 n s
-  | n == B || s == B = B
-  | n == Y || s == Y = Y
-  | otherwise = R
-
-strategyW2 :: Strategy
-strategyW2 n s
-  | n == Y || s == Y = Y
-  | n == B || s == B = B
-  | otherwise = R
-
-strategyW3 :: Strategy
-strategyW3 n s
-  | n == s = R
-  | n > s = Y
-  | otherwise = B
-
-strategyW4 :: Strategy
-strategyW4 n s
-  | n == s = R
-  | n == R = Y
-  | otherwise = B
-
-gather :: [(Hat,Hat,Hat,Hat)] -> Map (Hat,Hat) [(Hat,Hat)]
-gather = foldl collect empty
+gatherNS :: [(Hat,Hat,Hat,Hat)] -> Map (Hat,Hat) [(Hat,Hat)]
+gatherNS = foldl collect empty
   where
     collect m (n,e,s,w) = alter (Just . maybe [(n,s)] ((n,s):)) (e,w) m
 
-guessable :: [(Hat,Hat)] -> (Bool,[(Hat,Hat)])
-guessable cases = (or [all (ok a b) cases | a <- [R,Y,B], b <- [R,Y,B]],cases)
+guessable :: [(Hat,Hat)] -> Bool
+guessable cases = or [all (ok a b) cases | a <- [R,Y,B], b <- [R,Y,B]]
   where
     ok a b (c,d) = a == c || b == d
 
-check :: Strategy -> Strategy -> Strategy -> Strategy -> IO ()
-check ns es ss ws = mapM_ (print . fmap guessable) $ toList $ gather $ test ns es ss ws
+s :: [Hat] -> Strategy
+s [rr,ry,rb,yr,yy,yb,br,by,bb] R R = rr
+s [rr,ry,rb,yr,yy,yb,br,by,bb] R Y = ry
+s [rr,ry,rb,yr,yy,yb,br,by,bb] R B = rb
+s [rr,ry,rb,yr,yy,yb,br,by,bb] Y R = yr
+s [rr,ry,rb,yr,yy,yb,br,by,bb] Y Y = yy
+s [rr,ry,rb,yr,yy,yb,br,by,bb] Y B = yb
+s [rr,ry,rb,yr,yy,yb,br,by,bb] B R = br
+s [rr,ry,rb,yr,yy,yb,br,by,bb] B Y = by
+s [rr,ry,rb,yr,yy,yb,br,by,bb] B B = bb
+
+test :: Strategy -> Strategy -> [((Hat,Hat),[(Hat,Hat)])]
+test es ws = filter (not . guessable . snd) $ toList $ gatherNS $ applyEW es ws
+
+t :: Strategy -> Strategy -> IO ()
+t es ws = mapM_ print $ test es ws
+
+win :: Strategy -> Strategy -> Bool
+win es ws = all (guessable . snd) $ toList $ gatherNS $ applyEW es ws
+
+search :: Int -> Int -> [([Hat],[Hat])] -> IO ()
+search blockSize n [] = print "done"
+search blockSize n strategies = do
+    getCurrentTime >>= print . ((,) n)
+    mapM_ print $ searchBlock (take blockSize strategies)
+    search blockSize (n+blockSize) (drop blockSize strategies)
+  where
+    searchBlock [] = []
+    searchBlock ((es,ws):rest)
+      | win (s es) (s ws) = (es,ws) : searchBlock rest
+      | otherwise = searchBlock rest
+
+main :: IO ()
+main = do
+    search 100000 0 [(es,ws) | es <- strategies, ws <- strategies]
+  where
+    strategies = nub $ permutations [R,R,R,Y,Y,Y,B,B,B]
+
+test4 :: Strategy -> Strategy -> Strategy -> Strategy -> [(Hat,Hat,Hat,Hat)]
+test4 ns es ss ws = [(n,e,s,w) | n <- [R,Y,B], e <- [R,Y,B], s <- [R,Y,B], w <- [R,Y,B], n /= ns e w && e /= es n s && s /= ss e w && w /= ws n s]

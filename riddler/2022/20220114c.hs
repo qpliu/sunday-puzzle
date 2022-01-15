@@ -5,7 +5,7 @@ import Data.Set(Set,fromList,member,size)
 import Data.Time(getCurrentTime)
 
 firstGuesses :: [String]
-firstGuesses = filter ((==5) . size . fromList) la ++ ta
+firstGuesses = filter ((==5) . size . fromList) (la ++ ta)
 
 secondGuesses :: String -> [String]
 secondGuesses firstGuess =
@@ -30,8 +30,11 @@ winChanceFor2ndGuess targets guess = fromIntegral (Data.Map.size tabulation) / f
     tabulate target table = alter (Just . maybe 1 (+1)) (mark target guess) table
 
 winChancesFor1stGuess :: String -> [(Rational,String,Rational,[Mark])]
-winChancesFor1stGuess guess = map chances (toList tabulation)
+winChancesFor1stGuess guess
+    | prune = [(0,"",0,[])]
+    | otherwise = map chances (toList tabulation)
   where
+    prune = maybe False ((> 300) . length) $ Data.Map.lookup [Gray,Gray,Gray,Gray,Gray] tabulation
     tabulation = foldr tabulate empty la
     tabulate target table = alter (Just . maybe [target] (target:)) (mark target guess) table
     chances :: ([Mark],[String]) -> (Rational,String,Rational,[Mark])
@@ -44,13 +47,13 @@ winChance chances = foldr (\(win,_,chance,_) sum -> sum + win*chance) 0 chances
 search :: Int -> String -> Rational -> [String] -> IO ()
 search i bestFirstGuess bestWinChance words
   | null words = do
-      print (winChancesFor1stGuess bestFirstGuess)
+      print (bestFirstGuess,winChancesFor1stGuess bestFirstGuess)
   | otherwise = do
-      if i `mod` 10 == 0
+      if i `mod` 100 == 0
         then getCurrentTime >>= print . (,) (i,bestFirstGuess,bestWinChance,fromRational bestWinChance :: Double)
         else return ()
       let w = winChance (winChancesFor1stGuess (head words))
-        in  if w > bestWinChance
+        in  if w >= bestWinChance
               then search (i+1) (head words) w (tail words)
               else search (i+1) bestFirstGuess bestWinChance (tail words)
 

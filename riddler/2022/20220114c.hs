@@ -8,8 +8,7 @@ firstGuesses :: [String]
 firstGuesses = filter ((==5) . size . fromList) (la ++ ta)
 
 secondGuesses :: String -> [String]
-secondGuesses firstGuess =
-    filter (not . any (`member` (fromList firstGuess))) firstGuesses
+secondGuesses firstGuess = (la ++ ta)
 
 data Mark = Green | Yellow | Gray deriving (Eq,Ord,Show)
 

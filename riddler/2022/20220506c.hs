@@ -75,6 +75,19 @@ findMaxLadder graph maxConnections =
   where
     starts = keys (Data.Map.filter (\ connections -> let n = Data.Set.size connections in n > 0 && n <= maxConnections) graph)
 
+findLongestLadderFrom :: Map Int (Set Int) -> Int -> [Int]
+findLongestLadderFrom graph i =  chooseOne (addConnections iset iset [])
+  where
+    iset = Data.Set.fromList [i]
+    chooseOne [] = []
+    chooseOne [set] = [minimum set]
+    chooseOne (set:set1:sets) = let n = (minimum set) in n : chooseOne (Data.Set.filter (oneStep n) set1:sets)
+    addConnections top all ladders
+      | Data.Set.null top = ladders
+      | otherwise = addConnections newTop (union newTop all) (top:ladders)
+      where
+        newTop = difference (unions (map (graph!) (Data.Set.toList top))) all
+
 main :: IO ()
 main = do
     p 10

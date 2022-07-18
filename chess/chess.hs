@@ -105,7 +105,7 @@ movesFrom side square board = maybe [] pieceMoves (Data.Map.lookup square board)
       | piece == B = movesB
       | piece == Q = movesQ
       | piece == K = movesK
-      | piece == P = movesP (if side == White then (R2,R8,succ) else (R7,R1,pred))
+      | piece == P = movesP (if side == White then (R2,R8,R5,succ) else (R7,R1,R4,pred))
       where
         (c,r) = square
         movesR = moveLine square (Just Ca) Nothing pred id ++
@@ -143,8 +143,8 @@ movesFrom side square board = maybe [] pieceMoves (Data.Map.lookup square board)
             (if c /= maxBound && r /= maxBound then to (succ c,succ r) K else []) ++
             (if r /= minBound then to (c,pred r) K else []) ++
             (if r /= maxBound then to (c,succ r) K else [])
-        movesP :: (Row,Row,(Row -> Row)) -> [(Move,State)]
-        movesP (start,end,forward) =
+        movesP :: (Row,Row,Row,(Row -> Row)) -> [(Move,State)]
+        movesP (start,end,enpassant,forward) =
             (if r == start && clear (c,forward r) && clear (c,forward (forward r)) then to (c,forward (forward r)) P else []) ++
             (if clear (c,forward r) then pawnTo (c,forward r) else []) ++
             (if c /= minBound && enemy (pred c,forward r) then pawnTo (pred c,forward r) else []) ++
@@ -223,15 +223,15 @@ showBoardU board = ((' ':map (head . tail . show) [minBound..maxBound::Column]):
     showPiece (White,K) = '♔'
     showPiece (White,P) = '♙'
 
-showMove :: Int -> Move -> String
-showMove justification ((sc,sr),(dc,dr),piece,taken,promotion)
+showMove :: Int -> String -> Move -> String
+showMove justification suffix ((sc,sr),(dc,dr),piece,taken,promotion)
   | (sc,sr,dc,dr,piece) == (Ce,R1,Cc,R1,K) = justify "O-O-O"
   | (sc,sr,dc,dr,piece) == (Ce,R1,Cg,R1,K) = justify "O-O"
   | (sc,sr,dc,dr,piece) == (Cd,R8,Cf,R8,K) = justify "O-O-O"
   | (sc,sr,dc,dr,piece) == (Cd,R8,Cb,R8,K) = justify "O-O"
   | otherwise = (justify . drop 1) (show sc ++ drop 1 (show sr) ++ ":" ++ show piece ++ (if taken /= Nothing then "x" else "")  ++ drop 1 (show dc) ++ drop 1 (show dr) ++ (if piece == promotion then "" else '=':show promotion))
   where
-    justify str | justification == 0 = str | otherwise = take justification (str ++ repeat ' ')
+    justify str | justification == 0 = str ++ suffix | otherwise = take justification (str ++ suffix ++ repeat ' ')
 
 matedIn1Moves :: State -> [(Move,[Move])]
 matedIn1Moves state = [(m,map fst (mateIn1 s)) | (m,s) <- legalMoves state]
@@ -240,13 +240,13 @@ mateIn2Moves :: State -> [(Move,[(Move,[Move])])]
 mateIn2Moves = map (fmap matedIn1Moves) . mateIn2
 
 showMoves2 :: (Move,[Move]) -> String
-showMoves2 (m,ms) = showMove 10 m ++ " - " ++ concatMap (showMove 11) ms
+showMoves2 (m,ms) = showMove 10 "" m ++ " - " ++ concatMap (showMove 11 "") ms
 
 showMoves3 :: [(Move,[(Move,[Move])])] -> [String]
 showMoves3 = concatMap showM1
   where
-    showM1 (m1,m2) = showMove 0 m1 : zipWith showM2 m2 [1..]
-    showM2 m2 n = " " ++ show n ++ ". " ++ showMoves2 m2
+    showM1 (m1,m2) = showMove 0 "" m1 : zipWith showM2 m2 [1..]
+    showM2 m2 n = " " ++ showEnum n ++ showMoves2 m2
 
 notMatedIn2 :: (Move -> Bool) -> State -> [(Move,[Move])]
 notMatedIn2 chooseMoves state = [(move,[m | (m,state3) <- legalMoves state2, (null . mateIn1) state3]) | (move,state2) <- legalMoves state, chooseMoves move]
@@ -259,9 +259,12 @@ moveMatches move ((srccol,srcrow),(destcol,destrow),piece,taken,promotion) =
     || move == show piece ++ (drop 1 . show) destcol ++ (drop 1 . show) destrow ++ "=" ++ show promotion
     || maybe False ((move ==) . ((show piece ++ "x") ++) . show) taken
     || maybe False ((move ==) . const (show piece ++ "x" ++ (drop 1 . show) destcol ++ (drop 1 . show) destrow)) taken
-    || (move `elem` ["ooo","oo","o-o-o","o-o","OOO","OO","O-O-O","O-O"]
+    || (move `elem` ["ooo","o-o-o","OOO","O-O-O"]
         && (srccol,srcrow,destcol,destrow,piece) `elem`
-           [(Ce,R1,Cc,R1,K),(Ce,R1,Cg,R1,K),(Cd,R8,Cf,R8,K),(Cd,R8,Cb,R8,K)])
+           [(Ce,R1,Cc,R1,K),(Cd,R8,Cf,R8,K)])
+    || (move `elem` ["oo","o-o","OO","O-O"]
+        && (srccol,srcrow,destcol,destrow,piece) `elem`
+           [(Ce,R1,Cg,R1,K),(Cd,R8,Cb,R8,K)])
 
 makeMoves :: [String] -> State -> Either String State
 makeMoves [] state = return state
@@ -271,19 +274,39 @@ makeMoves (move:moves) state =
     [] -> Left ("invalid move:"++move)
     _ -> Left ("ambiguous move:"++move)
 
-putBoard :: Either String State -> IO ()
-putBoard (Left msg) = putStrLn msg
-putBoard (Right (_,board)) = (mapM_ putStrLn . showBoardU) board
+putBoard :: State -> IO ()
+putBoard (_,board) = (mapM_ putStrLn . showBoardU) board
 
-putMoves :: Either String State -> IO ()
-putMoves (Left msg) = putStrLn msg
-putMoves (Right state@(side,board)) =
+putMoves :: State -> IO ()
+putMoves state@(side,_) =
     mapM_ putStrLn ((show side++":"):zipWith showm (legalMoves state) [1..])
   where
-    showm (move,state) i
-      | mated state = ' ':show i ++ ". " ++ showMove 0 move ++ "#"
-      | inCheck state = ' ':show i ++ ". " ++ showMove 0 move ++ "+"
-      | otherwise = ' ':show i ++ ". " ++ showMove 0 move
+    showm (move,state2) i
+      | mated state2 = ' ':showEnum i ++ showMove 0 "#" move
+      | otherwise = ' ':showEnum i ++ showMove 11 (if inCheck state2 then "+" else "") move ++ " - " ++ concatMap (showMove 11 "#" . fst) (mateIn1 state2)
+
+showEnum :: Int -> String
+showEnum i = take 5 (show i ++ ".   ")
+
+modify :: [String] -> Board -> Board
+modify [] board = board
+modify (m:ms) board = (modify ms . domodify m) board
+  where
+    domodify :: String -> Board -> Board
+    domodify ('x':m) = dosquare m delete
+    domodify ('W':m) = dopiece White m
+    domodify ('B':m) = dopiece Black m
+    domodify _ = id
+    dopiece :: Side -> String -> Board -> Board
+    dopiece side ('R':m) = dosquare m (flip insert (side,R))
+    dopiece side ('N':m) = dosquare m (flip insert (side,N))
+    dopiece side ('B':m) = dosquare m (flip insert (side,B))
+    dopiece side ('Q':m) = dosquare m (flip insert (side,Q))
+    dopiece side ('K':m) = dosquare m (flip insert (side,K))
+    dopiece side ('P':m) = dosquare m (flip insert (side,P))
+    dopiece _ _ = id
+    dosquare :: String -> (Square -> Board -> Board) -> Board -> Board
+    dosquare m domod = maybe id domod (lookup m [([last (show c),last (show r)],(c,r))|c<-[Ca .. Ch],r<-[R1 .. R8]])
 
 main :: IO ()
 main = do
@@ -291,13 +314,14 @@ main = do
   args <- getArgs
   case args of
     [] -> (mapM_ putStrLn . showMoves3 . mateIn2Moves) (White,board)
-    ("board":"black":moves) -> (putBoard . makeMoves moves) (Black,board)
-    ("board":"white":moves) -> (putBoard . makeMoves moves) (White,board)
-    ("board":moves) -> (putBoard . makeMoves moves) (White,board)
-    ("moves":"black":moves) -> (putMoves . makeMoves moves) (Black,board)
-    ("moves":"white":moves) -> (putMoves . makeMoves moves) (White,board)
-    ("moves":moves) -> (putMoves . makeMoves moves) (White,board)
-    ("black":moves) -> (putMoves . makeMoves moves) (Black,board)
-    ("white":moves) -> (putMoves . makeMoves moves) (White,board)
+    ("modify":mods) -> (mapM_ putStrLn . showBoardU . modify mods) board
+    ("board":"black":moves) -> (either putStrLn putBoard . makeMoves moves) (Black,board)
+    ("board":"white":moves) -> (either putStrLn putBoard . makeMoves moves) (White,board)
+    ("board":moves) -> (either putStrLn putBoard . makeMoves moves) (White,board)
+    ("moves":"black":moves) -> (either putStrLn putMoves . makeMoves moves) (Black,board)
+    ("moves":"white":moves) -> (either putStrLn putMoves . makeMoves moves) (White,board)
+    ("moves":moves) -> (either putStrLn putMoves . makeMoves moves) (White,board)
+    ("black":moves) -> (either putStrLn putMoves . makeMoves moves) (Black,board)
+    ("white":moves) -> (either putStrLn putMoves . makeMoves moves) (White,board)
     [move] -> (mapM_ (putStrLn . showMoves2) . notMatedIn2 (moveMatches move)) (White,board)
-    moves -> (putMoves . makeMoves moves) (White,board)
+    moves -> (either putStrLn putMoves . makeMoves moves) (White,board)

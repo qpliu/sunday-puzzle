@@ -1,11 +1,9 @@
- BK BN WQ __ BQ BR WN __
- BB __ __ BP BP BP __ __
- WR __ WP BN __ __ __ __
- WK BP WP BP __ WP __ __
- __ __ BP __ WP __ __ __
- __ __ __ __ __ __ __ __
- __ __ __ __ __ __ __ __
- __ __ __ __ __ __ __ __
-
-solution is en passant: c5xb6, not adding en passant to the code
-chess modify xc5 xb5 WPb6 < 20220715-51 | chess black
+ abcdefgh
+8♚♞♕_♛♜♘_
+7♝__♟♟♟__
+6♖_♙♞____
+5♔♟♙♟_♙__
+4__♟_♙___
+3________
+2________
+1________

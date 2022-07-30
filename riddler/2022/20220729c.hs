@@ -22,8 +22,8 @@ integrate :: Double -> Double -> (Double -> Double) -> Double -> Double
 integrate x0 x1 f dx = dx*sum [f x | x <- [x0,x0+dx .. x1]]
 
 c :: Double -> Double -> Double
-c dx r = integrate (-1) (1-dx) f dx / sqrt (2*pi)
-  where f x = exp(-(x+r)^2/2)*erf(sqrt(1-x^2)/2)
+c dx r = integrate (-1) 1 f dx / sqrt (2*pi)
+  where f x = exp(-(x+r)^2/2)*erf(sqrt(max 0 (1-x^2)/2))
 
 xy :: (Int,Int) -> (Double,Double)
 xy (i,j) = (fromIntegral (2*i) + fromIntegral (j `mod` 2),fromIntegral j * sqrt 3)
@@ -63,4 +63,18 @@ cn n = addName $ maximum [(sum [cmemo!(ij,center) | ij <- ijs],center,ijs) | cen
         names = foldr (alter (Just . maybe 1 (+1))) empty (map (rName center) ijs)
 
 main :: IO ()
-main = mapM_ (print . cn) [1..10]
+main = do
+  print ("C(0)",c 0.001 0)
+  print ("C(1)",c 0.001 1)
+  print ("C(2/sqrt3)",c 0.001 (2/sqrt 3))
+  print ("C(sqrt2)",c 0.001 (sqrt 2))
+  print ("C(sqrt3)",c 0.001 (sqrt 3))
+  print ("C(2)",c 0.001 2)
+  print ("C(4/sqrt3)",c 0.001 (4/sqrt 3))
+  print ("C(0)+3C(2)",c 0.001 0 + 3*c 0.001 2)
+  print ("2C(1)+2C(sqrt3)",2*c 0.001 1 + 2*c 0.001 (sqrt 3))
+  print ("4*C(sqrt2)",4*c 0.001 (sqrt 2))
+  print ("3*C(2/sqrt3)+C(4/sqrt3)",3*c 0.001 (2/sqrt 3) + c 0.001 (4/sqrt 3))
+  mapM_ (print . cn) [1..10]
+  print ("C(0)+6C(2)+3C(sqrt(12))",c 0.001 0 + 6*c 0.001 2 + 3*c 0.001 (sqrt 12))
+  print ("2C(1)+2C(sqrt3)+4C(sqrt7)+C(3)",2*c 0.001 1 + 2*c 0.001 (sqrt 3) + 4*c 0.001 (sqrt 7) + c 0.001 3)

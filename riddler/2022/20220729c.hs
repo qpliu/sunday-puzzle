@@ -1,5 +1,6 @@
 import Data.List(intercalate)
 import Data.Map(Map,alter,empty,fromList,toList,(!))
+import qualified Data.Set
 
 erf :: Double -> Double
 erf x = sign*y 
@@ -48,16 +49,15 @@ rName center (i,j) =
   where
     x = 2*i + j`mod`2
 
-takeN :: Int -> [a] -> [[a]]
-takeN 0 _ = [[]]
-takeN _ [] = []
-takeN n (a:as) = map (a:) (takeN (n-1) as) ++ takeN n as
+cups :: Center -> [(Int,Int)]
+cups center = (0,0) : next 0 0 0 0 (Data.Set.fromList [(0,0)])
+  where
+    next mini minj maxi maxj set = (nexti,nextj) : next (min mini nexti) (min minj nextj) (max maxi nexti) (max maxj nextj) (Data.Set.insert (nexti,nextj) set)
+      where (_,(nexti,nextj)) = minimum [(r center (i,j),(i,j)) | i <- [mini-1..maxi+1], j <- [minj-1..maxj+1], not ((i,j) `Data.Set.member` set)]
 
 cn :: Int -> (String,(Double,Center,[(Int,Int)]))
-cn n = addName $ maximum [(sum [cmemo!(ij,center) | ij <- ijs],center,ijs) | center <- [One,Two,Three], ijs <- takeN n [ij | ij <- ijset]]
+cn n = addName $ maximum [(sum [c 0.001 (r center ij)| ij <- take n (cups center)],center,take n (cups center)) | center <- [One,Two,Three]]
   where
-    ijset = [(i,j) | i <- [-n..n], j <- [-n..n], 2*(i^2 + j^2) <= n]
-    cmemo = fromList [((ij,center),c 0.001 (r center ij)) | ij <- ijset, center <- [One,Two,Three]]
     addName ans@(_,center,ijs) = (show n ++ ":" ++ intercalate "+" [show n++"C("++name++")"|(name,n) <- toList names],ans)
       where
         names = foldr (alter (Just . maybe 1 (+1))) empty (map (rName center) ijs)
@@ -75,6 +75,4 @@ main = do
   print ("2C(1)+2C(sqrt3)",2*c 0.001 1 + 2*c 0.001 (sqrt 3))
   print ("4*C(sqrt2)",4*c 0.001 (sqrt 2))
   print ("3*C(2/sqrt3)+C(4/sqrt3)",3*c 0.001 (2/sqrt 3) + c 0.001 (4/sqrt 3))
-  mapM_ (print . cn) [1..10]
-  print ("C(0)+6C(2)+3C(sqrt(12))",c 0.001 0 + 6*c 0.001 2 + 3*c 0.001 (sqrt 12))
-  print ("2C(1)+2C(sqrt3)+4C(sqrt7)+C(3)",2*c 0.001 1 + 2*c 0.001 (sqrt 3) + 4*c 0.001 (sqrt 7) + c 0.001 3)
+  mapM_ (print . cn) [1..20]

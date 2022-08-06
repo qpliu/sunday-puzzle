@@ -26,6 +26,14 @@ ps s = upper [1]
     lower [p] = p
     lower plist = lower (zipWith (nextP s) plist (tail plist))
 
+psn :: Fractional f => Int -> f -> [(Int,[f])]
+psn n s = upper [1]
+  where
+    nextP s p1 p2 = s*p1 + s*p2 - s*s*p1*p2
+    upper plist = (length plist,lower plist) : upper (zipWith (nextP s) (0:plist) (plist++[0]))
+    lower plist | length plist <= n = plist
+                | otherwise = lower (zipWith (nextP s) plist (tail plist))
+
 ulimit :: Fractional f => f -> f
 ulimit s = (1-(1-s)^2)^2
 

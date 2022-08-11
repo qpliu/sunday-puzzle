@@ -5,6 +5,7 @@ import Data.List(intercalate)
 import Data.Map(Map,alter,delete,empty,fromList,insert,toList,(!))
 import qualified Data.Map
 import System.Environment(getArgs)
+import Text.Read(readMaybe)
 
 data Row = R1 | R2 | R3 | R4 | R5 | R6 | R7 | R8 deriving (Bounded,Enum,Eq,Ord,Show)
 
@@ -18,7 +19,7 @@ data Piece = R | N | B | Q | K | P deriving (Eq,Show)
 
 type Board = Map Square (Side,Piece)
 
-type Flags = (Bool,Bool,Bool,Bool,Maybe Square) -- (white queen side castling ok,white king side castling ok,black queen side castling ok,black king side castling ok,en passant allowed)
+type Flags = (Bool,Bool,Bool,Bool,Maybe Square,Int,Int) -- (white queen side castling ok,white king side castling ok,black queen side castling ok,black king side castling ok,en passant allowed,stale mate count,move number)
 
 type State = ((Side,Flags),Board)
 
@@ -49,9 +50,10 @@ inCheck ((side,flags),board) = any tookK moves
     tookK ((_,_,_,taken,_,_),_) = taken == Just K
 
 legalMoves :: State -> [(Move,State)]
-legalMoves ((side,flags@(wooo,woo,booo,boo,_)),board) = filter (not . inCheck . snd . snd) (moves side board ++ castling)
+legalMoves ((side,flags@(wooo,woo,booo,boo,_,stalemateCount,moveNumber)),board) = filter (not . inCheck . snd . snd) (moves side board ++ castling)
   where
     moves side board = concat [movesFrom flags side (col,row) board | row <- [R8,R7 .. R1], col <- [Ca .. Ch]]
+    newMoveNumber = if side == White then moveNumber else moveNumber + 1
     enemy = opp side
     clear square = Nothing == Data.Map.lookup square board
     isAttacked square board = any (isTaken square) (moves enemy board)
@@ -69,7 +71,7 @@ legalMoves ((side,flags@(wooo,woo,booo,boo,_)),board) = filter (not . inCheck . 
               && not (isAttacked (Cd,R1) board)
               && not (isAttacked (Ce,R1) board)
              then
-                ((((Ce,R1),(Cc,R1),K,Nothing,K,False),((enemy,flags),delete (Ca,R1) $ delete (Ce,R1) $ insert (Cc,R1) (White,K) $ insert (Cd,R1) (White,R) board)):)
+                ((((Ce,R1),(Cc,R1),K,Nothing,K,False),((enemy,(False,False,booo,boo,Nothing,0,newMoveNumber)),delete (Ca,R1) $ delete (Ce,R1) $ insert (Cc,R1) (White,K) $ insert (Cd,R1) (White,R) board)):)
              else
                 id)
           (if woo && Just (White,R) == Data.Map.lookup (Ch,R1) board
@@ -78,7 +80,7 @@ legalMoves ((side,flags@(wooo,woo,booo,boo,_)),board) = filter (not . inCheck . 
               && not (isAttacked (Cf,R1) board)
               && not (isAttacked (Ce,R1) board)
              then
-                [(((Ce,R1),(Cg,R1),K,Nothing,K,False),((enemy,flags),delete (Ch,R1) $ delete (Ce,R1) $ insert (Cg,R1) (White,K) $ insert (Cf,R1) (White,R) board))]
+                [(((Ce,R1),(Cg,R1),K,Nothing,K,False),((enemy,(False,False,booo,boo,Nothing,0,newMoveNumber)),delete (Ch,R1) $ delete (Ce,R1) $ insert (Cg,R1) (White,K) $ insert (Cf,R1) (White,R) board))]
              else
                 [])
       | side == Black && Just (Black,K) == Data.Map.lookup (Cd,R8) board =
@@ -88,7 +90,7 @@ legalMoves ((side,flags@(wooo,woo,booo,boo,_)),board) = filter (not . inCheck . 
               && not (isAttacked (Ce,R1) board)
               && not (isAttacked (Cd,R1) board)
              then
-                ((((Cd,R8),(Cf,R8),K,Nothing,K,False),((enemy,flags),delete (Ch,R8) $ delete (Cd,R8) $ insert (Cf,R8) (Black,K) $ insert (Ce,R8) (Black,R) board)):)
+                ((((Cd,R8),(Cf,R8),K,Nothing,K,False),((enemy,(wooo,woo,False,False,Nothing,0,newMoveNumber)),delete (Ch,R8) $ delete (Cd,R8) $ insert (Cf,R8) (Black,K) $ insert (Ce,R8) (Black,R) board)):)
              else
                 id)
           (if boo && Just (Black,R) == Data.Map.lookup (Ca,R8) board
@@ -97,18 +99,18 @@ legalMoves ((side,flags@(wooo,woo,booo,boo,_)),board) = filter (not . inCheck . 
               && not (isAttacked (Cc,R8) board)
               && not (isAttacked (Cd,R8) board)
              then
-                [(((Cd,R8),(Cb,R8),K,Nothing,K,False),((enemy,flags),delete (Ca,R8) $ delete (Cd,R8) $ insert (Cb,R8) (Black,K) $ insert (Cc,R8) (Black,R) board))]
+                [(((Cd,R8),(Cb,R8),K,Nothing,K,False),((enemy,(wooo,woo,False,False,Nothing,0,newMoveNumber)),delete (Ca,R8) $ delete (Cd,R8) $ insert (Cb,R8) (Black,K) $ insert (Cc,R8) (Black,R) board))]
              else
                 [])
       | otherwise = []
 
 movesFrom :: Flags -> Side -> Square -> Board -> [(Move,State)]
-movesFrom flags@(wooo,woo,booo,boo,enpassant) side square board = maybe [] pieceMoves (Data.Map.lookup square board)
+movesFrom flags@(wooo,woo,booo,boo,enpassant,stalemateCount,moveNumber) side square board = maybe [] pieceMoves (Data.Map.lookup square board)
   where
     clear square = maybe True (const False) (Data.Map.lookup square board)
     enemy square = maybe False ((/= side) . fst) (Data.Map.lookup square board)
     friend square = not (clear square) && not (enemy square)
-    -- omit en passant
+    newMoveNumber = if side == White then moveNumber else moveNumber+1
     pieceMoves (s,piece)
       | s /= side = []
       | piece == R = movesR
@@ -171,7 +173,7 @@ movesFrom flags@(wooo,woo,booo,boo,enpassant) side square board = maybe [] piece
             enPassantKill kill ((square,dest,piece,_,movePiece,_),state) = ((square,dest,piece,fmap snd (Data.Map.lookup kill board),movePiece,True),fmap (delete kill) state)
         to dest movePiece
           | friend dest = []
-          | otherwise = [((square,dest,piece,fmap snd (Data.Map.lookup dest board),movePiece,False),((opp side,(wooo&&square/=(Ca,R1)&&square/=(Ce,R1),woo&&square/=(Ch,R1)&&square/=(Ce,R1),booo&&square/=(Ch,R8)&&square/=(Cd,R8),boo&&square/=(Ca,R8)&&square/=(Cd,R8),Nothing)),delete square (insert dest (side,movePiece) board)))]
+          | otherwise = [((square,dest,piece,fmap snd (Data.Map.lookup dest board),movePiece,False),((opp side,(wooo&&square/=(Ca,R1)&&square/=(Ce,R1),woo&&square/=(Ch,R1)&&square/=(Ce,R1),booo&&square/=(Ch,R8)&&square/=(Cd,R8),boo&&square/=(Ca,R8)&&square/=(Cd,R8),Nothing,if movePiece == P || Data.Map.lookup dest board /= Nothing then 0 else stalemateCount+1,newMoveNumber)),delete square (insert dest (side,movePiece) board)))]
 
 readBoard :: String -> Board
 readBoard string = fromList (concat (zipWith (readRow minBound) (skipU (lines string)) (reverse [minBound..maxBound])))
@@ -237,7 +239,7 @@ showSquare :: Square -> String
 showSquare (col,row) = tail (show col) ++ tail (show row)
 
 fen :: State -> String
-fen ((side,(wooo,woo,booo,boo,ep)),board) =
+fen ((side,(wooo,woo,booo,boo,ep,stalemateCount,moveNumber)),board) =
     intercalate "/" (map fenRow [R8,R7 .. R1])
       ++ (if side == White then " w " else " b ")
       ++ (if wk then "K" else "")
@@ -245,7 +247,8 @@ fen ((side,(wooo,woo,booo,boo,ep)),board) =
       ++ (if bk then "k" else "")
       ++ (if bq then "q" else "")
       ++ (if not (wk || wq || bk || bq) then "-" else "")
-      ++ " " ++ maybe "-" showSquare ep ++ " 0 0"
+      ++ " " ++ maybe "-" showSquare ep
+      ++ " " ++ show stalemateCount ++ " " ++ show moveNumber
   where
     wk = woo && Just (White,K) == Data.Map.lookup (Ce,R1) board && Just (White,R) == Data.Map.lookup (Ch,R1) board
     wq = wooo && Just (White,K) == Data.Map.lookup (Ce,R1) board && Just (White,R) == Data.Map.lookup (Ca,R1) board
@@ -263,7 +266,7 @@ readFen :: String -> Maybe State
 readFen str = do
     (board,str) <- parseBoard str
     (side,str) <- parseSide str
-    (flags,str) <- parseFlags str
+    flags <- parseFlags str
     return ((side,flags),board)
   where
     parseBoard str = do
@@ -301,11 +304,16 @@ readFen str = do
     parseCastle wk wq bk bq ('k':str) = parseCastle wk wq True bq str
     parseCastle wk wq bk bq ('q':str) = parseCastle wk wq bk True str
     parseCastle _ _ _ _ _ = Nothing
-    parseEP wk wq bk bq ('-':' ':str) = Just ((wq,wk,bq,bk,Nothing),str)
+    parseEP wk wq bk bq ('-':' ':str) = parseNumbers wk wq bk bq Nothing str
     parseEP wk wq bk bq str@(_:_:' ':_) = do
       square <- parseSquare (take 2 str)
-      return ((wq,wk,bq,bk,Just square),drop 3 str)
+      parseNumbers wk wq bk bq (Just square) (drop 3 str)
     parseEP _ _ _ _ _ = Nothing
+    parseNumbers wk wq bk bq ep str = do
+      wds <- return (words str)
+      stalemateCount <- if length wds > 1 then readMaybe (wds!!0) else Nothing
+      moveNumber <- if length wds > 1 then readMaybe (wds!!1) else Nothing
+      return (wq,wk,bq,bk,ep,stalemateCount,moveNumber)
 
 moveNotations :: (Move,a) -> [String]
 moveNotations (((sc,sr),(dc,dr),piece,taken,promotion,enPassant),_)
@@ -415,7 +423,7 @@ modify move = case move of
     dosquare m domod = maybe id domod (parseSquare m)
 
 enableEnPassant :: Square -> State -> State
-enableEnPassant square ((side,(wooo,woo,booo,boo,_)),board) = ((side,(wooo,woo,booo,boo,Just square)),board)
+enableEnPassant square ((side,(wooo,woo,booo,boo,_,stalemateCount,moveNumber)),board) = ((side,(wooo,woo,booo,boo,Just square,stalemateCount,moveNumber)),board)
 
 parseSquare :: String -> Maybe Square
 parseSquare [row,col] = last (Nothing:[Just (r,c) | r <- [minBound..maxBound], row == last (show r), c <- [minBound..maxBound], col == last (show c)])
@@ -441,7 +449,7 @@ processArgs [] lastMove state = do
 readState :: String -> State
 readState str = maybe ((makeState . readBoard) str) id (readFen str)
   where
-    makeState board = ((White,(True,True,True,True,possibleEnPassant White board)),board)
+    makeState board = ((White,(True,True,True,True,possibleEnPassant White board,0,1)),board)
     possibleEnPassant side board | side == White = check R5 R6 R7
                                  | otherwise = check R4 R3 R2
       where check pawnrow skiprow initialrow | length possibles == 1 = (Just . head) possibles

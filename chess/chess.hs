@@ -2,7 +2,7 @@ import Control.Monad(foldM)
 import Data.Char(ord,toLower)
 import Data.Foldable(maximumBy)
 import Data.List(intercalate)
-import Data.Map(Map,alter,delete,empty,fromList,insert,toList,(!))
+import Data.Map(Map,alter,delete,empty,fromList,insert,member,toList,(!))
 import qualified Data.Map
 import System.Environment(getArgs)
 import Text.Read(readMaybe)
@@ -363,33 +363,44 @@ notateMoves moves = map addDisambiguated (zip notated moves)
 makeMove :: String -> State -> Either String (String,State)
 makeMove move state@((side,_),_) =
     case (filter (elem move . fst . snd) . notateMoves . legalMoves) state of
-      [(m,(_,(_,state)))] -> Right (show side ++ ": " ++ m,state)
+      [(m,(_,(_,state)))] -> Right (m,state)
       [] -> Left ("invalid move: "++move)
       m -> Left ("ambiguous move "++move++": "++intercalate " " (map fst m))
 
-putMoves :: State -> IO ()
-putMoves state@((side,_),_) = do
-    putStrLn (show side ++ ":")
+putMoves :: [String] -> State -> IO ()
+putMoves lastMoves state@((side,(_,_,_,_,_,_,moveNumber)),_) =
     (mapM_ putItem . zip [1..] . notateMoves . legalMoves) state
   where
+    (prefix,middle)
+      | side == White && moveNumber == 1 = (" 1. "," ")
+      | side == White = (" "++show (moveNumber-1)++". "++(if length lastMoves > 1 then head (drop 1 lastMoves) else "-")++" "++(if length lastMoves > 0 then head lastMoves else "-")++" "++show moveNumber++". "," ")
+      | otherwise = (" "++show moveNumber++". "++(if length lastMoves > 0 then head lastMoves else "-")++" "," "++show (moveNumber+1)++". ")   
     putItem (i,(notation,(_,(_,state2)))) = do
-        putStr (" " ++ showEnum i ++ justify notation ++ " - ")
+        putStr (" " ++ showEnum i ++ prefix ++ justify notation ++ middle)
         (putStrLn . intercalate "/" . map fst . filter (mated . snd . snd . snd) . notateMoves . legalMoves) state2
     justify str = take ((maximum . map (length . fst) . notateMoves . legalMoves) state) (str ++ repeat ' ')
   
 putSolves :: State -> IO ()
-putSolves state@((side,_),_) = (mapM_ putSolve . filter (matedIn1 . snd . snd . snd) . notateMoves . legalMoves) state
+putSolves state@((side,(_,_,_,_,_,_,moveNumber)),_) = (mapM_ putSolve . filter (matedIn1 . snd . snd . snd) . notateMoves . legalMoves) state
   where
     putSolve (move1,(_,(_,state2))) = do
-        mapM_ (putStrLn . showItem ((maximum . map (getWidth 3) . toList) move3s) move1) (toList move3s)
+        mapM_ (putStrLn . showItem ((maximum . map (getWidth 4) . toList) mergedMove3s) move1) (toList mergedMove3s)
       where
         move2s = (map collectMove3s . notateMoves . legalMoves) state2
         collectMove3s (move2,(_,(_,state3))) = (move2,(map fst . filter (mated . snd . snd . snd) . notateMoves . legalMoves) state3)
         move3Counts = foldr (alter (Just . maybe 1 (+1))) empty (concatMap snd move2s)
         pickMove3 = maximumBy (\ a b -> compare (move3Counts!a) (move3Counts!b))
         move3s = foldl (\ m (m2,m3) -> alter (Just . maybe ([m2]) (m2:)) m3 m) empty (map (fmap pickMove3) move2s)
-    (sep1,sep2,sep3) | side == White = (" 1. "," "," 2. ")
-                     | otherwise = (" 1. - "," 2. "," ")
+        mergedMove3s = -- merge captures and non-captures
+            (fromList . map doMerge . filter (not . isMergedNoncapture . fst) . toList) move3s
+          where
+            isMergedNoncapture move@(p:dest) = (p:'x':dest) `member` move3s
+            isMergedNoncapture _ = False
+            doMerge (m2@(p:'x':dest),m3list) | (p:dest) `member` move3s =
+                (p:'(':'x':')':dest,m3list ++ move3s!(p:dest))
+            doMerge mlist = mlist
+    (sep1,sep2,sep3) | side == White = (" "++show moveNumber++". "," "," "++show (moveNumber+1)++". ")
+                     | otherwise = (" "++show (moveNumber-1)++". - "," "++show moveNumber++". "," ")
     getWidth n (_,move2s)
       | length move2s <= n = length (intercalate "/" move2s)
       | otherwise = length ("(" ++ show (length move2s) ++ " moves)")
@@ -429,22 +440,20 @@ parseSquare :: String -> Maybe Square
 parseSquare [row,col] = last (Nothing:[Just (r,c) | r <- [minBound..maxBound], row == last (show r), c <- [minBound..maxBound], col == last (show c)])
 parseSquare _ = Nothing
 
-processArgs :: [String] -> String -> State -> IO ()
-processArgs ("white":args) lastMove ((side,flags),board) = processArgs args lastMove ((White,flags),board)
-processArgs ("black":args) lastMove ((side,flags),board) = processArgs args lastMove ((Black,flags),board)
-processArgs ("moves":_) _ state = putMoves state
+processArgs :: [String] -> [String] -> State -> IO ()
+processArgs ("white":args) lastMoves ((side,flags),board) = processArgs args lastMoves ((White,flags),board)
+processArgs ("black":args) lastMoves ((side,flags),board) = processArgs args lastMoves ((Black,flags),board)
+processArgs ("moves":_) lastMoves state = putMoves lastMoves state
 processArgs ("solve":_) _ state = putSolves state
 processArgs ("solution":_) _ state = putSolution state
 processArgs ("board":_) _ (_,board) = (mapM_ putStrLn . showBoard) board
 processArgs ("fen":_) _ state = (putStrLn . fen) state
 processArgs (('e':'p':':':square):args) lastMove state = processArgs args lastMove ((maybe id enableEnPassant (parseSquare square)) state)
 -- add option to make castling unavailable
-processArgs (('-':mod):args) lastMove ((side,flags),board) = processArgs args lastMove ((side,flags),modify mod board)
-processArgs (arg:args) _ state = either putStrLn (\ (lastMove,state) -> processArgs args lastMove state) (makeMove arg state)
-processArgs [] "" state = putMoves state
-processArgs [] lastMove state = do
-    putStr (lastMove ++ ", ")
-    putMoves state
+processArgs (('-':mod):args) lastMoves ((side,flags),board) = processArgs args lastMoves ((side,flags),modify mod board)
+processArgs (arg:args) lastMoves state = either putStrLn (\ (lastMove,state) -> processArgs args (lastMove:lastMoves) state) (makeMove arg state)
+processArgs [] [] state = putSolves state
+processArgs [] lastMoves state = putMoves lastMoves state
 
 readState :: String -> State
 readState str = maybe ((makeState . readBoard) str) id (readFen str)
@@ -460,4 +469,4 @@ main :: IO ()
 main = do
   state <- fmap readState getContents
   args <- getArgs
-  processArgs (if null args then ["solve"] else args) "" state
+  processArgs (if null args then ["solve"] else args) [] state

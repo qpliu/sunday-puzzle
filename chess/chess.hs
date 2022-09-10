@@ -394,13 +394,15 @@ putSolves state@((side,(_,_,_,_,_,_,moveNumber)),_) = (mapM_ putSolve . filter (
         mergedMove3s = -- merge captures and non-captures
             (fromList . map doMerge . filter (not . isMergedNoncapture . fst) . toList) move3s
           where
-            isMergedNoncapture move@(p:dest) = (p:'x':dest) `member` move3s
+            isMergedNoncapture move@(p1:p2:dest) = (p1:'x':p2:dest) `member` move3s || (p1:p2:'x':dest) `member` move3s
             isMergedNoncapture _ = False
             doMerge (m2@(p:'x':dest),m3list) | (p:dest) `member` move3s =
                 (p:'(':'x':')':dest,m3list ++ move3s!(p:dest))
+            doMerge (m2@(p1:p2:'x':dest),m3list) | (p1:p2:dest) `member` move3s =
+                (p1:p2:'(':'x':')':dest,m3list ++ move3s!(p1:p2:dest))
             doMerge mlist = mlist
     (sep1,sep2,sep3) | side == White = (" "++show moveNumber++". "," "," "++show (moveNumber+1)++". ")
-                     | otherwise = (" "++show (moveNumber-1)++". - "," "++show moveNumber++". "," ")
+                     | otherwise = (" "++show moveNumber++". - "," "++show (moveNumber+1)++". "," ")
     getWidth n (_,move2s)
       | length move2s <= n = length (intercalate "/" move2s)
       | otherwise = length ("(" ++ show (length move2s) ++ " moves)")

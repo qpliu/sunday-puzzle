@@ -24,15 +24,14 @@ a6 r = 1/2 - 2*r/sqrt 2
 b6 :: Double -> Double
 b6 r = 1/2 - 2*sqrt(r^2 - (h6 r)^2/4)
 
-f6 :: Double -> Double
-f6 r = sqrt(r^2 - (a6 r - b6 r)^2) + sqrt(r^2 - (a6 r + b6 r)^2/4) - 1/2 - a6 r
+x6 :: Double -> Double
+x6 r = 1/2 + (a6 r - b6 r)/2
 
-bisect6 :: (Double -> Double) -> Double -> Double -> Double -> Double
-bisect6 f epsilon x1 x2
-  | abs (x2 - x1) < epsilon = x3
-  | f x3 /= f x3 || f x3 < 0 = bisect6 f epsilon x3 x2
-  | otherwise = bisect6 f epsilon x1 x3
-  where x3 = (x1 + x2)/2
+y6 :: Double -> Double
+y6 r = sqrt(r^2 - (a6 r + b6 r)^2/4)
+
+f6 :: Double -> Double
+f6 r = y6 r + sqrt(r^2 - (x6 r - r*sqrt 2)^2) - 1 + r*sqrt 2
 
 main :: IO ()
 main = do
@@ -44,7 +43,7 @@ main = do
   print (x5,sqrt(r5^2-x5^2))
   print (1-x5,sqrt(r5^2-x5^2))
   print (1/2,1-r5-2*sqrt(r5^2-1/16))
-  let r6 = 0.305 --bisect6 f6 0.0000001 0.26 0.35
+  let r6 = bisect f6 0.0000001 0.30 0.33
   print ("r6",r6)
   print (r6/sqrt 2,r6/sqrt 2)
   print (1-r6/sqrt 2,1-r6/sqrt 2)
@@ -52,6 +51,4 @@ main = do
   let y6a = sqrt(r6^2-x6a^2)
   print (1-x6a,y6a)
   print (y6a,1-x6a)
-  let x6b = 1/2 + (a6 r6 - b6 r6)/2
-  let y6b = sqrt(r6^2 - (a6 r6 + b6 r6)^2/4)
-  print (x6b,1-y6b)
+  print (x6 r6,1-y6 r6)

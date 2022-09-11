@@ -33,6 +33,23 @@ y6 r = sqrt(r^2 - (a6 r + b6 r)^2/4)
 f6 :: Double -> Double
 f6 r = y6 r + sqrt(r^2 - (x6 r - r*sqrt 2)^2) - 1 + r*sqrt 2
 
+xyi6 :: Double -> (Double,Double)
+xyi6 r = (xa + r*cos(theta+dtheta),ya + r*sin(theta+dtheta))
+  where
+    xa = x6 r
+    ya = 1 - y6 r
+    xb = 1 - x6 r
+    yb = y6 r
+    theta = atan((yb-ya)/(xb-xa))
+    dtheta = acos(sqrt((xa-xb)^2+(ya-yb)^2)/(2*r))
+
+f6_2 :: Double -> Double
+f6_2 r = r - sqrt((xi-x0)^2 + (yi-y0)^2)
+  where
+    (xi,yi) = xyi6 r
+    x0 = 1 - r/sqrt 2
+    y0 = 1 - r/sqrt 2
+
 main :: IO ()
 main = do
   let r5 = bisect f5 0.0000001 0.32 0.4
@@ -52,3 +69,16 @@ main = do
   print (1-x6a,y6a)
   print (y6a,1-x6a)
   print (x6 r6,1-y6 r6)
+  let r6_2 = bisect f6_2 0.0000001 0.301 0.308
+  print ("r6-2",r6_2)
+  print (r6_2/sqrt 2,r6_2/sqrt 2)
+  print (1-r6_2/sqrt 2,1-r6_2/sqrt 2)
+  let x6_2a = (1-2*r6_2/sqrt 2)/2
+  let y6_2a = sqrt(r6_2^2-x6_2a^2)
+  print (1-y6_2a,x6_2a)
+  print (y6_2a,1-x6_2a)
+  print (x6 r6_2,1-y6 r6_2)
+  print (1-x6 r6_2,y6 r6_2)
+
+  let (xi,yi) = xyi6 r6_2
+  print (xi,yi)

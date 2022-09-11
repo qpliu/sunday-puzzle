@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="400"
+     height="400" viewBox="-50 -50 200 200">
+  <rect x="0" y="0" width="100" height="100" fill="transparent"
+	stroke="black"/>
+  <circle cx="21.441379" cy="21.441379" r="30.32269" fill="transparent"
+	  stroke="black"/>
+  <circle cx="78.55862" cy="78.55862" r="30.32269" fill="transparent"
+	  stroke="black"/>
+  <circle cx="89.8083" cy="28.558621" r="30.32269" fill="transparent"
+	  stroke="black"/>
+  <circle cx="10.19169" cy="71.441379" r="30.32269" fill="transparent"
+	  stroke="black"/>
+  <circle cx="38.750314" cy="75.8728" r="30.32269" fill="transparent"
+	  stroke="black"/>
+  <circle cx="61.249686" cy="24.12719" r="30.32269" fill="transparent"
+	  stroke="black"/>
+</svg>

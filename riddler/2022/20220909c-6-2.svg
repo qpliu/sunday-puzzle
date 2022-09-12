@@ -3,16 +3,16 @@
      height="400" viewBox="-50 -50 200 200">
   <rect x="0" y="0" width="100" height="100" fill="transparent"
 	stroke="black"/>
-  <circle cx="21.441379" cy="21.441379" r="30.32269" fill="transparent"
-	  stroke="black"/>
-  <circle cx="78.55862" cy="78.55862" r="30.32269" fill="transparent"
-	  stroke="black"/>
-  <circle cx="89.8083" cy="28.558621" r="30.32269" fill="transparent"
-	  stroke="black"/>
-  <circle cx="10.19169" cy="71.441379" r="30.32269" fill="transparent"
-	  stroke="black"/>
-  <circle cx="38.750314" cy="75.8728" r="30.32269" fill="transparent"
-	  stroke="black"/>
-  <circle cx="61.249686" cy="24.12719" r="30.32269" fill="transparent"
-	  stroke="black"/>
+  <circle cx="21.4413793253289" cy="21.4413793253289"
+	  r="30.322689437866213" fill="transparent" stroke="black"/>
+  <circle cx="78.5586206746711" cy="78.5586206746711"
+	  r="30.322689437866213" fill="transparent" stroke="black"/>
+  <circle cx="10.191696615653925" cy="71.4413793253289"
+	  r="30.322689437866213" fill="transparent" stroke="black"/>
+  <circle cx="89.80830338434608" cy="28.558620674671097"
+	  r="30.322689437866213" fill="transparent" stroke="black"/>
+  <circle cx="38.75031729032502" cy="75.87280382316297"
+	  r="30.322689437866213" fill="transparent" stroke="black"/>
+  <circle cx="61.24968270967498" cy="24.127196176837028"
+	  r="30.322689437866213" fill="transparent" stroke="black"/>
 </svg>

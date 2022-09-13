@@ -62,6 +62,23 @@ f6c phi r = (f,[(x1,y1),(1-x1,1-y1),(x2,y2),(1-x2,1-y2),(x3,y3),(1-x3,1-y3)])
     yi = y3 + r*sin(theta+dtheta)
     f = r - sqrt((1-x1-xi)^2+(1-y1-yi)^2)
 
+f6d :: Double -> Double -> (Double,[(Double,Double)])
+f6d phi r = (f,[(x1,y1),(1-x1,y1),(x2,y2),(1-x2,y2),(x3,y3),(x4,y4)])
+  where
+    x1 = r*cos phi
+    y1 = r*sin phi
+    y2 = 1-(1-2*y1)/2
+    x2 = sqrt(r^2 - (1-y2)^2)
+    x3 = 1/2
+    w3 = 1 - 4*x1
+    y3 = sqrt(r^2 - w3^2/4)
+    x4 = 1/2
+    w4 = 1 - 4*x2
+    y4 = 1 - sqrt(r^2 - w4^2/4)
+    yi = (y3+y4)/2
+    xi = 1/2 - sqrt(r^2 - (y3-y4)^2/4)
+    f = r - sqrt((xi-x2)^2 + (yi-y2)^2)
+
 gen :: (Double -> (Double,[(Double,Double)])) -> Double -> Double -> Double -> String
 gen f epsilon r1 r2 = svg rmin ((snd . f) rmin)
   where
@@ -80,3 +97,6 @@ main = do
   let (r6c,phi6c) = minimum [(bisect (fst . f6c (pi/4+phi)) 0.0000001 0.288 0.3,phi+pi/4) | phi <- [0.125,0.12505 .. 0.135]]
   print (r6c,phi6c,phi6c*180/pi)
   putStr (gen (f6c phi6c) 0.0000001 0.288 0.3)
+  let (r6d,phi6d) = minimum [(bisect (fst . f6d (pi/4+phi)) 0.0000001 0.288 0.305,phi+pi/4) | phi <- [0.140,0.14005 .. 0.145]]
+  print (r6d,phi6d,phi6d*180/pi)
+  putStr (gen (f6d phi6d) 0.0000001 0.288 0.305)

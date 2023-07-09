@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="1010"
+     height="250" viewBox="-5 -50 1010 200">
+  <rect x="0" y="0" width="250" height="25" fill="#ff0"/>
+  <rect x="0" y="25" width="250" height="25" fill="#ffc"/>
+  <rect x="0" y="50" width="250" height="25" fill="#cfc"/>
+  <rect x="0" y="75" width="250" height="25" fill="#0f0"/>
+  <rect x="250" y="0" width="250" height="25" fill="#fcc"/>
+  <rect x="250" y="25" width="250" height="25" fill="#f00"/>
+  <rect x="250" y="50" width="250" height="25" fill="#00f"/>
+  <rect x="250" y="75" width="250" height="25" fill="#ccf"/>
+  <rect x="500" y="0" width="250" height="25" fill="#cfc"/>
+  <rect x="500" y="25" width="250" height="25" fill="#0f0"/>
+  <rect x="500" y="50" width="250" height="25" fill="#ff0"/>
+  <rect x="500" y="75" width="250" height="25" fill="#ffc"/>
+  <rect x="750" y="0" width="250" height="25" fill="#00f"/>
+  <rect x="750" y="25" width="250" height="25" fill="#ccf"/>
+  <rect x="750" y="50" width="250" height="25" fill="#fcc"/>
+  <rect x="750" y="75" width="250" height="25" fill="#f00"/>
+  <line x1="0" y1="25" x2="1000" y2="25" stroke="#fff"/>
+  <line x1="0" y1="75" x2="1000" y2="75" stroke="#fff"/>
+  <line x1="250" y1="0" x2="250" y2="100" stroke="#fff"/>
+  <line x1="750" y1="0" x2="750" y2="100" stroke="#fff"/>
+  <circle cx="500" cy="50" r="2" stroke="#000" fill="#fff"/>
+  <circle cx="500" cy="50" stroke="#000" fill="none">
+    <animate attributeName="r" values="0;252.5;252.5;0" dur="5s"
+	     repeatCount="indefinite"/>
+  </circle>
+  <circle cx="0" cy="0" r="2" stroke="#000" fill="#fff"/>
+  <circle cx="0" cy="0" stroke="#000" fill="none">
+    <animate attributeName="r" values="0;252.5;252.5;0" dur="5s"
+	     repeatCount="indefinite"/>
+  </circle>
+  <circle cx="1000" cy="0" r="2" stroke="#000" fill="#fff"/>
+  <circle cx="1000" cy="0" stroke="#000" fill="none">
+    <animate attributeName="r" values="0;252.5;252.5;0" dur="5s"
+	     repeatCount="indefinite"/>
+  </circle>
+  <circle cx="0" cy="100" r="2" stroke="#000" fill="#fff"/>
+  <circle cx="0" cy="100" stroke="#000" fill="none">
+    <animate attributeName="r" values="0;252.5;252.5;0" dur="5s"
+	     repeatCount="indefinite"/>
+  </circle>
+  <circle cx="1000" cy="100" r="2" stroke="#000" fill="#fff"/>
+  <circle cx="1000" cy="100" stroke="#000" fill="none">
+    <animate attributeName="r" values="0;252.5;252.5;0" dur="5s"
+	     repeatCount="indefinite"/>
+  </circle>
+  <circle cx="247.5" cy="50" r="1" stroke="#000" fill="#888"/>
+  <circle cx="752.5" cy="50" r="1" stroke="#000" fill="#888"/>
+  <circle cx="252.5" cy="0" r="1" stroke="#000" fill="#888"/>
+  <circle cx="252.5" cy="100" r="1" stroke="#000" fill="#888"/>
+  <circle cx="747.5" cy="0" r="1" stroke="#000" fill="#888"/>
+  <circle cx="747.5" cy="100" r="1" stroke="#000" fill="#888"/>
+</svg>

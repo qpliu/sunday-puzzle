@@ -1,3 +1,5 @@
+import Data.List(intercalate)
+
 -- define line of sight L as y = Lx, where L = a + sqrt(b) (or a - sqrt(-b))
 -- L = LOS a b
 data LOS = LOS Rational Rational deriving (Eq,Show)
@@ -54,3 +56,50 @@ main = do
     mapM_ print $ fillView (1/4) [initialGap] 1 0
     putStrLn ""
     mapM_ print $ fillView (1/10) [initialGap] 1 0
+
+viz :: Int -> Int -> Rational -> String
+viz size duration r =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ++
+    "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\"" ++
+    " width=\"" ++ show size ++ "\" height=\"" ++ show size ++ "\"" ++
+    " viewBox=\"-" ++ show (xmax+1) ++ " -" ++ show (xmax+1) ++
+    " " ++ show (2*xmax+2) ++ " " ++ show (2*xmax+2) ++ "\">\n" ++
+    concat circles ++
+    concat longestLines ++
+    "<line x1=\"0\" y1=\"0\" stroke=\"blue\" stroke-width=\"0.01\">\n" ++
+    "<animate attributeName=\"x2\" dur=\"" ++ show duration ++ "s\" repeatCount=\"indefinite\"" ++
+    " values=\"" ++ intercalate ";" (map (show . fst . snd) endpoints8) ++ "\"/>" ++
+    "<animate attributeName=\"y2\" dur=\"" ++ show duration ++ "s\" repeatCount=\"indefinite\"" ++
+    " values=\"" ++ intercalate ";" (map (show . snd . snd) endpoints8) ++ "\"/>" ++
+    "</line>\n" ++
+    "</svg>\n"
+  where
+    rd = fromRational r :: Double
+    view = fillView r [initialGap] 1 0
+    xmax = maximum (map (\ (Tree x _ _ _) -> x) view)
+    visible x y = any (\ (Tree xx yy _ _) -> (xx == abs x && yy == abs y) || (xx == abs y && yy == abs x)) view
+    circles = ["<circle cx=\"" ++ show x ++ "\"" ++
+               " cy=\"" ++ show y ++ "\"" ++
+               " r=\"" ++ show rd ++ "\"" ++
+               " fill=\"" ++ (if visible x y then "black" else "#ddd") ++ "\"/>\n"
+               | x <- [-xmax-1 .. xmax+1], y <- [-xmax-1 .. xmax+1], (x,y) /= (0,0)]
+    toEndpoints (Tree x y _ (_,(los1,los2))) =
+        [(x1^2+y1^2,(x1,y1)),(x2^2+y2^2,(x2,y2))]
+      where
+        xx = fromIntegral x
+        yy = fromIntegral y
+        x1 = (xx+los1*yy - sqrt (abs ((xx+los1*yy)^2 - (1+los1^2)*(xx^2+yy^2-rd^2))))/(1+los1^2)
+        y1 = los1*x1
+        x2 = (xx+los2*yy - sqrt (abs ((xx+los2*yy)^2 - (1+los2^2)*(xx^2+yy^2-rd^2))))/(1+los2^2)
+        y2 = los2*x2
+    endpoints = concatMap toEndpoints view
+    endpoints8 = endpoints ++
+        map (\ (r,(x,y)) -> (r,(y,x))) (drop 1 $ reverse endpoints) ++
+        map (\ (r,(x,y)) -> (r,(-y,x))) (drop 1 endpoints) ++
+        map (\ (r,(x,y)) -> (r,(-x,y))) (drop 1 $ reverse endpoints) ++
+        map (\ (r,(x,y)) -> (r,(-x,-y))) (drop 1 $ endpoints) ++
+        map (\ (r,(x,y)) -> (r,(-y,-x))) (drop 1 $ reverse endpoints) ++
+        map (\ (r,(x,y)) -> (r,(y,-x))) (drop 1 $ endpoints) ++
+        map (\ (r,(x,y)) -> (r,(x,-y))) (drop 1 $ reverse endpoints)
+    (_,(longestx,longesty)) = maximum endpoints
+    longestLines = ["<line x1=\"0\" y1=\"0\" x2=\"" ++ show x ++ "\" y2=\"" ++ show y ++ "\" stroke=\"red\" stroke-width=\"0.02\"/>\n" | (x,y) <- [(longestx,longesty),(longesty,longestx),(-longesty,longestx),(-longestx,longesty),(-longestx,-longesty),(-longesty,-longestx),(longesty,-longestx),(longestx,-longesty)]]

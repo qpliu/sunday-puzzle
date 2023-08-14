@@ -65,7 +65,6 @@ viz size duration r =
     " viewBox=\"-" ++ show (xmax+1) ++ " -" ++ show (xmax+1) ++
     " " ++ show (2*xmax+2) ++ " " ++ show (2*xmax+2) ++ "\">\n" ++
     "<polygon fill=\"#ffd\" points=\"" ++ intercalate " " (map (\ (x,y) -> show x ++ "," ++ show y) endpoints8) ++ "\"/>\n" ++
-    concat circles ++
     concat longestLines ++
     "<line x1=\"0\" y1=\"0\" stroke=\"blue\" stroke-width=\"0.01\">\n" ++
     "<animate attributeName=\"x2\" dur=\"" ++ show duration ++ "s\" repeatCount=\"indefinite\"" ++
@@ -73,6 +72,8 @@ viz size duration r =
     "<animate attributeName=\"y2\" dur=\"" ++ show duration ++ "s\" repeatCount=\"indefinite\"" ++
     " values=\"" ++ intercalate ";" (map (show . snd) endpoints8) ++ "\"/>" ++
     "</line>\n" ++
+    concat circles ++
+    concat (hilightCircles 0 circles8) ++
     "</svg>\n"
   where
     rd = fromRational r :: Double
@@ -104,3 +105,22 @@ viz size duration r =
         map (\ (_,(x,y)) -> (x,-y)) (drop 1 $ reverse endpoints)
     (_,(longestx,longesty)) = maximum endpoints
     longestLines = ["<line x1=\"0\" y1=\"0\" x2=\"" ++ show x ++ "\" y2=\"" ++ show y ++ "\" stroke=\"red\" stroke-width=\"0.02\"/>\n" | (x,y) <- [(longestx,longesty),(longesty,longestx),(-longesty,longestx),(-longestx,longesty),(-longestx,-longesty),(-longesty,-longestx),(longesty,-longestx),(longestx,-longesty)]]
+    circles8 =
+        map (\ (Tree x y _ _) -> (x,y)) view ++
+        map (\ (Tree x y _ _) -> (y,x)) (drop 1 $ reverse view) ++
+        map (\ (Tree x y _ _) -> (-y,x)) (drop 1 view) ++
+        map (\ (Tree x y _ _) -> (-x,y)) (drop 1 $ reverse view) ++
+        map (\ (Tree x y _ _) -> (-x,-y)) (drop 1 view) ++
+        map (\ (Tree x y _ _) -> (-y,-x)) (drop 1 $ reverse view) ++
+        map (\ (Tree x y _ _) -> (y,-x)) (drop 1 view) ++
+        map (\ (Tree x y _ _) -> (x,-y)) (drop 1 $ reverse view)
+    hilightCircles _ [] = []
+    hilightCircles i ((x,y):xys) =
+        ("<circle cx=\"" ++ show x ++ "\"" ++
+         " cy=\"" ++ show y ++ "\"" ++
+         " r=\"" ++ show rd ++ "\"" ++
+         " fill=\"#ccf\">" ++
+         "<animate" ++
+         " attributeName=\"fill-opacity\" dur=\"" ++ show duration ++ "s\" repeatCount=\"indefinite\"" ++
+         " values=\"" ++ intercalate ";" (take i (repeat "0") ++ "1" : take (length xys) (repeat "0")) ++ "\"/>" ++
+         "</circle>\n") : hilightCircles (i+1) xys

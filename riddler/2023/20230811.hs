@@ -64,13 +64,14 @@ viz size duration r =
     " width=\"" ++ show size ++ "\" height=\"" ++ show size ++ "\"" ++
     " viewBox=\"-" ++ show (xmax+1) ++ " -" ++ show (xmax+1) ++
     " " ++ show (2*xmax+2) ++ " " ++ show (2*xmax+2) ++ "\">\n" ++
+    "<polygon fill=\"#ffd\" points=\"" ++ intercalate " " (map (\ (x,y) -> show x ++ "," ++ show y) endpoints8) ++ "\"/>\n" ++
     concat circles ++
     concat longestLines ++
     "<line x1=\"0\" y1=\"0\" stroke=\"blue\" stroke-width=\"0.01\">\n" ++
     "<animate attributeName=\"x2\" dur=\"" ++ show duration ++ "s\" repeatCount=\"indefinite\"" ++
-    " values=\"" ++ intercalate ";" (map (show . fst . snd) endpoints8) ++ "\"/>" ++
+    " values=\"" ++ intercalate ";" (map (show . fst) endpoints8) ++ "\"/>" ++
     "<animate attributeName=\"y2\" dur=\"" ++ show duration ++ "s\" repeatCount=\"indefinite\"" ++
-    " values=\"" ++ intercalate ";" (map (show . snd . snd) endpoints8) ++ "\"/>" ++
+    " values=\"" ++ intercalate ";" (map (show . snd) endpoints8) ++ "\"/>" ++
     "</line>\n" ++
     "</svg>\n"
   where
@@ -93,13 +94,13 @@ viz size duration r =
         x2 = (xx+los2*yy - sqrt (abs ((xx+los2*yy)^2 - (1+los2^2)*(xx^2+yy^2-rd^2))))/(1+los2^2)
         y2 = los2*x2
     endpoints = concatMap toEndpoints view
-    endpoints8 = endpoints ++
-        map (\ (r,(x,y)) -> (r,(y,x))) (drop 1 $ reverse endpoints) ++
-        map (\ (r,(x,y)) -> (r,(-y,x))) (drop 1 endpoints) ++
-        map (\ (r,(x,y)) -> (r,(-x,y))) (drop 1 $ reverse endpoints) ++
-        map (\ (r,(x,y)) -> (r,(-x,-y))) (drop 1 $ endpoints) ++
-        map (\ (r,(x,y)) -> (r,(-y,-x))) (drop 1 $ reverse endpoints) ++
-        map (\ (r,(x,y)) -> (r,(y,-x))) (drop 1 $ endpoints) ++
-        map (\ (r,(x,y)) -> (r,(x,-y))) (drop 1 $ reverse endpoints)
+    endpoints8 = map snd endpoints ++
+        map (\ (_,(x,y)) -> (y,x)) (drop 1 $ reverse endpoints) ++
+        map (\ (_,(x,y)) -> (-y,x)) (drop 1 endpoints) ++
+        map (\ (_,(x,y)) -> (-x,y)) (drop 1 $ reverse endpoints) ++
+        map (\ (_,(x,y)) -> (-x,-y)) (drop 1 $ endpoints) ++
+        map (\ (_,(x,y)) -> (-y,-x)) (drop 1 $ reverse endpoints) ++
+        map (\ (_,(x,y)) -> (y,-x)) (drop 1 $ endpoints) ++
+        map (\ (_,(x,y)) -> (x,-y)) (drop 1 $ reverse endpoints)
     (_,(longestx,longesty)) = maximum endpoints
     longestLines = ["<line x1=\"0\" y1=\"0\" x2=\"" ++ show x ++ "\" y2=\"" ++ show y ++ "\" stroke=\"red\" stroke-width=\"0.02\"/>\n" | (x,y) <- [(longestx,longesty),(longesty,longestx),(-longesty,longestx),(-longestx,longesty),(-longestx,-longesty),(-longesty,-longestx),(longesty,-longestx),(longestx,-longesty)]]

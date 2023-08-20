@@ -65,7 +65,7 @@ inningOutcomes sluggersStart@(slugger1start,slugger2start) =
                          (2/3,memo!(3,outs+1,(3,4),sluggersEnd))
                          (1/3,1,(join 1 -- 8
                             (2/3,memo!(3,outs+1,(2,3),sluggersEnd))
-                            (1/3,1,scale (2/3) (memo!(3,outs+1,(1,2),sluggersEnd)))))))))))))))) -- 9
+                            (1/3,1,ninth (memo!(3,outs+1,(1,2),sluggersEnd)))))))))))))))) -- 9
       | slugger2 == 3 {- runners == 3 slugger1 == 1 -} =
           join (1/(1 - 1/(10^2*3^7)))
             (9/10,memo!(3,outs+1,(2,9),sluggersEnd))
@@ -83,7 +83,7 @@ inningOutcomes sluggersStart@(slugger1start,slugger2start) =
                          (2/3,memo!(3,outs+1,(3,5),sluggersEnd))
                          (1/3,1,(join 1 -- 8
                             (2/3,memo!(3,outs+1,(2,4),sluggersEnd))
-                            (1/3,1,scale (2/3) (memo!(3,outs+1,(2,4),sluggersEnd)))))))))))))))) -- 9
+                            (1/3,1,ninth (memo!(3,outs+1,(2,4),sluggersEnd)))))))))))))))) -- 9
       | slugger2 == 4 {- runners == 3 slugger1 == 1 -} =
           join (1/(1 - 1/(10^2*3^7)))
             (9/10,memo!(3,outs+1,(3,9),sluggersEnd))
@@ -101,7 +101,7 @@ inningOutcomes sluggersStart@(slugger1start,slugger2start) =
                          (2/3,memo!(2,outs+1,(3,6),sluggersEnd))
                          (1/3,0,(join 1 -- 8
                             (2/3,memo!(3,outs+1,(2,5),sluggersEnd))
-                            (1/3,1,scale (2/3) (memo!(3,outs+1,(2,5),sluggersEnd)))))))))))))))) -- 9
+                            (1/3,1,ninth (memo!(3,outs+1,(2,5),sluggersEnd)))))))))))))))) -- 9
       | slugger2 == 5 {- runners == 3 slugger1 == 1 -} =
           join (1/(1 - 1/(10^2*3^7)))
             (9/10,memo!(3,outs+1,(4,9),sluggersEnd))
@@ -119,7 +119,7 @@ inningOutcomes sluggersStart@(slugger1start,slugger2start) =
                          (2/3,memo!(1,outs+1,(3,7),sluggersEnd))
                          (1/3,0,(join 1 -- 8
                             (2/3,memo!(2,outs+1,(2,6),sluggersEnd))
-                            (1/3,0,scale (2/3) (memo!(3,outs+1,(2,6),sluggersEnd)))))))))))))))) -- 9
+                            (1/3,0,ninth (memo!(3,outs+1,(2,6),sluggersEnd)))))))))))))))) -- 9
       | otherwise {- runners == 3 slugger1 == 1 slugger2 > 5 -} =
           join 1
               (9/10,memo!(3,outs+1,(slugger2-1,9),sluggersEnd))
@@ -128,7 +128,7 @@ inningOutcomes sluggersStart@(slugger1start,slugger2start) =
         join factor (probout,(runsafterout,probafterout)) (probhit,runshit,(runsafterhit,probafterhit)) =
             (factor*(probhit*(runshit+runsafterhit)+probout*runsafterout),
              factor*(probhit*probafterhit+probout*probafterout))
-        scale factor (runs,prob) = (factor*runs,factor*prob)
+        ninth (runs,prob) = ((2/3)*runs+(1/3)*1,(2/3)*prob)
 
 inningOutcomesMemo :: Map (Int,Int) (Map (Int,Int) (Rational,Rational))
 inningOutcomesMemo = fromList [(sluggers,inningOutcomes sluggers) | sluggers <- [(s1,s2) | s1 <- [1..8], s2 <- [s1+1..9]]]

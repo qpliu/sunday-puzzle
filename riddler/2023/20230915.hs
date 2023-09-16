@@ -52,3 +52,12 @@ s :: Integer -> Rational
 s n
   | n <= 1 = 0
   | otherwise = 2*s1!n + (1 - 2*s1!n)*s (n-1)
+
+bigp :: Rational -> Integer -> Rational
+bigp p n
+  | n <= 1 = 0
+  | otherwise = q (n-1)
+  where
+    q m
+      | m <= 0 = bigp p (n-1)
+      | otherwise = p + (1-p)*q (m-1)

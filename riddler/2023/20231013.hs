@@ -56,7 +56,9 @@ hp :: Integer -> Integer -> Integer -> Integer -> Rational
 hp n k draws successes = fromIntegral (choose k successes * choose (n-k) (draws-successes)) / fromIntegral (choose n draws)
 
 main :: IO ()
-main = print (p, fromRational p, 2*p, fromRational (2*p))
+main = do
+     print (p, fromRational p, 2*p, fromRational (2*p))
+     print (pa, fromRational pa, 2*pa, fromRational (2*pa))
   where
     p = j4*(j4q4*(j4q4k4 + j4q4k3) + j4q3*(j4q3k4 + j4q3k3))
       + j3*(j3q4*(j3q4k4 + j3q4k3) + j3q3*(j3q3k4 + j3q3k3))
@@ -74,3 +76,23 @@ main = print (p, fromRational p, 2*p, fromRational (2*p))
     j3q4k3 = hp 44 4 19 3
     j3q3k4 = hp 44 4 20 4
     j3q3k3 = hp 44 4 20 3
+    pa = j4*(j4q4*(j4q4k4*(j4q4k4a4 + j4q4k4a3) + j4q4k3*(j4q4k3a4 + j4q4k3a3))
+          + j4q3*(j4q3k4*(j4q3k4a4 + j4q3k4a3) + j4q3k3*(j4q3k3a4 + j4q3k3a3)))
+      + j3*(j3q4*(j3q4k4*(j3q4k4a4 + j3q4k4a3) + j3q4k3*(j3q4k3a4 + j3q4k3a3))
+          + j3q3*(j3q3k4*(j3q3k4a4 + j3q3k4a3) + j3q3k3*(j3q3k3a4 + j3q3k3a3)))
+    j4q4k4a4 = hp 40 4 14 4
+    j4q4k4a3 = hp 40 4 14 3
+    j4q4k3a4 = hp 40 4 15 4
+    j4q4k3a3 = hp 40 4 15 3
+    j4q3k4a4 = hp 40 4 15 4
+    j4q3k4a3 = hp 40 4 15 3
+    j4q3k3a4 = hp 40 4 16 4
+    j4q3k3a3 = hp 40 4 16 3
+    j3q4k4a4 = hp 40 4 15 4
+    j3q4k4a3 = hp 40 4 15 3
+    j3q4k3a4 = hp 40 4 16 4
+    j3q4k3a3 = hp 40 4 16 3
+    j3q3k4a4 = hp 40 4 16 4
+    j3q3k4a3 = hp 40 4 16 3
+    j3q3k3a4 = hp 40 4 17 4
+    j3q3k3a3 = hp 40 4 17 3

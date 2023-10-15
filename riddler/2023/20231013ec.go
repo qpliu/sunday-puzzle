@@ -7,10 +7,12 @@ import (
 
 var traceOn bool = false
 
-func game(a, b []int) bool {
+var slapWins float64 = 1.0
+
+func game(a, b []int, r *rand.Rand) bool {
 	aleads := true
 	for {
-		a, b, aleads = round(a, b, aleads)
+		a, b, aleads = round(a, b, aleads, r)
 		if len(a) == 0 {
 			return false
 		}
@@ -26,7 +28,7 @@ func trace(s string) {
 	}
 }
 
-func round(a, b []int, aleads bool) ([]int, []int, bool) {
+func round(a, b []int, aleads bool, r *rand.Rand) ([]int, []int, bool) {
 	var played []int
 	for {
 		if aleads {
@@ -36,8 +38,13 @@ func round(a, b []int, aleads bool) ([]int, []int, bool) {
 			}
 			trace(fmt.Sprintf("a plays %d", a[0]))
 			if len(played) > 0 && a[0] == played[len(played)-1] {
-				trace("a wins slap")
-				return append(append(a[1:], played...), a[0]), b, true
+				if r.Float64() < slapWins {
+					trace("a wins slap")
+					return append(append(a[1:], played...), a[0]), b, true
+				} else {
+					trace("b wins slap")
+					return a[1:], append(append(b, played...), a[0]), false
+				}
 			}
 			atop := a[0]
 			played = append(played, atop)
@@ -55,8 +62,13 @@ func round(a, b []int, aleads bool) ([]int, []int, bool) {
 				trace(fmt.Sprintf("b plays %d", b[0]))
 				btop := b[0]
 				if btop == played[len(played)-1] {
-					trace("a wins slap")
-					return append(append(a, played...), btop), b[1:], true
+					if r.Float64() < slapWins {
+						trace("a wins slap")
+						return append(append(a, played...), btop), b[1:], true
+					} else {
+						trace("b wins slap")
+						return a, append(append(b[1:], played...), btop), false
+					}
 				}
 				played = append(played, btop)
 				b = b[1:]
@@ -75,8 +87,13 @@ func round(a, b []int, aleads bool) ([]int, []int, bool) {
 				return append(a, played...), b, true
 			}
 			if len(played) > 0 && b[0] == played[len(played)-1] {
-				trace("a wins slap")
-				return append(append(a, played...), b[0]), b[1:], true
+				if r.Float64() < slapWins {
+					trace("a wins slap")
+					return append(append(a, played...), b[0]), b[1:], true
+				} else {
+					trace("b wins slap")
+					return a, append(append(b[1:], played...), b[0]), false
+				}
 			}
 			trace(fmt.Sprintf("b plays %d", b[0]))
 			btop := b[0]
@@ -95,8 +112,13 @@ func round(a, b []int, aleads bool) ([]int, []int, bool) {
 				trace(fmt.Sprintf("a plays %d", a[0]))
 				atop := a[0]
 				if atop == played[len(played)-1] {
-					trace("a wins slap")
-					return append(append(a, played...), atop), b, true
+					if r.Float64() < slapWins {
+						trace("a wins slap")
+						return append(append(a[1:], played...), a[0]), b, true
+					} else {
+						trace("b wins slap")
+						return a[1:], append(append(b, played...), a[0]), false
+					}
 				}
 				played = append(played, atop)
 				a = a[1:]
@@ -119,7 +141,7 @@ func trial(r *rand.Rand) bool {
 		14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
 		14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
 	r.Shuffle(len(deck), func(i, j int) { deck[i], deck[j] = deck[j], deck[i] })
-	return game(deck[:26], deck[26:])
+	return game(deck[:26], deck[26:], r)
 }
 
 func simulate(n int, r *rand.Rand) int {
@@ -134,7 +156,8 @@ func simulate(n int, r *rand.Rand) int {
 
 func main() {
 	const n = 2000000
-	const seed = 30638799
+	const seed = 3063879934
+	slapWins = 1.0
 	traceOn = n < 2
 	w := simulate(n, rand.New(rand.NewSource(seed)))
 	println(w, n, float64(w)/float64(n), float64(n-w)/float64(n))

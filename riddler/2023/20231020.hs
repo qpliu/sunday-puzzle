@@ -31,3 +31,12 @@ caught2 lead time = memo!(lead,time)
       | l <= 0 = 0
       | l > t = 0
       | otherwise = memo!(l,t-1)/2 + memo!(l+1,t-1)/4 + memo!(l-1,t-1)/4
+
+catalan :: Integer -> Integer
+catalan n = product [n+2..2*n] `div` product [2..n]
+
+choose :: Integer -> Integer -> Integer
+choose n k = product [k+1..n] `div` product [2..n-k]
+
+behind1 :: Integer -> Integer
+behind1 n = sum [2^(n-2*k)*choose n (2*k)*catalan k | k <- [0..n`div`2]]

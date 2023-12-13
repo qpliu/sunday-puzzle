@@ -1,6 +1,6 @@
-import Debug.Trace(traceShow)
+import Control.Monad.State(State,evalState,get,put)
 import Data.List(group,intercalate)
-import Data.Map(Map,fromList,member,(!))
+import Data.Map(Map,empty,fromList,insert,member,(!))
 
 toSpace :: Char -> Char -> Char
 toSpace target ch | ch == target = ' ' | otherwise = ch
@@ -80,60 +80,108 @@ wtfeTable = table
       | ngroups == 1 = ndots + 1  -- all left of the group, all right of the group, or some combination
       | otherwise = sum [table!(ngroups-1,nLeftOfFirst) | nLeftOfFirst <- [0..ndots]]
 
-debug a b = traceShow (a,b) b
+type Memo = Map ([(Char,Int)],[Int],Int,Int) Int
 
 count2 :: ([(Char,Int)],[Int]) -> Int
-count2 (recs,ns) = c recs ns
+count2 (recs,ns) = evalState (c recs ns) empty
   where
-    c :: [(Char,Int)] -> [Int] -> Int
-    c [] [] = 1
-    c [] _ = 0
+    c :: [(Char,Int)] -> [Int] -> State Memo Int
+    c [] [] = return 1
+    c [] _ = return 0
     c ((_,nrec):rest) ns | nrec <= 0 = c rest ns
     c recs []
-      | any ((== '#') . fst) recs = 0
-      | otherwise = 1
+      | any ((== '#') . fst) recs = return 0
+      | otherwise = return 1
     c (('.',_):rest) ns = c rest ns
     c (('#',nrec):rest) (n:ns)
-      | n < nrec = 0
+      | n < nrec = return 0
       | otherwise = finishGroup rest ns (n - nrec)
     c (('?',nrec):rest) (n:ns)
-      | totaln > nquest + nhash || nhash > totaln = 0
-      | otherwise = damCount rest ns n nrec []
+      | totaln > nquest + nhash || nhash > totaln = return 0
+      | otherwise = do
+          memo <- get
+          if (rest,ns,n,nrec) `member` memo then return (memo!(rest,ns,n,nrec))
+          else do
+            val <- damCount rest ns n nrec []
+            memo <- get
+            put (insert (rest,ns,n,nrec) val memo)
+            return val
       where
         totaln = n + sum ns
         nquest = nrec + sum (map snd $ filter ((== '?') . fst) rest)
         nhash = sum (map snd $ filter ((== '#') . fst) rest)
-    finishGroup :: [(Char,Int)] -> [Int] -> Int -> Int
+    finishGroup :: [(Char,Int)] -> [Int] -> Int -> State Memo Int
     finishGroup [] ns n
-      | n > 0 = 0
+      | n > 0 = return 0
       | otherwise = c [] ns
     finishGroup (('.',_):rest) ns n
-      | n > 0 = 0
+      | n > 0 = return 0
       | otherwise = c rest ns
     finishGroup (('#',nrec):rest) ns n
-      | n < nrec = 0
+      | n < nrec = return 0
       | otherwise = finishGroup rest ns (n-nrec)
     finishGroup (('?',nrec):rest) ns n
       | n+1 < nrec = c (('?',nrec-n-1):rest) ns
       | n+1 == nrec = c rest ns
       | otherwise = finishGroup rest ns (n-nrec)
-    damCount :: [(Char,Int)] -> [Int] -> Int -> Int -> [Int] -> Int
+    damCount :: [(Char,Int)] -> [Int] -> Int -> Int -> [Int] -> State Memo Int
     damCount rest ns n nQs previousGroups
-      | remainingQs < 0 = 0
-      | otherwise =
+      | remainingQs < 0 = return 0
+      | otherwise = do
           -- push this group of n entirely out of this set of ?
-          wtfe (length previousGroups,remainingQs)*c rest (n:ns) +
+          v1 <- fmap (wtfe (length previousGroups,remainingQs)*) $ c rest (n:ns)
           -- hang this group of n off the right edge of this set of ?
-          sum [wtfe (length previousGroups,remainingQs-m) * finishGroup rest ns (n-m) | m <- [1..n], remainingQs-m >= 0] +
+          v2 <- sequence [fmap (wtfe (length previousGroups,remainingQs-m) *) $ finishGroup rest ns (n-m) | m <- [1..n], remainingQs-m >= 0]
           -- fit this group of n entirely in this set of ?
-          (if n+1 > remainingQs then 0
-           else if null ns then wtfe (1+length previousGroups,remainingQs-n-1)*c rest ns
-           else damCount rest (tail ns) (head ns) nQs (n:previousGroups))
+          v3 <-
+              (if n+1 > remainingQs then return 0
+               else if null ns then fmap (wtfe (1+length previousGroups,remainingQs-n-1)*) $ c rest ns
+               else damCount rest (tail ns) (head ns) nQs (n:previousGroups))
+          return (v1+sum v2+v3)
       where
         remainingQs = nQs - sum previousGroups - length previousGroups
 
 result2 :: String -> Int
 result2 = sum . map (count2 . parse2 . unfold 5 "?") . parse
+
+{-
+-- this approach doesn't work, and only agrees when it's fast anyhow
+-- ??? 1
+-- when unfolded once becomes
+-- ??????? 1,1
+-- and
+-- #.#.... wouldn't be counted by this approach
+
+c2 :: (String,[Int]) -> Int
+c2 item = n1^2 + n2
+  where
+    n1 = count2 $ parse2 $ item
+    n2 = count2 $ parse2 $ unfold 2 "#" item
+
+c3 :: (String,[Int]) -> Int
+c3 item = n1^3 + 2*n2*n1 + n3
+  where
+    n1 = count2 $ parse2 $ item
+    n2 = count2 $ parse2 $ unfold 2 "#" item
+    n3 = count2 $ parse2 $ unfold 3 "#" item
+
+c4 :: (String,[Int]) -> Int
+c4 item = n1^4 + 3*n2*n1^2 + n2^2 + 2*n3*n1 + n4
+  where
+    n1 = count2 $ parse2 $ item
+    n2 = count2 $ parse2 $ unfold 2 "#" item
+    n3 = count2 $ parse2 $ unfold 3 "#" item
+    n4 = count2 $ parse2 $ unfold 4 "#" item
+
+c5 :: (String,[Int]) -> Int
+c5 item = n1^5 + 4*n2*n1^3 + 3*n2^2*n1 + 3*n3*n1^2 + 2*n3*n2 + 2*n4*n1 + n5
+  where
+    n1 = count2 $ parse2 $ item
+    n2 = count2 $ parse2 $ unfold 2 "#" item
+    n3 = count2 $ parse2 $ unfold 3 "#" item
+    n4 = count2 $ parse2 $ unfold 4 "#" item
+    n5 = count2 $ parse2 $ unfold 5 "#" item
+-}
 
 test2 :: ()
 test2

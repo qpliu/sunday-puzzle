@@ -1,4 +1,6 @@
-import Data.Map(Map,alter,empty,fromList,member,size,toList,(!))
+import Data.Map(Map,alter,empty,foldrWithKey,fromList,insert,member,size,toList,(!))
+import Data.Set(Set)
+import qualified Data.Set
 
 parse :: String -> Map (Int,Int) Char
 parse = fromList . concatMap parseRow . zip [0..] . lines
@@ -80,3 +82,58 @@ test2
 
 part2 :: IO Int
 part2 = fmap result2 $ readFile "input/16.txt"
+
+-- The part 2 code is a bit slow.
+-- Try to make it faster by making a table of precalculated paths from each
+-- splitter.
+-- Goes from about 13 seconds to about 3.2 seconds.  Faster, but still
+-- not great.
+
+result1f :: String -> Int
+result1f input = Data.Set.size $ Data.Set.map fst $ followf (0,0) E Data.Set.empty grid table
+  where
+    grid = parse input
+    table = makeTable grid
+
+result2f :: String -> Int
+result2f input = maximum ([count $ followf (0,y) E Data.Set.empty grid table | y <- [0..ymax]]
+                       ++ [count $ followf (xmax,y) W Data.Set.empty grid table | y <- [0..ymax]]
+                       ++ [count $ followf (x,0) S Data.Set.empty grid table | x <- [0..xmax]]
+                       ++ [count $ followf (x,ymax) N Data.Set.empty grid table | x <- [0..xmax]])
+  where
+    grid = parse input
+    xmax = maximum $ map (fst . fst) $ toList grid
+    ymax = maximum $ map (snd . fst) $ toList grid
+    count = Data.Set.size . Data.Set.map fst
+    table = makeTable grid
+
+makeTable :: Map (Int,Int) Char -> Map (Int,Int) (Set ((Int,Int),Dir))
+makeTable grid = foldrWithKey followSplitter empty grid
+  where
+    followSplitter xy ch table
+      | ch == '-' = insert xy (followf xy N (Data.Set.singleton (xy,S)) grid table) table
+      | ch == '|' = insert xy (followf xy E (Data.Set.singleton (xy,W)) grid table) table
+      | otherwise = table
+
+followf :: (Int,Int) -> Dir -> Set ((Int,Int),Dir) -> Map (Int,Int) Char -> Map (Int,Int) (Set ((Int,Int),Dir)) -> Set ((Int,Int),Dir)
+followf xy dir paths grid table
+  | Data.Set.member (xy,dir) paths = paths
+  | not (member xy grid) = paths
+  | ch == '.' || (ch == '-' && elem dir [E,W]) || (ch == '|' && elem dir [N,S]) = followf (move xy dir) dir newPaths grid table
+  | ch == '/' || ch == '\\' = followf (move xy reflectDir) reflectDir newPaths grid table
+  | member xy table = Data.Set.union paths (table!xy)
+  | ch == '|' = followf (move xy N) N (followf (move xy S) S newPaths grid table) grid table
+  | ch == '-' = followf (move xy E) E (followf (move xy W) W newPaths grid table) grid table
+  where
+    ch = grid!xy
+    newPaths = Data.Set.insert (xy,dir) paths
+    reflectDir = reflect dir ch
+
+test2f :: ()
+test2f
+  | result1f testData /= 46 = error "a"
+  | result2f testData /= 51 = error "a"
+  | otherwise = ()
+
+part2f :: IO Int
+part2f = fmap result2f $ readFile "input/16.txt"

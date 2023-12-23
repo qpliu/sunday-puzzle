@@ -39,18 +39,25 @@ toGraph trails = makeNodes empty [start,finish]
 
 -- depth first search
 -- my input is a 36-node graph
--- part 2 takes about 100 seconds
+-- part 2 takes about 52 seconds
 longestPath :: Map (Int,Int) [(Int,(Int,Int))] -> Int
 longestPath graph = search start 0 empty
   where
     start = minimum $ keys graph
-    finish = maximum $ keys graph
+    (nfinish,finish) = findFinish [] 0 $ maximum $ keys graph
 
     search xy steps visited
-      | xy == finish = steps
+      | xy == finish = steps + nfinish
       | member xy visited = 0
       | otherwise = maximum (0 : [search newXY (steps+newSteps) newVisited | (newSteps,newXY) <- graph!xy])
       where newVisited = insert xy () visited
+
+    findFinish visited n xy
+      | length edges /= 1 = (n,xy)
+      | otherwise = findFinish (xy:visited) (n+edgeN) edgeXY
+      where
+        edges = graph!xy
+        ((edgeN,edgeXY):_) = edges
 
 result :: String -> Int
 result = longestPath . toGraph . parse

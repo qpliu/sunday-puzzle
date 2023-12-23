@@ -227,6 +227,58 @@ testNW nTile nsteps = do
   where
     p1 (garden,startXY) = length $ filter (reachable nsteps startXY) $ toList $ walk nsteps (garden,startXY)
 
+exTestN :: Int -> Int -> IO ()
+exTestN nTile nsteps = do
+    print (startXY,"untiled",p1 (garden,startXY),countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+    print ("tiled",p1 $  tileDir nTile (0,-11) (garden,startXY),
+        countDir garden startXY 11 [((0,0),(0,10)),((10,0),(10,10))] True nsteps "N" +
+        countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+  where
+    (garden,startXY) = parse testData
+    p1 (garden,startXY) = length $ filter (reachable nsteps startXY) $ toList $ walk nsteps (garden,startXY)
+
+exTestW :: Int -> Int -> IO ()
+exTestW nTile nsteps = do
+    print (startXY,"untiled",p1 (garden,startXY),countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+    print ("tiled",p1 $  tileDir nTile (-11,0) (garden,startXY),
+        countDir garden startXY 11 [((0,0),(10,0)),((0,10),(10,10))] True nsteps "W" +
+        countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+  where
+    (garden,startXY) = parse testData
+    p1 (garden,startXY) = length $ filter (reachable nsteps startXY) $ toList $ walk nsteps (garden,startXY)
+
+exTestNW :: Int -> Int -> IO ()
+exTestNW nTile nsteps = do
+    print (startXY,"untiled",p1 (garden,startXY),countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+    print ("tiled",p1 $  tileDir nTile (-11,-11) (garden,startXY),
+        countDir garden startXY 11 [((0,0),(0,10)),((10,0),(10,10))] True nsteps "N" +
+        countDir garden startXY 11 [((0,0),(10,10))] False nsteps "NW" +
+        countDir garden startXY 11 [((0,0),(10,0)),((0,10),(10,10))] True nsteps "W" +
+        countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+  where
+    (garden,startXY) = parse testData
+    p1 (garden,startXY) = length $ filter (reachable nsteps startXY) $ toList $ walk nsteps (garden,startXY)
+
+exTestS :: Int -> Int -> IO ()
+exTestS nTile nsteps = do
+    print (startXY,"untiled",p1 (garden,startXY),countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+    print ("tiled",p1 $  tileDir nTile (0,11) (garden,startXY),
+        countDir garden startXY 11 [((0,10),(0,0)),((10,10),(10,0))] True nsteps "S" +
+        countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+  where
+    (garden,startXY) = parse testData
+    p1 (garden,startXY) = length $ filter (reachable nsteps startXY) $ toList $ walk nsteps (garden,startXY)
+
+exTestE :: Int -> Int -> IO ()
+exTestE nTile nsteps = do
+    print (startXY,"untiled",p1 (garden,startXY),countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+    print ("tiled",p1 $  tileDir nTile (11,0) (garden,startXY),
+        countDir garden startXY 11 [((10,0),(0,0)),((10,10),(0,10))] True nsteps "E" +
+        countReachable nsteps 0 (walkFrom garden [(startXY,0)]))
+  where
+    (garden,startXY) = parse testData
+    p1 (garden,startXY) = length $ filter (reachable nsteps startXY) $ toList $ walk nsteps (garden,startXY)
+
 test2 :: ()
 test2
   | otherwise = ()

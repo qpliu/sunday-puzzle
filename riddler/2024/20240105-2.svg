@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="-1.2 -1.2 2.4 2.4">
+  <polygon points="-0.6189618382115197,0.7854210608570517 0.33825380067866184,-0.9410549220563272 -0.8745736564052604,-0.4848926886661971" stroke="yellow" stroke-width="0.01" fill="yellow"/>
+  <circle cx="0" cy="0" r="1" fill="none" stroke="black" stroke-width="0.02"/>
+  <circle cx="0" cy="0" r="0.02" fill="black"/>
+  <circle cx="0" cy="-0.33096557617187505" r="0.03" fill="red"/>
+  <circle cx="-0.2780196313843313" cy="0.17048278808593753" r="0.03" fill="red"/>
+  <circle cx="0.2780196313843313" cy="0.17048278808593753" r="0.03" fill="red"/>
+  <polygon points="-0.9853606542613954,0.17048278808593753 0.9853606542613954,0.17048278808593753 0.717797775242021,-0.6962516454972333" fill="none" stroke="red" stroke-width="0.01"/>
+  <polygon points="-0.5560392627686626,-0.33096557617187505 0.5560392627686626,-0.33096557617187505 0,0.6719311523437501" fill="none" stroke="black" stroke-width="0.01"/>
+  <polygon points="0,-0.33096557617187505 -0.6189618382115197,0.7854210608570517 0.6189618382115197,0.7854210608570517" fill="none" stroke="green" stroke-width="0.02"/>
+</svg>

@@ -1,5 +1,5 @@
 import Data.Bits(testBit)
-import Data.Map(Map,empty,insert,member,fromList,toList)
+import Data.Map(Map,empty,insert,member,fromList,toList,(!))
 
 makeGrids :: (Int,Int) -> [Map (Int,Int) ()]
 makeGrids (nx,ny) = [makeGrid i | i <- [0..2^(nx*ny)-1]]
@@ -27,3 +27,29 @@ validLoop (nx,ny) grid
       | ix < 0 || iy < 0 || ix >= nx || iy >= ny = False
       | member (ix,iy) seen || member (ix,iy) grid = walkHole seen queue
       | otherwise = walkHole (insert (ix,iy) () seen) ((ix-1,iy):(ix+1,iy):(ix,iy+1):(ix,iy-1):queue)
+
+getNumbers :: (Int,Int) -> Map (Int,Int) () -> Map (Int,Int) Int
+getNumbers (nx,ny) grid = fromList [((ix,iy),getNumber ix iy) | ix <- [0..nx-1], iy <- [0..ny-1]]
+  where
+    getNumber ix iy
+      | member (ix,iy) grid = 4 - neighbors
+      | otherwise = neighbors
+      where
+        neighbors = length [() | i <- [(ix-1,iy),(ix+1,iy),(ix,iy-1),(ix,iy+1)], member i grid]
+
+consistentWith :: (Int,Int) -> Map (Int,Int) Int -> Int -> Map (Int,Int) Int -> Bool
+consistentWith (nx,ny) solution index loop =
+    and [solution!(ix,iy) == loop!(ix,iy) | ix <- [0..nx-1], iy <- [0..ny-1], testBit index (ix+nx*iy)]
+
+validPuzzles :: (Int,Int) -> [Map (Int,Int) Int] -> Map (Int,Int) Int -> [Int]
+validPuzzles (nx,ny) loops solution = [index | index <- [0..2^(nx*ny)-1], length [() | loop <- loops, consistentWith (nx,ny) solution index loop] == 1]
+
+countPuzzles :: (Int,Int) -> Int
+countPuzzles (nx,ny) = sum [length $ validPuzzles (nx,ny) loops solution | solution <- loops]
+  where
+    loops = map (getNumbers (nx,ny)) $ filter (validLoop (nx,ny)) $ makeGrids (nx,ny)
+
+main :: IO ()
+main = do
+    print $ length $ filter (validLoop (3,3)) $ makeGrids (3,3)
+    print $ countPuzzles (3,3)

@@ -31,3 +31,22 @@ toughest n = getToughest $ head $ drop (n-1) $ iterate previousRound finals
 
 main :: IO ()
 main = mapM_ print [(toughest n,2^n*2/3,2^n*5/6) | n <- [1..20]]
+
+mtrScores :: Int -> Integer -> (Int,Int)
+mtrScores flips i = score flips i 0 0
+  where
+    score flips index a b
+      | flips <= 1 = (a,b)
+      | round == 3 = score (flips-1) (index `div` 2) (a+1) b
+      | round == 2 = score (flips-1) (index `div` 2) a (b+1)
+      | otherwise = score (flips-1) (index `div` 2) a b
+      where round = index `mod` 4
+
+mtr :: Int -> (Int,Int,Int)
+mtr flips = tally 0 0 0 $ [mtrScores flips i | i <- [0..2^flips-1]]
+  where
+    tally a b ties [] = (a,b,ties)
+    tally a b ties ((ascore,bscore):scores)
+      | ascore > bscore = tally (a+1) b ties scores
+      | ascore < bscore = tally a (b+1) ties scores
+      | otherwise = tally a b (ties+1) scores

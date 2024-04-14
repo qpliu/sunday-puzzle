@@ -4,4 +4,12 @@
   <line x1="0" y1="0" x2="0.587" y2="-0.809" stroke="black" stroke-width="0.02"/>
   <line x1="0" y1="0" x2="-0.587" y2="-0.809" stroke="black" stroke-width="0.02"/>
   <ellipse cx="0" cy="-0.539" rx="0.679" ry="0.539" stroke="red" stroke-width="0.02" fill="none"/>
+  <line x1="0" y1="0" x2="-0.587" y2="-0.809" stroke="black" stroke-width="0.02" transform="rotate(72)"/>
+  <ellipse cx="0" cy="-0.539" rx="0.679" ry="0.539" stroke="red" stroke-width="0.02" fill="none" transform="rotate(72)"/>
+  <line x1="0" y1="0" x2="-0.587" y2="-0.809" stroke="black" stroke-width="0.02" transform="rotate(144)"/>
+  <ellipse cx="0" cy="-0.539" rx="0.679" ry="0.539" stroke="red" stroke-width="0.02" fill="none" transform="rotate(144)"/>
+  <line x1="0" y1="0" x2="-0.587" y2="-0.809" stroke="black" stroke-width="0.02" transform="rotate(216)"/>
+  <ellipse cx="0" cy="-0.539" rx="0.679" ry="0.539" stroke="red" stroke-width="0.02" fill="none" transform="rotate(216)"/>
+  <line x1="0" y1="0" x2="-0.587" y2="-0.809" stroke="black" stroke-width="0.02" transform="rotate(288)"/>
+  <ellipse cx="0" cy="-0.539" rx="0.679" ry="0.539" stroke="red" stroke-width="0.02" fill="none" transform="rotate(288)"/>
 </svg>

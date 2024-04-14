@@ -4,4 +4,22 @@
   <line x1="0" y1="0" x2="0.309" y2="-0.951" stroke="black" stroke-width="0.02"/>
   <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02"/>
   <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(36)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(36)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(72)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(72)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(108)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(108)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(144)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(144)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(180)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(180)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(216)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(216)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(252)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(252)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(288)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(288)"/>
+  <line x1="0" y1="0" x2="-0.309" y2="-0.951" stroke="black" stroke-width="0.02" transform="rotate(324)"/>
+  <ellipse cx="0" cy="-0.634" rx="0.357" ry="0.634" stroke="red" stroke-width="0.02" fill="none" transform="rotate(324)"/>
 </svg>

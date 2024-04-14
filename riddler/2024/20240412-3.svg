@@ -3,5 +3,11 @@
   <circle cx="0" cy="0" r="1" fill="blue"/>
   <line x1="0" y1="0" x2="0.866" y2="-0.5" stroke="black" stroke-width="0.02"/>
   <line x1="0" y1="0" x2="-0.866" y2="-0.5" stroke="black" stroke-width="0.02"/>
-  <ellipse cx="0" cy="-0.5" rx="0.866" ry="0.5" stroke="red" stroke-width="0.02" fill="none"/>
+  <line x1="0" y1="0" x2="0" y2="1" stroke="black" stroke-width="0.02"/>
+  <ellipse cx="0" cy="-0.5" rx="0.866" ry="0.5" stroke="red"
+	   stroke-width="0.02" fill="none"/>
+  <ellipse cx="0" cy="-0.5" rx="0.866" ry="0.5" stroke="red"
+	   stroke-width="0.02" fill="none" transform="rotate(120)"/>
+  <ellipse cx="0" cy="-0.5" rx="0.866" ry="0.5" stroke="red"
+	   stroke-width="0.02" fill="none" transform="rotate(-120)"/>
 </svg>

@@ -21,11 +21,11 @@ d alpha beta = 2*aa^2*bb*cc/(bb^2*ss^2 + aa^2*cc^2)
     gamma = (alpha + beta)/2
     aa = a alpha
     bb = b alpha
-    cc = cos(gamma/2)
-    ss = sin(gamma/2)
+    cc = cos gamma
+    ss = sin gamma
 
 alpha5a :: Double -> Double
-alpha5a epsilon = bisect epsilon f (pi/10) (pi/5)
+alpha5a epsilon = bisect epsilon f (2*pi/7) (2*pi/5)
   where
     f alpha = cc^2/aa^2 + (ss - bb - dd)^2/bb^2 - 1
       where
@@ -37,7 +37,7 @@ alpha5a epsilon = bisect epsilon f (pi/10) (pi/5)
         ss = sin(beta/2)
 
 alpha5b :: Double -> Double
-alpha5b epsilon = bisect epsilon f (pi/10) (pi/5)
+alpha5b epsilon = bisect epsilon f (2*pi/7) (2*pi/5)
   where
     f alpha = cc^2/bb^2 + (ss - aa - dd)^2/aa^2 - 1
       where
@@ -49,7 +49,7 @@ alpha5b epsilon = bisect epsilon f (pi/10) (pi/5)
         ss = sin(beta/2)
 
 alpha6a :: Double -> Double
-alpha6a epsilon = bisect epsilon f (pi/12) (pi/6)
+alpha6a epsilon = bisect epsilon f (2*pi/8) (2*pi/6)
   where
     f alpha = cc^2/aa^2 + (ss - bb - dd)^2/bb^2 - 1
       where
@@ -61,7 +61,7 @@ alpha6a epsilon = bisect epsilon f (pi/12) (pi/6)
         ss = sin(beta/2)
 
 alpha6b :: Double -> Double
-alpha6b epsilon = bisect epsilon f (pi/12) (pi/6)
+alpha6b epsilon = bisect epsilon f (2*pi/8) (2*pi/6)
   where
     f alpha = cc^2/bb^2 + (ss - aa - dd)^2/aa^2 - 1
       where
@@ -71,3 +71,7 @@ alpha6b epsilon = bisect epsilon f (pi/12) (pi/6)
         dd = d alpha beta
         cc = cos(beta/2)
         ss = sin(beta/2)
+
+v5 alpha = (alpha*180/pi,beta*180/pi,(alpha+beta)*90/pi,(3*alpha+beta)*90/pi,a alpha,b alpha,d alpha beta + b alpha,cos(beta/2))
+  where
+    beta = pi - 3*alpha/2

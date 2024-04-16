@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="-1.2 -1.2 2.4 2.4">
+  <circle cx="0" cy="0" r="1" fill="blue"/>
+  <line x1="0" y1="0" x2="0" y2="-1" stroke="black" stroke-width="0.02" transform="rotate(39.6)"/>
+  <line x1="0" y1="0" x2="0" y2="-1" stroke="black" stroke-width="0.02" transform="rotate(106.8)"/>
+  <line x1="0" y1="0" x2="0" y2="-1" stroke="black" stroke-width="0.02" transform="rotate(185.9)"/>
+  <line x1="0" y1="0" x2="0" y2="-1" stroke="black" stroke-width="0.02" transform="rotate(253.1)"/>
+  <line x1="0" y1="0" x2="0" y2="-1" stroke="black" stroke-width="0.02" transform="rotate(320.3)"/>
+  <ellipse cx="0" cy="-0.771" rx="0.639" ry="0.555" stroke="red" stroke-width="0.02" fill="none"/>
+  <ellipse cx="0" cy="-0.555" rx="0.639" ry="0.555" stroke="red" stroke-width="0.02" fill="none" transform="rotate(73.2)"/>
+  <ellipse cx="0" cy="-0.555" rx="0.639" ry="0.555" stroke="red" stroke-width="0.02" fill="none" transform="rotate(-73.2)"/>
+  <ellipse cx="0" cy="-0.555" rx="0.639" ry="0.555" stroke="red" stroke-width="0.02" fill="none" transform="rotate(-140.4)"/>
+  <ellipse cx="0" cy="-0.771" rx="0.639" ry="0.555" stroke="red" stroke-width="0.02" fill="none" transform="rotate(146.4)"/>
+</svg>

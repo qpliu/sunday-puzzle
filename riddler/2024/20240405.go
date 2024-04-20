@@ -54,6 +54,25 @@ func ecsimulate(n int, r *rand.Rand) int {
 	return nclusters
 }
 
+func fsimulate(n int, r *rand.Rand, index int) int {
+	sumSizes := 0
+	for i := 0; i < n; i++ {
+		size := 0
+		for j := 0; j < 2*index; j++ {
+			size++
+			if r.Intn(2) == 0 {
+				if j < index {
+					size = 0
+				} else {
+					break
+				}
+			}
+		}
+		sumSizes += size
+	}
+	return sumSizes
+}
+
 func main() {
 	const n = 50000000
 	const seed = 3851367828
@@ -62,4 +81,8 @@ func main() {
 	fmt.Printf("%d/%d %f\n", n, nclusters, n/float64(nclusters))
 	nclusters = ecsimulate(n, r)
 	fmt.Printf("%d/%d %f\n", 2*n, nclusters, 2*n/float64(nclusters))
+
+	const index = 50
+	sumSizes := fsimulate(n, r, index)
+	fmt.Printf("%d/%d %f\n", sumSizes, n, float64(sumSizes)/n)
 }

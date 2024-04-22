@@ -69,13 +69,63 @@ func ecsimulate(deckSize, n int, r *rand.Rand) int {
 	return wins
 }
 
+func fttrial(ranks, suits int, r *rand.Rand) bool {
+	deckSize := ranks*suits
+	deck1 := make([]int, deckSize)
+	deck2 := make([]int, deckSize)
+	for i := 0; i < deckSize; i++ {
+		deck1[i] = i%ranks
+		deck2[i] = i%ranks
+	}
+	rand.Shuffle(deckSize, func(i, j int) {
+		deck1[i], deck1[j] = deck1[j], deck1[i]
+	})
+	rand.Shuffle(deckSize, func(i, j int) {
+		deck2[i], deck2[j] = deck2[j], deck2[i]
+	})
+	for i := 0; i < deckSize; i++ {
+		if deck1[i] == deck2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func ftsimulate(ranks, suits, n int, r *rand.Rand) int {
+	wins := 0
+	for i := 0; i < n; i++ {
+		if fttrial(ranks, suits, r) {
+			wins++
+		}
+	}
+	return wins
+}
+
 func main() {
-	const n = 10000000
-	const seed = 84061273
+	const n = 1000000
+	const seed = 8406112731
 	const deckSize = 52
 	r := rand.New(rand.NewSource(seed))
-	m := simulate(deckSize, n, r)
+	var m int
+	m = simulate(deckSize, n, r)
 	fmt.Printf("%d/%d %f\n", m, n, float64(m)/n)
 	m = ecsimulate(deckSize, n, r)
 	fmt.Printf("%d/%d %f\n", m, n, float64(m)/n)
+	f := func(ranks, suits int) {
+		p := ftsimulate(ranks, suits, n, r)
+		fmt.Printf("ranks=%d suits=%d %d/%d %f\n", ranks, suits, p, n, float64(p)/n)
+	}
+	f(13, 4)
+	f(2, 2)
+	f(3, 2)
+	f(4, 2)
+	f(5, 2)
+	f(2, 3)
+	f(3, 3)
+	f(4, 3)
+	f(5, 3)
+	f(2, 4)
+	f(3, 4)
+	f(4, 4)
+	f(5, 4)
 }

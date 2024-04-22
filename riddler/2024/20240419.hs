@@ -73,7 +73,7 @@ makeTerminals :: [State] -> Map State Rational
 makeTerminals allStates = fromList $ [(s,0) | s <- allStates, isWin s] ++ [(s,1) | s <- allStates, isLose s]
   where
     isWin state = and [a == 0 || b == 0 || n == 0 | ((a,b),n) <- toList state]
-    isLose state = length [() | ((a,b),n) <- toList state, a == b, n == 1] == 1 && length [() | ((a,b),n) <- toList state, n > 0] == 0
+    isLose state = length [() | ((a,b),n) <- toList state, a == b, n == 1] == 1 && length [() | ((a,b),n) <- toList state, n > 0] == 1
 
 transitions :: Map State Rational -> State -> (Rational,Map State Rational)
 transitions terminals state
@@ -89,8 +89,8 @@ transitions terminals state
         (totalLoseProb+fromIntegral drawLoseCounts/deckSize^2,foldl addTransProb totalTransProbs drawTransCounts)
     addTransProb totalTransProbs (newStateCount,newState) = alter (maybe (if newStateCount == 0 then Nothing else Just (fromIntegral newStateCount/deckSize^2)) (Just . (+(fromIntegral newStateCount/deckSize^2)))) newState totalTransProbs
 
-ft :: Int -> Int -> (Rational,Double)
-ft nsuits nranks = (1-p,1-fromRational p)
+winProbabilityIfSameRankLoses :: Int -> Int -> (Rational,Double)
+winProbabilityIfSameRankLoses nsuits nranks = (1-p,1-fromRational p)
   where
     p = table!initialState nsuits nranks
     table = fromList [(state,prob state) | state <- states nsuits nranks]

@@ -56,6 +56,32 @@ func ecsimulate(n, depth int, r *rand.Rand) float64 {
 	return sum/float64(n)
 }
 
+func altectrial(depth int, l float64, r *rand.Rand) float64 {
+	if depth <= 0 {
+		return l*l*l/42
+	}
+	a := r.Float64()
+	b := r.Float64()
+	c := r.Float64()
+	for a+b+c == 0 {
+		a = r.Float64()
+		b = r.Float64()
+		c = r.Float64()
+	}
+	a, b, c = l*a/(a+b+c), l*b/(a+b+c), l*c/(a+b+c)
+	result := a*b*c + ectrial(depth-1, a, r) + ectrial(depth-1, b, r) + ectrial(depth-1, c, r)
+	// fmt.Printf("%d %f %f %f %f %f %f %f\n", depth, a, b, c, l, a*b*c, result, l*l*l/42)
+	return result
+}
+
+func altecsimulate(n, depth int, r *rand.Rand) float64 {
+	sum := float64(0)
+	for i := 0; i < n; i++ {
+		sum += altectrial(depth, 1, r)
+	}
+	return sum/float64(n)
+}
+
 func main() {
 	const n = 10000
 	const seed = 74068
@@ -63,8 +89,11 @@ func main() {
 	for _, depth := range []int{10,11,12,13} {
 		fmt.Printf("%d %f\n", depth, simulate(n, depth, r))
 	}
-	const nn = 1
+	const nn = 100
 	for _, depth := range []int{1,2,3,4,5,6} {
-		fmt.Printf("%d %f\n", depth, ecsimulate(nn, depth, r))
+		fmt.Printf("ec %d %f\n", depth, ecsimulate(nn, depth, r))
+	}
+	for _, depth := range []int{1,2,3,4,5,6,7,8,9} {
+		fmt.Printf("alt %d %f\n", depth, altecsimulate(nn, depth, r))
 	}
 }

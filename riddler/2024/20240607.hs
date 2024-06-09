@@ -28,3 +28,13 @@ ourProbability npossessions threshold = (wins,games,fromIntegral wins/fromIntegr
     n = nMatrix npossessions threshold
     games = sum [n | ((x,y),n) <- toList n, x+y == npossessions]
     wins = sum [n | ((x,y),n) <- toList n, x+y == npossessions, x>y]
+
+ftMatrix :: Integer -> Rational -> Map (Integer,Integer) Integer
+ftMatrix npossessions threshold = table
+  where
+    table = fromList [(score,nWays score) | score <- scores npossessions]
+    nWays (x,y)
+      | x <= 0 || y <= 0 = 1
+      | chances >= threshold || chances <= 1-threshold = 0
+      | otherwise = table!(x-1,y) + table!(x,y-1)
+      where chances = theirChancesOfWinning npossessions (x,y)

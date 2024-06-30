@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300"
+     height="300" viewBox="-1 -1 12 12">
+  <rect x="-0.5" y="-0.5" width="11" height="11" fill="none"
+	stroke="black" stroke-width="0.01"/>
+  <text x="6" y="1" fill="black" font-size="1"><tspan font-style="italic">N</tspan>=100</text>
+  <g transform="translate(0,10) scale(0.1,-215)" viewBox="0 0 10 10">
+    <rect x="0" y="0" width="0.5" height="0.0"/>
+    <rect x="1" y="0" width="0.5" height="5.025125628140704e-3"/>
+    <rect x="2" y="0" width="0.5" height="1.0050251256281407e-2"/>
+    <rect x="3" y="0" width="0.5" height="1.4998852128663623e-2"/>
+    <rect x="4" y="0" width="0.5" height="1.9794403489528864e-2"/>
+    <rect x="5" y="0" width="0.5" height="2.4362342756343216e-2"/>
+    <rect x="6" y="0" width="0.5" height="2.8632031693021923e-2"/>
+    <rect x="7" y="0" width="0.5" height="3.253864741624944e-2"/>
+    <rect x="8" y="0" width="0.5" height="3.602493106799045e-2"/>
+    <rect x="9" y="0" width="0.5" height="3.9042726340701696e-2"/>
+    <rect x="10" y="0" width="0.5" height="4.155424674858309e-2"/>
+    <rect x="11" y="0" width="0.5" height="4.353302040327752e-2"/>
+    <rect x="12" y="0" width="0.5" height="4.49644736853969e-2"/>
+    <rect x="13" y="0" width="0.5" height="4.5846130032169384e-2"/>
+    <rect x="14" y="0" width="0.5" height="4.6187416359952285e-2" fill="blue"/>
+    <rect x="15" y="0" width="0.5" height="4.600908656705672e-2"/>
+    <rect x="16" y="0" width="0.5" height="4.534228821101242e-2"/>
+    <rect x="17" y="0" width="0.5" height="4.422731391074162e-2"/>
+    <rect x="18" y="0" width="0.5" height="4.271209242575823e-2"/>
+    <rect x="19" y="0" width="0.5" height="4.085048495968773e-2"/>
+    <rect x="20" y="0" width="0.5" height="3.870045943549364e-2"/>
+    <rect x="21" y="0" width="0.5" height="3.632221891152476e-2"/>
+    <rect x="22" y="0" width="0.5" height="3.377635980108616e-2"/>
+    <rect x="23" y="0" width="0.5" height="3.1122131218874458e-2"/>
+    <rect x="24" y="0" width="0.5" height="2.8415858938972333e-2"/>
+    <rect x="25" y="0" width="0.5" height="2.5709586659070204e-2"/>
+    <rect x="26" y="0" width="0.5" height="2.304997424606294e-2"/>
+    <rect x="27" y="0" width="0.5" height="2.047747823194031e-2"/>
+    <rect x="28" y="0" width="0.5" height="1.802582493802153e-2"/>
+    <rect x="29" y="0" width="0.5" height="1.572177212639472e-2"/>
+    <rect x="30" y="0" width="0.5" height="1.3585141837412069e-2"/>
+    <rect x="31" y="0" width="0.5" height="1.1629095774037156e-2"/>
+    <rect x="32" y="0" width="0.5" height="9.86061577153381e-3"/>
+    <rect x="33" y="0" width="0.5" height="8.28114587998573e-3"/>
+    <rect x="34" y="0" width="0.5" height="6.8873495124525345e-3"/>
+    <rect x="35" y="0" width="0.5" height="5.671934892607969e-3"/>
+    <rect x="36" y="0" width="0.5" height="4.624504407213467e-3"/>
+    <rect x="37" y="0" width="0.5" height="3.732388015092532e-3"/>
+    <rect x="38" y="0" width="0.5" height="2.9814270631069472e-3"/>
+    <rect x="39" y="0" width="0.5" height="2.35668213095541e-3"/>
+    <rect x="40" y="0" width="0.5" height="1.8430462819010256e-3"/>
+    <rect x="41" y="0" width="0.5" height="1.4257527841121142e-3"/>
+    <rect x="42" y="0" width="0.5" height="1.0907735100431674e-3"/>
+    <rect x="43" y="0" width="0.5" height="8.251104440544917e-4"/>
+    <rect x="44" y="0" width="0.5" height="6.169877739083677e-4"/>
+    <rect x="45" y="0" width="0.5" height="4.5595577426659433e-4"/>
+    <rect x="46" y="0" width="0.5" height="3.3292008914703714e-4"/>
+    <rect x="47" y="0" width="0.5" height="2.4011116403955106e-4"/>
+    <rect x="48" y="0" width="0.5" height="1.7100862298897478e-4"/>
+    <rect x="49" y="0" width="0.5" height="1.2023453956288846e-4"/>
+    <rect x="50" y="0" width="0.5" height="8.342804785996342e-5"/>
+    <rect x="51" y="0" width="0.5" height="5.711181799809576e-5"/>
+    <rect x="52" y="0" width="0.5" height="3.855880028064335e-5"/>
+    <rect x="53" y="0" width="0.5" height="2.566551227471394e-5"/>
+    <rect x="54" y="0" width="0.5" height="1.683615149992866e-5"/>
+    <rect x="55" y="0" width="0.5" height="1.088006725282746e-5"/>
+    <rect x="56" y="0" width="0.5" height="6.923679160890202e-6"/>
+    <rect x="57" y="0" width="0.5" height="4.336810023854302e-6"/>
+    <rect x="58" y="0" width="0.5" height="2.6725980231017123e-6"/>
+    <rect x="59" y="0" width="0.5" height="1.6196375400454985e-6"/>
+    <rect x="60" y="0" width="0.5" height="9.64723571068263e-7"/>
+    <rect x="61" y="0" width="0.5" height="5.644905307929405e-7"/>
+    <rect x="62" y="0" width="0.5" height="3.2429035482473985e-7"/>
+    <rect x="63" y="0" width="0.5" height="1.827998844950382e-7"/>
+    <rect x="64" y="0" width="0.5" height="1.0104344689174847e-7"/>
+    <rect x="65" y="0" width="0.5" height="5.473186706636375e-8"/>
+    <rect x="66" y="0" width="0.5" height="2.903113959203221e-8"/>
+    <rect x="67" y="0" width="0.5" height="1.506788243122565e-8"/>
+    <rect x="68" y="0" width="0.5" height="7.64638809942794e-9"/>
+    <rect x="69" y="0" width="0.5" height="3.7905758696759974e-9"/>
+    <rect x="70" y="0" width="0.5" height="1.834013297033872e-9"/>
+    <rect x="71" y="0" width="0.5" height="8.652155753448831e-10"/>
+    <rect x="72" y="0" width="0.5" height="3.975726499384058e-10"/>
+    <rect x="73" y="0" width="0.5" height="1.7774245329704755e-10"/>
+    <rect x="74" y="0" width="0.5" height="7.72188348961733e-11"/>
+    <rect x="75" y="0" width="0.5" height="3.255713038865685e-11"/>
+    <rect x="76" y="0" width="0.5" height="1.3302913492139358e-11"/>
+    <rect x="77" y="0" width="0.5" height="5.259688518073071e-12"/>
+    <rect x="78" y="0" width="0.5" height="2.0089165853572685e-12"/>
+    <rect x="79" y="0" width="0.5" height="7.398807004346117e-13"/>
+    <rect x="80" y="0" width="0.5" height="2.62236197622394e-13"/>
+    <rect x="81" y="0" width="0.5" height="8.924845381266351e-14"/>
+    <rect x="82" y="0" width="0.5" height="2.9095854998980904e-14"/>
+    <rect x="83" y="0" width="0.5" height="9.06174846122107e-15"/>
+    <rect x="84" y="0" width="0.5" height="2.6880300794814474e-15"/>
+    <rect x="85" y="0" width="0.5" height="7.568780348022295e-16"/>
+    <rect x="86" y="0" width="0.5" height="2.0152170586065554e-16"/>
+    <rect x="87" y="0" width="0.5" height="5.05152166573942e-17"/>
+    <rect x="88" y="0" width="0.5" height="1.186153691626826e-17"/>
+    <rect x="89" y="0" width="0.5" height="2.5938004558915853e-18"/>
+    <rect x="90" y="0" width="0.5" height="5.245888562477364e-19"/>
+    <rect x="91" y="0" width="0.5" height="9.732433418663407e-20"/>
+    <rect x="92" y="0" width="0.5" height="1.6398972060751527e-20"/>
+    <rect x="93" y="0" width="0.5" height="2.4788368982525673e-21"/>
+    <rect x="94" y="0" width="0.5" height="3.3091391338003435e-22"/>
+    <rect x="95" y="0" width="0.5" height="3.8221059904076915e-23"/>
+    <rect x="96" y="0" width="0.5" height="3.7137871971572714e-24"/>
+    <rect x="97" y="0" width="0.5" height="2.9145417323968875e-25"/>
+    <rect x="98" y="0" width="0.5" height="1.7321109143413886e-26"/>
+    <rect x="99" y="0" width="0.5" height="6.929843625774802e-28"/>
+    <rect x="100" y="0" width="0.5" height="1.399968409247435e-29"/>
+  </g>
+  <g transform="translate(0,10) scale(0.1)" viewBox="-1 -1 12 12">
+    <text x="10.5" y="4" fill="blue" font-size="5"><tspan font-style="italic">n</tspan>=15</text>
+  </g>
+</svg>

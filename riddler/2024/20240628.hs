@@ -30,3 +30,8 @@ main = do
     mapM_ (print . f) [10,100,1000,2000,3000]
   where
     f np = (sqrt (2*fromIntegral np),maximum [(pp np n,n) | n <- [1..np]])
+
+svg :: Integer -> IO ()
+svg np = mapM_ (putStrLn . makeBar) [0..np]
+  where
+    makeBar n = "    <rect x=\""++show n++"\" y=\"0\" width=\"0.8\" height=\""++show (fromRational (pp np n))++"\""++(if n == round (sqrt (fromIntegral (2*np))) then " fill=\"blue\"" else "")++"/>"

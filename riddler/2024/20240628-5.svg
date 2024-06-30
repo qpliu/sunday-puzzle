@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300"
+     height="300" viewBox="-1 -1 12 12">
+  <rect x="-0.5" y="-0.5" width="11" height="11" fill="none"
+	stroke="black" stroke-width="0.01"/>
+  <text x="0" y="1" fill="black" font-size="1"><tspan font-style="italic">N</tspan>=5</text>
+  <g transform="translate(0,10) scale(1.7,-33)" viewBox="0 0 10 10">
+    <rect x="0" y="0" width="0.8" height="0.0"/>
+    <rect x="1" y="0" width="0.8" height="0.1111111111111111"/>
+    <rect x="2" y="0" width="0.8" height="0.2222222222222222"/>
+    <rect x="3" y="0" width="0.8" height="0.2857142857142857" fill="blue"/>
+    <rect x="4" y="0" width="0.8" height="0.25396825396825395"/>
+    <rect x="5" y="0" width="0.8" height="0.12698412698412698"/>
+  </g>
+  <g transform="translate(0,10) scale(1.7)" viewBox="-1 -1 12 12">
+    <text x="3.2" y="0.25" fill="blue" font-size="0.3"><tspan font-style="italic">n</tspan>=4</text>
+  </g>
+</svg>

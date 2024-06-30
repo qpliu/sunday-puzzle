@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300"
+     height="300" viewBox="-1 -1 12 12">
+  <rect x="-0.5" y="-0.5" width="11" height="11" fill="none"
+	stroke="black" stroke-width="0.01"/>
+  <text x="7" y="1" fill="black" font-size="1"><tspan font-style="italic">N</tspan>=50</text>
+  <g transform="translate(0,10) scale(0.2,-140)" viewBox="0 0 10 10">
+    <rect x="0" y="0" width="0.8" height="0.0"/>
+    <rect x="1" y="0" width="0.8" height="1.0101010101010102e-2"/>
+    <rect x="2" y="0" width="0.8" height="2.0202020202020204e-2"/>
+    <rect x="3" y="0" width="0.8" height="2.999062792877226e-2"/>
+    <rect x="4" y="0" width="0.8" height="3.915443090700823e-2"/>
+    <rect x="5" y="0" width="0.8" height="4.739746899269417e-2"/>
+    <rect x="6" y="0" width="0.8" height="5.4456666502244365e-2"/>
+    <rect x="7" y="0" width="0.8" height="6.011703685552425e-2"/>
+    <rect x="8" y="0" width="0.8" height="6.4224412044411e-2"/>
+    <rect x="9" y="0" width="0.8" height="6.669458173842681e-2"/>
+    <rect x="10" y="0" width="0.8" height="6.751797163643207e-2" fill="blue"/>
+    <rect x="11" y="0" width="0.8" height="6.675934274164069e-2"/>
+    <rect x="12" y="0" width="0.8" height="6.455242232042943e-2"/>
+    <rect x="13" y="0" width="0.8" height="6.1089840280253146e-2"/>
+    <rect x="14" y="0" width="0.8" height="5.660919009869612e-2"/>
+    <rect x="15" y="0" width="0.8" height="5.137640782066538e-2"/>
+    <rect x="16" y="0" width="0.8" height="4.566791806281367e-2"/>
+    <rect x="17" y="0" width="0.8" height="3.975309734985889e-2"/>
+    <rect x="18" y="0" width="0.8" height="3.3878536335460806e-2"/>
+    <rect x="19" y="0" width="0.8" height="2.825534992038432e-2"/>
+    <rect x="20" y="0" width="0.8" height="2.3050417040313523e-2"/>
+    <rect x="21" y="0" width="0.8" height="1.838197814607281e-2"/>
+    <rect x="22" y="0" width="0.8" height="1.431953853137296e-2"/>
+    <rect x="23" y="0" width="0.8" height="1.0887583015589357e-2"/>
+    <rect x="24" y="0" width="0.8" height="8.072258345654351e-3"/>
+    <rect x="25" y="0" width="0.8" height="5.829964360750365e-3"/>
+    <rect x="26" y="0" width="0.8" height="4.096731712959716e-3"/>
+    <rect x="27" y="0" width="0.8" height="2.7973468387754437e-3"/>
+    <rect x="28" y="0" width="0.8" height="1.8533861771310553e-3"/>
+    <rect x="29" y="0" width="0.8" height="1.1895979688225486e-3"/>
+    <rect x="30" y="0" width="0.8" height="7.383711530622714e-4"/>
+    <rect x="31" y="0" width="0.8" height="4.4230928975710947e-4"/>
+    <rect x="32" y="0" width="0.8" height="2.5514615576121684e-4"/>
+    <rect x="33" y="0" width="0.8" height="1.4137762735276383e-4"/>
+    <rect x="34" y="0" width="0.8" height="7.50378958768572e-5"/>
+    <rect x="35" y="0" width="0.8" height="3.802825492401813e-5"/>
+    <rect x="36" y="0" width="0.8" height="1.8335051481223025e-5"/>
+    <rect x="37" y="0" width="0.8" height="8.375270429694468e-6"/>
+    <rect x="38" y="0" width="0.8" height="3.6071347796591697e-6"/>
+    <rect x="39" y="0" width="0.8" height="1.456547952442184e-6"/>
+    <rect x="40" y="0" width="0.8" height="5.477616231406504e-7"/>
+    <rect x="41" y="0" width="0.8" height="1.9032395380310735e-7"/>
+    <rect x="42" y="0" width="0.8" height="6.050669010729569e-8"/>
+    <rect x="43" y="0" width="0.8" height="1.7388722971520233e-8"/>
+    <rect x="44" y="0" width="0.8" height="4.448277969458664e-9"/>
+    <rect x="45" y="0" width="0.8" height="9.92590951862677e-10"/>
+    <rect x="46" y="0" width="0.8" height="1.8789787566124752e-10"/>
+    <rect x="47" y="0" width="0.8" height="2.8978507485081653e-11"/>
+    <rect x="48" y="0" width="0.8" height="3.4148159393222242e-12"/>
+    <rect x="49" y="0" width="0.8" height="2.7340846573004736e-13"/>
+    <rect x="50" y="0" width="0.8" height="1.115952921347132e-14"/>
+  </g>
+  <g transform="translate(0,10) scale(0.2)" viewBox="-1 -1 12 12">
+    <text x="8.5" y="2" fill="blue" font-size="2.5"><tspan font-style="italic">n</tspan>=11</text>
+  </g>
+</svg>

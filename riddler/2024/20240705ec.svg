@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="500"
+     height="350" viewBox="-0.5 -0.5 5 3.5">
+  <g transform="translate(4,2) scale(-1,-1)">
+    <rect x1="0" y1="0" width="5" height="1" stroke="none" fill="#eee"/>
+    <rect x1="0" y1="1" width="1" height="3" stroke="none" fill="#eee"/>
+    <line x1="0.5" y1="2" x2="0" y2="0.5116" stroke="red" stroke-width="0.03"/>
+    <line x1="1" y1="1" x2="0" y2="0.5116" stroke="red" stroke-width="0.03"/>
+    <line x1="0.5" y1="2" x2="0.6158" y2="0" stroke="red" stroke-width="0.03"/>
+    <line x1="5" y1="0" x2="0.6158" y2="0" stroke="red" stroke-width="0.03"/>
+    <line x1="0" y1="0" x2="5" y2="0" stroke="black" stroke-width="0.02"/>
+    <line x1="0" y1="0" x2="0" y2="3" stroke="black" stroke-width="0.02"/>
+    <line x1="0" y1="1" x2="5" y2="1" stroke="black" stroke-width="0.02"/>
+    <line x1="1" y1="0" x2="1" y2="3" stroke="black" stroke-width="0.02"/>
+    <circle cx="0.5" cy="2" r="0.08" fill="#06f"/>
+    <polygon points="0.6158,0 0,0.5116 0,0" stroke="black" stroke-width="0.02" fill="#06f"/>
+  </g>
+</svg>

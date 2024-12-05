@@ -1,7 +1,7 @@
 module AOC where
 
 import Data.Map(Map,fromList)
-import Data.Time(diffUTCTime,getCurrentTime)
+import Data.Time(diffUTCTime,getCurrentTime,NominalDiffTime)
 
 data AOC parsed result parsed2 result2 = AOC {
     day :: String,
@@ -26,32 +26,32 @@ test2 AOC { testData=td1, testData2=td2, testResult2=tr, aocParse2=p, aocResult2
   | otherwise = ()
   where td | null td2 = td1 | otherwise = td2
 
-part1 :: Show result => AOC parsed result parsed2 result2 -> IO ()
+part1 :: Show result => AOC parsed result parsed2 result2 -> IO NominalDiffTime
 part1 AOC { day=d, aocParse=p, aocResult=r } = do
     t0 <- getCurrentTime
-    res <- fmap (r . p) $ readFile ("input/" ++ d ++ ".txt")
-    print res
+    readFile ("input/" ++ d ++ ".txt") >>= print . r . p
     t1 <- getCurrentTime
-    print $ diffUTCTime t1 t0
+    return $ diffUTCTime t1 t0
 
-part2 :: Show result2 => AOC parsed result parsed2 result2 -> IO ()
+part2 :: Show result2 => AOC parsed result parsed2 result2 -> IO NominalDiffTime
 part2 AOC { day=d, aocParse2=p, aocResult2=r } = do
     t0 <- getCurrentTime
-    res <- fmap (r . p) $ readFile ("input/" ++ d ++ ".txt")
-    print res
+    readFile ("input/" ++ d ++ ".txt") >>= print . r . p
     t1 <- getCurrentTime
-    print $ diffUTCTime t1 t0
+    return $ diffUTCTime t1 t0
 
 run :: (Show result, Show result2) => AOC parsed result parsed2 result2 -> IO ()
 run aoc = do
     putStr "Test part 1: "
     print $ test aoc
     putStr "Part 1: "
-    part1 aoc
+    dt <- part1 aoc
+    putStrLn ("Time: " ++ show dt)
     putStr "Test part 2: "
     print $ test2 aoc
     putStr "Part 2: "
-    part2 aoc
+    dt <- part2 aoc
+    putStrLn ("Time: " ++ show dt)
 
 parse2d :: String -> Map (Int,Int) Char
 parse2d = fromList . p 0 0

@@ -38,6 +38,7 @@ result mp = length $ nub $ walk (0,-1) $ start mp
       | otherwise = pos : walk dir nextPos
       where nextPos = (x+dx,y+dy)
 
+{-
 -- brute force is pretty slow, about 90s for my input
 hasLoop mp = walk empty (0,-1) $ start mp
   where
@@ -56,4 +57,26 @@ result2 mp = length $ filter makesLoop $ filter (/= (start mp)) path
       | not (member nextPos mp) = [pos]
       | mp!nextPos == '#' = walk (turn dir) pos
       | otherwise = pos : walk dir nextPos
+      where nextPos = (x+dx,y+dy)
+-}
+
+-- this is faster, about 32s for my input
+hasLoop mp dir pos = walk empty dir pos
+  where
+    walk previous dir@(dx,dy) pos@(x,y)
+      | not (member nextPos mp) = 0
+      | member (dir,pos) previous = 1
+      | mp!nextPos == '#' = walk (insert (dir,pos) () previous) (turn dir) pos
+      | otherwise = walk (insert (dir,pos) () previous) dir nextPos
+      where nextPos = (x+dx,y+dy)
+
+result2 mp = sum $ walk empty (0,-1) $ start mp
+  where
+    walk tried dir@(dx,dy) pos@(x,y)
+      | not (member nextPos mp) = tried
+      | mp!nextPos == '#' = walk tried (turn dir) pos
+      | member nextPos tried = walk tried dir nextPos
+      | otherwise =
+          walk (insert nextPos (hasLoop (insert nextPos '#' mp) (turn dir) pos)
+                       tried) dir nextPos
       where nextPos = (x+dx,y+dy)

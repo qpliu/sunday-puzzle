@@ -1,6 +1,8 @@
 module AOC where
 
-import Data.Map(Map,fromList)
+import Data.Map(Map,fromList,keys)
+import qualified Data.Map
+import Data.Set(Set,elems)
 import Data.Time(diffUTCTime,getCurrentTime,NominalDiffTime)
 
 data AOC parsed result parsed2 result2 = AOC {
@@ -60,3 +62,25 @@ parse2d = fromList . p 0 0
     p x y (c:cs)
       | c == '\n' = p 0 (y+1) cs
       | otherwise = ((x,y),c) : p (x+1) y cs
+
+show2dm :: Map (Int,Int) Char -> String
+show2dm m
+  | xmax-xmin > 150 || ymax-ymin > 150 = gridSize
+  | otherwise = unlines $ gridSize :
+      [[maybe '.' id $ Data.Map.lookup (x,y) m | x <- [xmin..xmax]]
+       | y <- [ymin..ymax]]
+  where
+    xmax = maximum $ map fst $ keys m
+    xmin = minimum $ map fst $ keys m
+    ymax = maximum $ map snd $ keys m
+    ymin = minimum $ map snd $ keys m
+    gridSize = show (xmax-xmin) ++ "×" ++ show (ymax-ymin)
+
+p2dm :: Map (Int,Int) Char -> IO ()
+p2dm = putStr . show2dm
+
+show2ds :: Set (Int,Int) -> String
+show2ds = show2dm . fromList . flip zip (repeat '#') . elems
+
+p2ds :: Set (Int,Int) -> IO ()
+p2ds = putStr . show2ds

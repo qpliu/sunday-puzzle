@@ -135,8 +135,11 @@ result2 disk = checksum2 0 0 0 $ compact2 0 (fst $ findMax disk2) disk2
   where disk2 = toDoublyLinkedList disk
 -}
 
--- looking up the leftmost large enough gap is faster: about 160ms for my input
--- this gets the answer wrong: 6251170693614, should be 6272188244509
+-- looking up the leftmost large enough gap is faster: about 210ms for my input
+-- take advantage of the fact that gap sizes can only go up to 9, to
+-- quickly find the left-most gap that the block fits in
+-- well, gaps can be bigger than 9, but those can only be right of the
+-- file being moved
 toDoublyLinkedList :: [((Int,Int),Int)] -> Map Int (Int,Int,Int,Int,Int)
 toDoublyLinkedList = fromList . toEntries 0
   where
@@ -152,11 +155,24 @@ compact2 :: Int -> Map (Int,Int) Int -> Map Int (Int,Int,Int,Int,Int)
                                      -> Map Int (Int,Int,Int,Int,Int)
 compact2 moveid gapMap disk2
   | moveid <= 0 = disk2
-  | otherwise = maybe (compact2 (moveid-1)
-                                (delete (movegap,moveblockidx) gapMap) disk2)
-                      domove $ lookupGE (movesize,0) gapMap
+  | otherwise = findGap (movesize+1) Nothing $ lookupGE (movesize,0) gapMap
   where
     (moveblockidx,movesize,movegap,movenext,moveprev) = disk2!moveid
+    findGap _ Nothing Nothing =
+        compact2 (moveid-1) (delete (movegap,moveblockidx) gapMap) disk2
+    findGap _ (Just bestGap) Nothing = domove bestGap
+    findGap minGap Nothing (Just firstGap)
+      | minGap > 9 = domove firstGap
+      | otherwise =
+          findGap (minGap+1) (Just firstGap) $ lookupGE (minGap,0) gapMap
+    findGap minGap (Just bestGap@((_,bestIdx),_))
+                   (Just nextGap@((_,nextIdx),_))
+      | minGap > 9 && bestIdx < nextIdx = domove bestGap
+      | minGap > 9 = domove nextGap
+      | bestIdx < nextIdx =
+          findGap (minGap+1) (Just bestGap) $ lookupGE (minGap,0) gapMap
+      | otherwise =
+          findGap (minGap+1) (Just nextGap) $ lookupGE (minGap,0) gapMap
     domove (gapid,fileid) = compact2 (moveid-1) newGapMap newDisk2
       where
         (fileblockidx,filesize,filegap,filenext,fileprev) = disk2!fileid

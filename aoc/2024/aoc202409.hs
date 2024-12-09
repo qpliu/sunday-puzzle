@@ -1,4 +1,4 @@
-import Data.Map(Map,alter,findMax,fromList,insert,member,(!))
+import Data.Map(Map,alter,delete,findMax,fromList,insert,lookupGE,member,toList,(!))
 
 import AOC
 
@@ -65,6 +65,7 @@ checksum2 n i (((fileid,size),gap):rest) =
 result2 disk = checksum2 0 0 $ compact2 (fst $ fst $ last disk) disk
 -}
 
+{-
 -- using doubly linked lists is faster: about 17s for my input
 toDoublyLinkedList :: [((Int,Int),Int)] -> Map Int (Int,Int,Int,Int)
 toDoublyLinkedList = fromList . map toEntry
@@ -109,3 +110,59 @@ checksum2 n i fileid disk2
 
 result2 disk = checksum2 0 0 0 $ compact2 0 (fst $ findMax disk2) disk2
   where disk2 = toDoublyLinkedList disk
+-}
+
+-- looking up the leftmost large enough gap is faster: about 160ms for my input
+toDoublyLinkedList :: [((Int,Int),Int)] -> Map Int (Int,Int,Int,Int,Int)
+toDoublyLinkedList = fromList . toEntries 0
+  where
+    toEntries _ [] = []
+    toEntries blockidx (((fileid,size),gap):rest) =
+        (fileid,(blockidx,size,gap,fileid+1,fileid-1)) : toEntries (blockidx+size+gap) rest
+
+toGapMap :: Map Int (Int,Int,Int,Int,Int) -> Map (Int,Int) Int
+toGapMap = fromList . filter ((> 0) . fst . fst) . map toGapPointer . toList
+  where toGapPointer (fileid,(blockidx,_,gap,_,_)) = ((gap,blockidx),fileid)
+
+compact2 :: Int -> Map (Int,Int) Int -> Map Int (Int,Int,Int,Int,Int)
+                                     -> Map Int (Int,Int,Int,Int,Int)
+compact2 moveid gapMap disk2
+  | moveid <= 0 = disk2
+  | otherwise = maybe (compact2 (moveid-1)
+                                (delete (movegap,moveblockidx) gapMap) disk2)
+                      domove $ lookupGE (movesize,0) gapMap
+  where
+    (moveblockidx,movesize,movegap,movenext,moveprev) = disk2!moveid
+    domove (gapid,fileid) = compact2 (moveid-1) newGapMap newDisk2
+      where
+        (fileblockidx,filesize,filegap,filenext,fileprev) = disk2!fileid
+        (prevblockidx,prevsize,prevgap,prevnext,prevprev) = disk2!moveprev
+        (newGapMap,newDisk2)
+          | fileid == moveprev =
+              (delete gapid $ delete (movegap,moveblockidx) gapMap,
+               insert fileid (fileblockidx,filesize,0,filenext,fileprev) $
+               insert moveid (fileblockidx+filesize,movesize,filegap+movegap,
+                              movenext,moveprev) disk2)
+          | fileblockidx < moveblockidx =
+              (delete gapid $ delete (movegap,moveblockidx) $
+               delete (prevgap,prevblockidx) $
+               insert (filegap-movesize,fileblockidx+filesize) moveid gapMap,
+               insert fileid (fileblockidx,filesize,0,moveid,fileprev) $
+               alter (fmap (\ (i,s,g,n,p) -> (i,s,g,n,moveid))) filenext $
+               insert moveid (fileblockidx+filesize,movesize,filegap-movesize,
+                              filenext,fileid) $
+               alter (fmap (\ (i,s,g,n,p) -> (i,s,g,n,moveprev))) movenext $
+               insert moveprev (prevblockidx,prevsize,prevgap+movesize+movegap,
+                                movenext,prevprev) disk2)
+          | otherwise = (gapMap,disk2)
+
+checksum2 :: Map Int (Int,Int,Int,Int,Int) -> Int
+checksum2 = sum . map c . toList
+  where
+    c (fileid,(blockidx,size,_,_,_)) = fileid*sum [blockidx..blockidx+size-1]
+
+result2 disk = checksum2 $ compact2 fileid gapMap disk2
+  where
+    disk2 = toDoublyLinkedList disk
+    (fileid,_) = findMax disk2
+    gapMap = toGapMap disk2

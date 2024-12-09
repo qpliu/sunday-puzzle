@@ -1,8 +1,9 @@
 module AOC where
 
-import Data.Map(Map,fromList,keys)
+import Data.Map(Map,keys)
 import qualified Data.Map
 import Data.Set(Set,elems)
+import qualified Data.Set
 import Data.Time(diffUTCTime,getCurrentTime,NominalDiffTime)
 
 data AOC parsed result parsed2 result2 = AOC {
@@ -56,7 +57,7 @@ run aoc = do
     putStrLn ("Time: " ++ show dt)
 
 parse2d :: String -> Map (Int,Int) Char
-parse2d = fromList . p 0 0
+parse2d = Data.Map.fromList . p 0 0
   where
     p _ _ [] = []
     p x y (c:cs)
@@ -80,7 +81,27 @@ p2dm :: Map (Int,Int) Char -> IO ()
 p2dm = putStr . show2dm
 
 show2ds :: Set (Int,Int) -> String
-show2ds = show2dm . fromList . flip zip (repeat '#') . elems
+show2ds = show2dm . Data.Map.fromList . flip zip (repeat '#') . elems
 
 p2ds :: Set (Int,Int) -> IO ()
 p2ds = putStr . show2ds
+
+astar :: (Ord cost, Ord path, Ord state) =>
+    (path -> cost) -> (path -> [path]) -> (path -> state)
+    -> (path -> Bool) -> [path] -> path
+astar heuristic neighbors toState done initialPaths =
+    search (Data.Set.fromList [(heuristic p,p) | p <- initialPaths], 
+            Data.Map.empty)
+  where
+    search (open,visited)
+      | done curPath = curPath
+      | otherwise =
+          search $ foldr check (poppedOpen,visited) $ neighbors curPath
+      where
+        Just ((_,curPath),poppedOpen) = Data.Set.minView open
+        check nextPath (open,visited)
+          | maybe True (cost <) $ Data.Map.lookup (toState nextPath) visited =
+              (Data.Set.insert (cost,nextPath) open,
+               Data.Map.insert (toState nextPath) cost visited)
+          | otherwise = (open,visited)
+          where cost = heuristic nextPath

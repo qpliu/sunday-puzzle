@@ -1,3 +1,5 @@
+module AOC202408 where
+
 import Data.List(nub)
 import Data.Map(alter,elems,empty,keys,toList)
 

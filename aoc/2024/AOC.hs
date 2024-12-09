@@ -43,18 +43,20 @@ part2 AOC { day=d, aocParse2=p, aocResult2=r } = do
     t1 <- getCurrentTime
     return $ diffUTCTime t1 t0
 
-run :: (Show result, Show result2) => AOC parsed result parsed2 result2 -> IO ()
+run :: (Show result, Show result2) => AOC parsed result parsed2 result2 -> IO NominalDiffTime
 run aoc = do
-    putStr "Test part 1: "
+    putStr ("Day " ++ day aoc ++ " test part 1: ")
     print $ test aoc
-    putStr "Part 1: "
-    dt <- part1 aoc
-    putStrLn ("Time: " ++ show dt)
-    putStr "Test part 2: "
+    putStr ("Day " ++ day aoc ++ " part 1: ")
+    dt1 <- part1 aoc
+    putStrLn ("Day " ++ day aoc ++ " part 1 time: " ++ show dt1)
+    putStr ("Day " ++ day aoc ++ " test part 2: ")
     print $ test2 aoc
-    putStr "Part 2: "
-    dt <- part2 aoc
-    putStrLn ("Time: " ++ show dt)
+    putStr ("Day " ++ day aoc ++ " part 2: ")
+    dt2 <- part2 aoc
+    putStrLn ("Day " ++ day aoc ++ " part 2 time: " ++ show dt2)
+    putStrLn ("Day " ++ day aoc ++ " total time: " ++ show (dt1+dt2))
+    return $ dt1+dt2
 
 parse2d :: String -> Map (Int,Int) Char
 parse2d = Data.Map.fromList . p 0 0

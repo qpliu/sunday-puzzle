@@ -1,3 +1,5 @@
+module AOC202402 where
+
 import AOC
 
 aoc = AOC {

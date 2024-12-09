@@ -1,3 +1,5 @@
+module AOC202405 where
+
 import Data.List(groupBy,sortBy)
 import Data.Set(Set,fromList,member)
 

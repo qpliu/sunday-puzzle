@@ -1,3 +1,5 @@
+module AOC202409 where
+
 import Data.Map(Map,alter,delete,findMax,fromList,insert,lookupGE,member,toList,(!))
 
 import AOC

@@ -1,3 +1,5 @@
+module AOC202404 where
+
 import Data.Map(toList)
 import qualified Data.Map
 

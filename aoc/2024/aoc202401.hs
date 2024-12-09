@@ -1,3 +1,5 @@
+module AOC202401 where
+
 import Data.Map(alter,empty)
 import qualified Data.Map
 import Data.List(sort)

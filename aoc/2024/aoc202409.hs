@@ -24,6 +24,8 @@ parse = p 0
     p fileid (size:gap:rest) =
         ((fileid,read [size]),read [gap]) : p (fileid+1) rest
 
+{-
+-- this slow, about 0.6s for my input
 compact :: Int -> [((Int,Int),Int)] -> [(Int,Int)]
 compact _ [] = []
 compact _ [((fileid,size),_)] = [(fileid,size)]
@@ -39,6 +41,26 @@ checksum n i ((fileid,size):rest) =
     checksum (n+fileid*sum [i..i+size-1]) (i+size) rest
 
 result = checksum 0 0 . compact 0
+-}
+
+-- this is much faster: about 60ms for my input
+compact :: [((Int,Int),Int)] -> [(Int,Int)]
+compact disk = c 0 disk (reverse disk)
+  where
+    c gap forward@(((fileid,filesize),filegap):next)
+             back@(((backid,backsize),backgap):prev)
+      | backid == fileid = [(backid,backsize)]
+      | gap == 0 = (fileid,filesize) : c filegap next back
+      | gap < backsize = (backid,gap) : (fileid,filesize) :
+            c filegap next (((backid,backsize-gap),backgap+gap):prev)
+      | otherwise = (backid,backsize) : c (gap-backsize) forward prev
+
+checksum :: Int -> Int -> [(Int,Int)] -> Int
+checksum n i [] = n
+checksum n i ((fileid,size):rest) =
+    checksum (n+fileid*sum [i..i+size-1]) (i+size) rest
+
+result = checksum 0 0 . compact
 
 {-
 -- this is very slow, about 60s for my input
@@ -67,6 +89,7 @@ result2 disk = checksum2 0 0 $ compact2 (fst $ fst $ last disk) disk
 
 {-
 -- using doubly linked lists is faster: about 17s for my input
+-- this gets the answer wrong: 7441282148965, should be 6272188244509
 toDoublyLinkedList :: [((Int,Int),Int)] -> Map Int (Int,Int,Int,Int)
 toDoublyLinkedList = fromList . map toEntry
   where toEntry ((fileid,size),gap) = (fileid,(size,gap,fileid+1,fileid-1))
@@ -113,6 +136,7 @@ result2 disk = checksum2 0 0 0 $ compact2 0 (fst $ findMax disk2) disk2
 -}
 
 -- looking up the leftmost large enough gap is faster: about 160ms for my input
+-- this gets the answer wrong: 6251170693614, should be 6272188244509
 toDoublyLinkedList :: [((Int,Int),Int)] -> Map Int (Int,Int,Int,Int,Int)
 toDoublyLinkedList = fromList . toEntries 0
   where

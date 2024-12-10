@@ -1,7 +1,7 @@
 module AOC202406 where
 
-import Data.List(nub)
-import Data.Map(empty,fromList,insert,member,toList,(!))
+import Data.Array(Array,Ix,array,assocs,bounds,inRange,range,(!))
+import Data.Set(Set,empty,insert,member,singleton,size)
 
 import AOC
 
@@ -22,106 +22,87 @@ aoc = AOC {
     testResult="41",
     testData2="",
     testResult2="6",
-    aocParse=parse2d,
+    aocParse=parse2da,
     aocResult=result,
-    aocParse2=parse2d,
+    aocParse2=parse2da,
     aocResult2=result2
     }
 
-start = fst . head . filter ((== '^') . snd) . toList
+result :: Array (Int,Int) Char -> Int
+result grid = size $ (toCounts grid)!((start grid),N)
 
-turn (dx,dy) = (-dy,dx)
-
-result mp = length $ nub $ walk (0,-1) $ start mp
+start = s . assocs
   where
-    walk dir@(dx,dy) pos@(x,y)
-      | not (member nextPos mp) = [pos]
-      | mp!nextPos == '#' = walk (turn dir) pos
-      | otherwise = pos : walk dir nextPos
-      where nextPos = (x+dx,y+dy)
+    s ((xy,'^'):_) = xy
+    s (_:as) = s as
 
-{-
--- brute force is pretty slow, about 90s for my input
-hasLoop mp = walk empty (0,-1) $ start mp
-  where
-    walk previous dir@(dx,dy) pos@(x,y)
-      | not (member nextPos mp) = False
-      | member (dir,pos) previous = True
-      | mp!nextPos == '#' = walk (insert (dir,pos) () previous) (turn dir) pos
-      | otherwise = walk (insert (dir,pos) () previous) dir nextPos
-      where nextPos = (x+dx,y+dy)
+data Dir = N | E | S | W deriving (Bounded,Enum,Eq,Ix,Ord,Show)
 
-result2 mp = length $ filter makesLoop $ filter (/= (start mp)) path
-  where
-    makesLoop pos = hasLoop (insert pos '#' mp)
-    path = nub $ walk (0,-1) $ start mp
-    walk dir@(dx,dy) pos@(x,y)
-      | not (member nextPos mp) = [pos]
-      | mp!nextPos == '#' = walk (turn dir) pos
-      | otherwise = pos : walk dir nextPos
-      where nextPos = (x+dx,y+dy)
--}
+turn dir
+  | dir == maxBound = minBound
+  | otherwise = succ dir
 
-{-
--- this is faster, about 32s for my input
-hasLoop mp dir pos = walk empty dir pos
-  where
-    walk previous dir@(dx,dy) pos@(x,y)
-      | not (member nextPos mp) = 0
-      | member (dir,pos) previous = 1
-      | mp!nextPos == '#' = walk (insert (dir,pos) () previous) (turn dir) pos
-      | otherwise = walk (insert (dir,pos) () previous) dir nextPos
-      where nextPos = (x+dx,y+dy)
+step N (x,y) = (x,y-1)
+step E (x,y) = (x+1,y)
+step S (x,y) = (x,y+1)
+step W (x,y) = (x-1,y)
 
-result2 mp = sum $ walk empty (0,-1) $ start mp
+toCounts :: Array (Int,Int) Char -> Array ((Int,Int),Dir) (Set (Int,Int))
+toCounts grid = countsArray
   where
-    walk tried dir@(dx,dy) pos@(x,y)
-      | not (member nextPos mp) = tried
-      | mp!nextPos == '#' = walk tried (turn dir) pos
-      | member nextPos tried = walk tried dir nextPos
+    (minXY,maxXY) = bounds grid
+    countsBounds = ((minXY,minBound),(maxXY,maxBound))
+    countsArray = array countsBounds $ map counts $ range countsBounds
+    counts idx@(xy,dir)
+      | not (inRange (bounds grid) nextXY) = (idx,singleton xy)
+      | grid!nextXY == '#' = (idx,countsArray!(xy,turn dir))
+      | otherwise = (idx,insert xy (countsArray!(nextXY,dir)))
+      where nextXY = step dir xy
+
+result2 :: Array (Int,Int) Char -> Int
+result2 grid = walk empty empty (start grid) N
+  where
+    out = not . inRange (bounds grid)
+    graph = makeGraph grid
+    walk loop noloop xy dir
+      | out nextXY = size loop
+      | grid!nextXY == '#' = walk loop noloop xy (turn dir)
+      | member nextXY loop || member nextXY noloop =
+          walk loop noloop nextXY dir
+      | hasLoop graph xy dir =
+          walk (insert nextXY loop) noloop nextXY dir
       | otherwise =
-          walk (insert nextPos (hasLoop (insert nextPos '#' mp) (turn dir) pos)
-                       tried) dir nextPos
-      where nextPos = (x+dx,y+dy)
--}
+          walk loop (insert nextXY noloop) nextXY dir
+      where nextXY = step dir xy
 
--- this is much faster, under 2s for my input
-makeGraph mp = graph
+makeGraph :: Array (Int,Int) Char -> Array ((Int,Int),Dir) (Int,Int)
+makeGraph grid = graph
   where
-    graph = fromList $ concatMap connect $ toList mp
-    connect (_,'#') = []
-    connect (pos,_) = [((dir,pos),c dir pos) | dir <- [(0,-1),(1,0),(0,1),(-1,0)]]
-    c dir@(dx,dy) pos@(x,y)
-      | not (member nextPos mp) = nextPos
-      | not (member (dir,nextPos) graph) = pos
-      | otherwise = graph!(dir,nextPos)
-      where nextPos = (x+dx,y+dy)
+    (minXY,maxXY) = bounds grid
+    out = not . inRange (bounds grid)
+    graphBounds = ((minXY,minBound),(maxXY,maxBound))
+    graph = array graphBounds $ map makeStep $ range graphBounds
+    makeStep idx@(xy,dir)
+      | out nextXY = (idx,nextXY)
+      | grid!nextXY == '#' = (idx,xy)
+      | otherwise = (idx,graph!(nextXY,dir))
+      where nextXY = step dir xy
 
-hasLoop graph dir@(dx,dy) pos@(x,y) = walk empty (turn dir) pos
+hasLoop :: Array ((Int,Int),Dir) (Int,Int) -> (Int,Int) -> Dir -> Bool
+hasLoop graph xy dir = walk empty (xy,dir)
   where
-    (obsx,obsy) = (x+dx,y+dy)
-    walk previous dir@(dx,dy) pos@(x,y)
-      | not (member (dir,pos) graph) = 0
-      | member (dir,pos) previous = 1
-      | x == obsx && dy > 0 && y < obsy && obsy <= nexty =
-          walk (insert (dir,pos) () previous) (turn dir) (x,obsy-1)
-      | x == obsx && dy < 0 && y > obsy && obsy >= nexty =
-          walk (insert (dir,pos) () previous) (turn dir) (x,obsy+1)
-      | y == obsy && dx > 0 && x < obsx && obsx <= nextx =
-          walk (insert (dir,pos) () previous) (turn dir) (obsx-1,y)
-      | y == obsy && dx < 0 && x > obsx && obsx >= nextx =
-          walk (insert (dir,pos) () previous) (turn dir) (obsx+1,y)
-      | otherwise =
-          walk (insert (dir,pos) () previous) (turn dir) nextPos
-      where nextPos@(nextx,nexty) = graph!(dir,pos)
-
-result2 mp = sum $ walk (insert (start mp) 0 empty) (0,-1) $ start mp
-  where
-    graph = makeGraph mp
-    walk tried dir@(dx,dy) pos@(x,y)
-      | not (member nextPos mp) = tried
-      | mp!nextPos == '#' = walk tried (turn dir) pos
-      | member nextPos tried = walk tried dir nextPos
-      | otherwise =
-          walk (insert nextPos (hasLoop graph dir pos) tried) dir nextPos
-      where nextPos = (x+dx,y+dy)
+    out = not . inRange (bounds graph)
+    (xobs,yobs) = step dir xy
+    walk path idx@((x,y),dir)
+      | out idx = False
+      | member idx path = True
+      | x == xobs && y < yobs && yobs <= nexty =
+          walk (insert idx path) ((x,yobs-1),turn dir)
+      | x == xobs && y > yobs && yobs >= nexty =
+          walk (insert idx path) ((x,yobs+1),turn dir)
+      | y == yobs && x < xobs && xobs <= nextx =
+          walk (insert idx path) ((xobs-1,y),turn dir)
+      | y == yobs && x > xobs && xobs >= nextx =
+          walk (insert idx path) ((xobs+1,y),turn dir)
+      | otherwise = walk (insert idx path) (nextXY,turn dir)
+      where nextXY@(nextx,nexty) = graph!idx

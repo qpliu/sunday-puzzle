@@ -1,5 +1,6 @@
 module AOC where
 
+import Data.Array(Array,array)
 import Data.Map(Map,keys)
 import qualified Data.Map
 import Data.Set(Set,elems)
@@ -65,6 +66,14 @@ parse2d = Data.Map.fromList . p 0 0
     p x y (c:cs)
       | c == '\n' = p 0 (y+1) cs
       | otherwise = ((x,y),c) : p (x+1) y cs
+
+parse2da :: String -> Array (Int,Int) Char
+parse2da = p 0 0 0 0 []
+  where
+    p _ _ xmax ymax e [] = array ((0,0),(xmax,ymax)) e
+    p x y xmax ymax e (c:cs)
+      | c == '\n' = p 0 (y+1) xmax ymax e cs
+      | otherwise = p (x+1) y (max xmax x) (max ymax y) (((x,y),c):e) cs
 
 show2dm :: Map (Int,Int) Char -> String
 show2dm m

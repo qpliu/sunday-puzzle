@@ -1,6 +1,7 @@
 module AOC202412 where
 
-import Data.Map(Map,alter,elems,empty,insert,keys,member,toList,(!))
+import Data.Array(Array,array,assocs,bounds,inRange,inRange,(!))
+import Data.Map(Map,alter,elems,empty,insert,keys,member,toList)
 import qualified Data.Map
 
 import AOC
@@ -22,52 +23,58 @@ aoc = AOC {
     testResult="1930",
     testData2="",
     testResult2="1206",
-    aocParse=parse2d,
+    aocParse=parse2da,
     aocResult=result,
-    aocParse2=parse2d,
+    aocParse2=parse2da,
     aocResult2=result2
     }
 
-makeRegions :: Map (Int,Int) Char -> Map (Int,Int) (Int,Int)
-makeRegions grid = foldr fill empty $ toList grid
+makeRegions :: Array (Int,Int) Char -> Array (Int,Int) (Int,Int)
+makeRegions grid =
+    array (bounds grid) $ toList $ foldr fill empty $ assocs grid
   where
+    inBounds = inRange (bounds grid)
     fill (xy,ch) regions
       | member xy regions = regions
       | otherwise = foldr (fillWith xy ch xy) (insert xy xy regions)
-                        $ neighbors xy
+                        $ filter inBounds $ neighbors xy
     fillWith region ch fromXY xy regions
-      | Just ch /= Data.Map.lookup xy grid = regions
+      | grid!xy /= ch = regions
       | member xy regions = regions
       | otherwise = foldr (fillWith region ch xy) (insert xy region regions)
-                        $ filter (/= fromXY) $ neighbors xy
+                        $ filter inBounds $ filter (/= fromXY) $ neighbors xy
+
+getMetrics :: (Array (Int,Int) (Int,Int) -> (Int,Int) -> (Int,Int) -> Int)
+                -> Array (Int,Int) (Int,Int) -> Map (Int,Int) (Int,Int)
+getMetrics metric regions = foldr collect empty $ assocs regions
+  where
+    collect (xy@(x,y),region) = alter (Just . maybe (1,m) addMetric) region
+      where
+        m = metric regions xy region
+        addMetric (oldCount,oldMetric) = (oldCount+1,oldMetric+m)
+
+perimeter :: Array (Int,Int) (Int,Int) -> (Int,Int) -> (Int,Int) -> Int
+perimeter regions xy region =
+    length [() | n <- neighbors xy, not (inBounds n && regions!n == region)]
+  where
+    inBounds = inRange (bounds regions)
+
+-- Counts south ends of fences to the east, north ends of fences to the west,
+-- east ends of fences to the south, and west ends of fences to the north.
+sides :: Array (Int,Int) (Int,Int) -> (Int,Int) -> (Int,Int) -> Int
+sides regions (x,y) region =
+    length [() | dxy <- [(1,0),(-1,0),(0,1),(0,-1)], isEnd dxy]
+  where
+    inRegion (dx,dy) = inRange (bounds regions) (x+dx,y+dy)
+                            && region == regions!(x+dx,y+dy)
+    isEnd (dx,dy) = not (inRegion (dx,dy))
+        && (inRegion (dy,dx),inRegion (dx+dy,dy+dx)) /= (True,False)
 
 neighbors :: (Int,Int) -> [(Int,Int)]
 neighbors (x,y) = [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]
 
-toSizes :: Map (Int,Int) (Int,Int) -> Map (Int,Int) (Int,Int)
-toSizes regions = foldr collect empty $ keys regions
-  where
-    collect xy@(x,y) sizes = alter (Just . maybe (1,perimeter) (\ (s,p) -> (s+1,p+perimeter))) region sizes
-      where
-        region = regions!xy
-        perimeter = sum [1 | nxy <- neighbors xy,
-                             Just region /= Data.Map.lookup nxy regions]
+result :: Array (Int,Int) Char -> Int
+result = sum . map (uncurry (*)) . elems . getMetrics perimeter . makeRegions
 
-result = sum . map (uncurry (*)) . elems . toSizes . makeRegions
-
-toSizes2 :: Map (Int,Int) (Int,Int) -> Map (Int,Int) (Int,Int)
-toSizes2 regions = foldr collect empty $ keys regions
-  where
-    collect xy@(x,y) sizes =
-        alter (Just . maybe (1,ends) (\ (s,e) -> (s+1,e+ends)))
-              region sizes
-      where
-        region = regions!xy
-        ends = sum [1 | dxdy@(dx,dy) <- [(1,0),(0,1),(-1,0),(0,-1)],
-                        dydx <- [(dy,dx),(-dy,-dx)], isEnd dxdy dydx]
-        inRegion (dx,dy) = Just region == Data.Map.lookup (x+dx,y+dy) regions
-        isEnd dxdy@(dx,dy) dxdy2@(dx2,dy2) =
-            not (inRegion dxdy) &&
-                (inRegion dxdy2,inRegion (dx+dx2,dy+dy2)) /= (True,False)
-
-result2 = (`div` 2) . sum . map (uncurry (*)) . elems . toSizes2 . makeRegions
+result2 :: Array (Int,Int) Char -> Int
+result2 = sum . map (uncurry (*)) . elems . getMetrics sides . makeRegions

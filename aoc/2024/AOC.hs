@@ -1,6 +1,7 @@
 module AOC where
 
 import Data.Array(Array,array)
+import Data.Char(isDigit)
 import Data.Map(Map,keys)
 import qualified Data.Map
 import Data.Set(Set,elems)
@@ -96,6 +97,19 @@ show2ds = show2dm . Data.Map.fromList . flip zip (repeat '#') . elems
 
 p2ds :: Set (Int,Int) -> IO ()
 p2ds = putStr . show2ds
+
+parseInts :: String -> [Int]
+parseInts = p . dropWhile notStart
+  where
+    notStart c = not (isDigit c || c == '-')
+    p "" = []
+    p "-" = []
+    p ('-':str@(c:_))
+      | not (isDigit c) = parseInts str
+      | otherwise = read ('-':n) : parseInts rest
+      where (n,rest) = span isDigit str
+    p str = read n : parseInts rest
+      where (n,rest) = span isDigit str
 
 astar :: (Ord cost, Ord path, Ord state) =>
     (path -> cost) -> (path -> [path]) -> (path -> state)

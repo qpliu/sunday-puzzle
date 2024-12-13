@@ -1,7 +1,5 @@
 module AOC202413 where
 
-import Data.Char(isDigit)
-
 import AOC
 
 aoc = AOC {
@@ -33,15 +31,10 @@ aoc = AOC {
     }
 
 parse :: String -> [((Int,Int),(Int,Int),(Int,Int))]
-parse = p . lines
+parse = p . parseInts
   where
     p [] = []
-    p ("":rest) = p rest
-    p (a:b:prize:rest) = (pn a,pn b,pn prize) : p rest
-    pn l = (read x,read y)
-      where
-        (x,rest) = span isDigit $ dropWhile (not . isDigit) l
-        y = takeWhile isDigit $ dropWhile (not . isDigit) rest
+    p (ax:ay:bx:by:px:py:rest) = ((ax,ay),(bx,by),(px,py)) : p rest
 
 -- na == -(by*px - bx*py)/(ay*bx - ax*by)
 -- nb == (ay*px - ax*py)/(ay*bx - ax*by)

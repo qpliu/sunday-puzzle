@@ -11,8 +11,10 @@ aoc = AOC {
     testData2="xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))",
     testResult2="48",
     aocParse=parse,
+    aocTest=sum,
     aocResult=sum,
     aocParse2=parse2,
+    aocTest2=sum,
     aocResult2=sum
     }
 

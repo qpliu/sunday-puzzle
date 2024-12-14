@@ -25,8 +25,10 @@ aoc = AOC {
     testData2="",
     testResult2="875318608908",
     aocParse=parse,
+    aocTest=result 0,
     aocResult=result 0,
     aocParse2=parse,
+    aocTest2=result 10000000000000,
     aocResult2=result 10000000000000
     }
 

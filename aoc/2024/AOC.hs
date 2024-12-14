@@ -15,18 +15,20 @@ data AOC parsed result parsed2 result2 = AOC {
     testData2 :: String,
     testResult2 :: String,
     aocParse :: String -> parsed,
+    aocTest :: parsed -> result,
     aocResult :: parsed -> result,
     aocParse2 :: String -> parsed2,
+    aocTest2 :: parsed2 -> result2,
     aocResult2 :: parsed2 -> result2
     }
 
 test :: Show result => AOC parsed result parsed2 result2 -> ()
-test AOC { testData=td, testResult=tr, aocParse=p, aocResult=r }
+test AOC { testData=td, testResult=tr, aocParse=p, aocTest=r }
   | tr /= (show . r . p) td = error (tr ++ " /= " ++ (show . r . p) td)
   | otherwise = ()
 
 test2 :: Show result2 => AOC parsed result parsed2 result2 -> ()
-test2 AOC { testData=td1, testData2=td2, testResult2=tr, aocParse2=p, aocResult2=r }
+test2 AOC { testData=td1, testData2=td2, testResult2=tr, aocParse2=p, aocTest2=r }
   | tr /= (show . r . p) td = error (tr ++ " /= " ++ (show . r . p) td)
   | otherwise = ()
   where td | null td2 = td1 | otherwise = td2
@@ -59,6 +61,14 @@ run aoc = do
     putStrLn ("Day " ++ day aoc ++ " part 2 time: " ++ show dt2)
     putStrLn ("Day " ++ day aoc ++ " total time: " ++ show (dt1+dt2))
     return $ dt1+dt2
+
+getInput :: AOC parsed result parsed2 result2 -> IO parsed
+getInput AOC { day=d, aocParse=p } =
+    fmap p $ readFile ("input/" ++ d ++ ".txt")
+
+getInput2 :: AOC parsed result parsed2 result2 -> IO parsed2
+getInput2 AOC { day=d, aocParse2=p } =
+    fmap p $ readFile ("input/" ++ d ++ ".txt")
 
 parse2d :: String -> Map (Int,Int) Char
 parse2d = Data.Map.fromList . p 0 0

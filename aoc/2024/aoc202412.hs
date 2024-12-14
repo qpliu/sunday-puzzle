@@ -23,8 +23,10 @@ aoc = AOC {
     testData2="",
     testResult2="1206",
     aocParse=parse2da,
+    aocTest=result perimeter,
     aocResult=result perimeter,
     aocParse2=parse2da,
+    aocTest2=result sides,
     aocResult2=result sides
     }
 

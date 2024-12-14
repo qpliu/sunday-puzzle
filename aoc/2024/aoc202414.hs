@@ -1,5 +1,6 @@
 module AOC202414 where
 
+import Data.List(sort)
 import Data.Set(fromList,member,toList)
 
 import AOC
@@ -59,6 +60,7 @@ makeSet t = fromList . map toXY
     ny = 103
     toXY (x,y,vx,vy) = ((x+vx*t) `mod` nx,(y+vy*t) `mod` ny)
 
-result2 input = snd $ minimum [(metric $ makeSet (x+101*t) input,x+101*t) | t <- [1..103]]
+result2 input = snd $ minimum [(metric $ makeSet t input,t) | (_,a) <- c, (_,b) <- c, t <- [n a b]]
   where
-    x = snd $ minimum [(metric $ makeSet t input,t) | t <- [1..101]]
+    c = take 2 $ sort $ [(metric $ makeSet t input,t) | t <- [0..102]]
+    n a b = head [a + 101*x | x <- [0..100], y <- [0..102], a+101*x == b+103*y]

@@ -9,9 +9,9 @@ import (
 type contestant = [2]int
 
 func round(graph [][]contestant, r *rand.Rand) [][]contestant {
-	territory := graph[r.Intn(len(graph))]
-	winner := territory[0]
-	loser := territory[1+r.Intn(len(territory)-1)]
+	neighbors := graph[r.Intn(len(graph))]
+	winner := neighbors[0]
+	loser := neighbors[1+r.Intn(len(neighbors)-1)]
 	if r.Intn(2) == 0 {
 		winner, loser = loser, winner
 	}
@@ -63,24 +63,24 @@ func round(graph [][]contestant, r *rand.Rand) [][]contestant {
 	return result
 }
 
-func game(size int, r *rand.Rand) contestant {
-	graph := make([][]contestant, 0, size)
-	for i := range size {
-		for j := range size {
-			territory := []contestant{contestant{i, j}}
+func game(xsize, ysize int, r *rand.Rand) contestant {
+	graph := make([][]contestant, 0, xsize*ysize)
+	for i := range xsize {
+		for j := range ysize {
+			neighbors := []contestant{contestant{i, j}}
 			if i > 0 {
-				territory = append(territory, contestant{i - 1, j})
+				neighbors = append(neighbors, contestant{i - 1, j})
 			}
 			if j > 0 {
-				territory = append(territory, contestant{i, j - 1})
+				neighbors = append(neighbors, contestant{i, j - 1})
 			}
-			if j < size-1 {
-				territory = append(territory, contestant{i, j + 1})
+			if j < ysize-1 {
+				neighbors = append(neighbors, contestant{i, j + 1})
 			}
-			if i < size-1 {
-				territory = append(territory, contestant{i + 1, j})
+			if i < xsize-1 {
+				neighbors = append(neighbors, contestant{i + 1, j})
 			}
-			graph = append(graph, territory)
+			graph = append(graph, neighbors)
 		}
 	}
 	for len(graph) > 1 {
@@ -89,13 +89,13 @@ func game(size int, r *rand.Rand) contestant {
 	return graph[0][0]
 }
 
-func simulate(n, ncpu, size int, r *rand.Rand) {
+func simulate(n, ncpu, xsize, ysize int, r *rand.Rand) {
 	ch := make(chan map[contestant]int)
 	for _ = range ncpu {
 		go func(r *rand.Rand) {
 			hist := make(map[contestant]int)
 			for _ = range n {
-				w := game(size, r)
+				w := game(xsize, ysize, r)
 				hist[w] = hist[w] + 1
 			}
 			ch <- hist
@@ -107,10 +107,11 @@ func simulate(n, ncpu, size int, r *rand.Rand) {
 			hist[k] = hist[k] + v
 		}
 	}
-	for i := range size {
-		for j := range size {
+	fmt.Printf("%d×%d:\n", xsize, ysize)
+	for i := range xsize {
+		for j := range ysize {
 			c := hist[contestant{i, j}]
-			fmt.Printf("%d,%d: %f\n", i+1, j+1, float64(c)/float64(n*ncpu))
+			fmt.Printf("%d,%d: %f\n", i, j, float64(c)/float64(n*ncpu))
 		}
 	}
 }
@@ -120,7 +121,22 @@ func main() {
 	r := rand.New(rand.NewSource(seed))
 	ncpu := runtime.NumCPU()
 
-	const n = 100000
-	const size = 3
-	simulate(n, ncpu, size, r)
+	{
+		const n = 100000
+		const xsize = 3
+		const ysize = 3
+		simulate(n, ncpu, xsize, ysize, r)
+	}
+	{
+		const n = 100000
+		const xsize = 4
+		const ysize = 3
+		simulate(n, ncpu, xsize, ysize, r)
+	}
+	{
+		const n = 100000
+		const xsize = 4
+		const ysize = 4
+		simulate(n, ncpu, xsize, ysize, r)
+	}
 }

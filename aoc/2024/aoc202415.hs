@@ -1,6 +1,7 @@
 module AOC202415 where
 
-import Data.Map(empty,insert,keys,member,toList,(!))
+import Data.Array(assocs,(!))
+import Data.Set(Set,delete,difference,elems,fromList,insert,member,union)
 
 import AOC
 
@@ -41,59 +42,86 @@ aoc = AOC {
     }
 
 parse modifyMap = p . span (not . null) . lines
-  where p (mp,moves) = (parse2d $ modifyMap $ unlines mp,concat moves)
+  where p (mp,moves) = (parse2da $ modifyMap $ unlines mp,concat moves)
 
-start = fst . head . filter ((== '@') . snd) . toList
+start = fst . head . filter ((== '@') . snd) . assocs
 
-move push state '^' = push state (0,-1)
-move push state '>' = push state (1,0)
-move push state 'v' = push state (0,1)
-move push state '<' = push state (-1,0)
-move push state _ = state
+makeBoxes = fromList . map fst . filter ((== 'O') . snd) . assocs
 
-push1 state@((x,y),mp) (dx,dy) = maybe state doPush $ findDest (x+dx,y+dy)
+move wall push state '^' = push wall state (0,-1)
+move wall push state '>' = push wall state (1,0)
+move wall push state 'v' = push wall state (0,1)
+move wall push state '<' = push wall state (-1,0)
+move wall push state _ = state
+
+gpsCoord (x,y) = x+100*y
+
+result push (mp,moves) =
+    sum $ map gpsCoord $ elems $ snd
+        $ foldl (move ((== '#') . (mp!)) push) (start mp,makeBoxes mp) moves
+
+push1 :: ((Int,Int) -> Bool) -> ((Int,Int),Set (Int,Int)) -> (Int,Int) -> ((Int,Int),Set (Int,Int))
+push1 wall state@((x,y),boxes) (dx,dy) =
+    maybe state ((,) (x+dx,y+dy)) $ doPush (x+dx,y+dy)
   where
-    doPush (x2,y2) =
-        ((x+dx,y+dy),
-         insert (x,y) '.' $ insert (x+dx,y+dy) (mp!(x,y)) $
-         insert (x2,y2) (mp!(x2-dx,y2-dy)) mp)
-    findDest (x2,y2)
-      | ch == 'O' = findDest (x2+dx,y2+dy)
-      | ch == '#' = Nothing
-      | otherwise = Just (x2,y2)
-      where ch = mp!(x2,y2)
-
-gpsCoord ((x,y),ch)
-  | ch == 'O' || ch == '[' = x+100*y
-  | otherwise = 0
-
-result push (mp,moves) = sum $ map gpsCoord $ toList $ snd
-                             $ foldl (move push) ((start mp),mp) moves
+    doPush xy@(x,y)
+      | wall xy = Nothing
+      | not (member xy boxes) = Just boxes
+      | otherwise = do
+          end <- findEnd (x+dx,y+dy)
+          return $ insert end $ delete xy boxes
+    findEnd xy@(x,y)
+      | wall xy = Nothing
+      | not (member xy boxes) = Just xy
+      | otherwise = findEnd (x+dx,y+dy)
 
 double '#' = "##"
 double '.' = ".."
 double '@' = "@."
-double 'O' = "[]"
+double 'O' = "O."
 double c = [c]
 
-push2 state@((x,y),mp) (dx,dy) =
-    maybe state ((,) (x+dx,y+dy) . doPush) $ getPushed (x,y) empty
+push2 :: ((Int,Int) -> Bool) -> ((Int,Int),Set (Int,Int)) -> (Int,Int) -> ((Int,Int),Set (Int,Int))
+push2 wall state@((x,y),boxes) (dx,dy) =
+    maybe state ((,) (x+dx,y+dy)) $ doPush (x+dx,y+dy)
   where
-    doPush xys = foldr move1 mp $ keys xys
+    doPush xy@(x,y)
+      | wall xy = Nothing
+      | dx == 1 =
+          if member xy boxes
+            then fmap pushBoxes $ getPushedXR (x+2,y) [xy]
+            else Just boxes
+      | dx == -1 =
+          if member (x-1,y) boxes
+            then fmap pushBoxes $ getPushedXL (x-2,y) [(x-1,y)]
+            else Just boxes
+      | member xy boxes = fmap pushBoxes $ getPushedY xy [xy]
+      | member (x-1,y) boxes = fmap pushBoxes $ getPushedY (x-1,y) [(x-1,y)]
+      | otherwise = Just boxes
+    getPushedXR xy@(x,y) pushed
+      | wall xy = Nothing
+      | member xy boxes = getPushedXR (x+2,y) (xy:pushed)
+      | otherwise = Just pushed
+    getPushedXL xy@(x,y) pushed
+      | wall xy = Nothing
+      | member (x-1,y) boxes = getPushedXL (x-2,y) ((x-1,y):pushed)
+      | otherwise = Just pushed
+    getPushedY xy@(x,y) pushed
+      | wall (x,y+dy) || wall (x+1,y+dy) = Nothing
+      | otherwise = do
+          pushed1 <- if member (x-1,y+dy) boxes
+                       then getPushedY (x-1,y+dy) ((x-1,y+dy):pushed)
+                       else Just pushed
+          pushed2 <- if member (x,y+dy) boxes
+                       then getPushedY (x,y+dy) ((x,y+dy):pushed1)
+                       else Just pushed1
+          pushed3 <- if member (x+1,y+dy) boxes
+                       then getPushedY (x+1,y+dy) ((x+1,y+dy):pushed2)
+                       else Just pushed2
+          Just pushed3
+    pushBoxes pushed = union (difference boxes (difference removes adds))
+                             (difference adds removes)
       where
-        move1 (x,y) newmp
-          | member (x-dx,y-dy) xys = insert (x+dx,y+dy) (mp!(x,y)) newmp
-          | otherwise = insert (x,y) '.' $ insert (x+dx,y+dy) (mp!(x,y)) newmp
-    getPushed (x,y) xys
-      | ch == '#' = Nothing
-      | ch == '.' = Just $ insert (x,y) () xys
-      | ch == '[' && dy == 0 = getPushed (x+dx,y+dy) $ insert (x,y) () xys
-      | ch == ']' && dy == 0 = getPushed (x+dx,y+dy) $ insert (x,y) () xys
-      | ch == '[' = do
-          xysLeft <- getPushed (x,y+dy) $ insert (x,y) () xys
-          getPushed (x+1,y+dy) xysLeft
-      | ch == ']' = do
-          xysRight <- getPushed (x,y+dy) $ insert (x,y) () xys
-          getPushed (x-1,y+dy) xysRight
-      | otherwise = error (show (ch,x,y,dx,dy))
-      where ch = mp!(x+dx,y+dy)
+        removes = fromList pushed
+        adds = fromList $ map pushBox pushed
+        pushBox (x,y) = (x+dx,y+dy)

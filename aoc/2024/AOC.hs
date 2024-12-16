@@ -140,3 +140,27 @@ astar heuristic neighbors toState done initialPaths =
                Data.Map.insert (toState nextPath) cost visited)
           | otherwise = (open,visited)
           where cost = heuristic nextPath
+
+astarAll :: (Ord cost, Ord path, Ord state) =>
+    (path -> cost) -> (path -> [path]) -> (path -> state)
+    -> (path -> Bool) -> [path] -> [path]
+astarAll heuristic neighbors toState done initialPaths =
+    search Nothing
+           (Data.Set.fromList [(heuristic p,p) | p <- initialPaths], 
+            Data.Map.empty)
+  where
+    search best (open,visited)
+      | Data.Set.null open = []
+      | curDone && maybe False (curCost >) best = []
+      | curDone = curPath : search (Just curCost) (poppedOpen,visited)
+      | otherwise =
+          search best $ foldr check (poppedOpen,visited) $ neighbors curPath
+      where
+        Just ((curCost,curPath),poppedOpen) = Data.Set.minView open
+        curDone = done curPath
+        check nextPath (open,visited)
+          | maybe True (cost <=) $ Data.Map.lookup (toState nextPath) visited =
+              (Data.Set.insert (cost,nextPath) open,
+               Data.Map.insert (toState nextPath) cost visited)
+          | otherwise = (open,visited)
+          where cost = heuristic nextPath

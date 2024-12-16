@@ -1,7 +1,7 @@
 module AOC202414 where
 
 import Data.List(sort)
-import Data.Set(fromList,member,toList)
+import Data.Set(fromList)
 
 import AOC
 
@@ -49,18 +49,11 @@ result nx ny t = product . foldr collect [0,0,0,0]
         x1 = (x+vx*t) `mod` nx
         y1 = (y+vy*t) `mod` ny
 
-draw t = readFile "input/14.txt" >>= putStr . show2ds . makeSet t . parse . parseInts
+draw t = getInput2 aoc >>= p2ds . fromList . map toXY
+  where toXY (x,y,vx,vy) = ((x+vx*t) `mod` 101,(y+vy*t) `mod` 103)
 
-metric set = -sum [length [() | dx <- [-1,0,1], dy <- [-1,0,1], (dx,dy) /= (0,0), member (x+dx,y+dy) set]
-                   | (x,y) <- toList set]
-
-makeSet t = fromList . map toXY
+result2 input = snd $ minimum [(metric t,t) | (_,a) <- c, (_,b) <- c, t <- [n a b]]
   where
-    nx = 101
-    ny = 103
-    toXY (x,y,vx,vy) = ((x+vx*t) `mod` nx,(y+vy*t) `mod` ny)
-
-result2 input = snd $ minimum [(metric $ makeSet t input,t) | (_,a) <- c, (_,b) <- c, t <- [n a b]]
-  where
-    c = take 2 $ sort $ [(metric $ makeSet t input,t) | t <- [0..102]]
+    c = take 2 $ sort $ [(metric t,t) | t <- [0..102]]
     n a b = head [a + 101*x | x <- [0..100], y <- [0..102], a+101*x == b+103*y]
+    metric t = result 101 103 t input

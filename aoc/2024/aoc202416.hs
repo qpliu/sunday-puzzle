@@ -2,9 +2,10 @@ module AOC202416 where
 
 import Data.Array(Array,assocs,(!))
 import qualified Data.Array
-import Data.Map(Map,empty,insert,mapWithKey,member)
+import Data.Map(Map,empty,insert,mapWithKey,member,unionWith)
 import qualified Data.Map
-import Data.Set(Set,fromList,size,toList,unions)
+import Data.Set(Set,fromList,size,toList,union,unions)
+import qualified Data.Set
 
 import AOC
 
@@ -111,6 +112,7 @@ result (start,end@(endX,endY),graph) =
            (cost,dest) <- [graph Data.Map.! src]]
     done (_,(xy,_)) = xy == end
 
+parse2 :: String -> (XY,XY,Map (XY,DXY) (Int,(XY,DXY)),(XY,DXY) -> Set XY)
 parse2 input = (getStart grid,getEnd grid,graph,getTiles grid graph)
   where
     grid = parse2da input
@@ -128,31 +130,48 @@ getTiles grid graph = (tiles Data.Map.!)
           | grid Data.Array.! (xy<<turnL dxy) /= '#' = xy : walk (xy<<turnL dxy,turnL dxy)
           | otherwise = xy : walk (xy<<turnR dxy,turnR dxy)
 
-type Path = [(Int,(XY,DXY))]
+type Path2 = (Int,(XY,DXY),Map (XY,DXY) Int,Set (XY,DXY))
 
 result2 :: (XY,XY,Map (XY,DXY) (Int,(XY,DXY)),(XY,DXY) -> Set XY) -> Int
 result2 (start,end@(endX,endY),graph,tiles) =
-    (1 +) -- end tile not counted by the following code
-        $ size $ unions $ concatMap (map (tiles . snd) . tail)
-        $ astarAll h neighbors state done [[(0,(start,(1,0)))]]
+    (1 +) -- end tile not counted in the following code
+        $ size $ unions $ map tiles $ toList $ snd
+        $ astarAll h neighbors state done mergeBest (firstPath,firstExits)
+                   (concatMap toStartPath $ Data.Map.toList firstPath)
   where
-    h :: Path -> Int
-    h ((score,(xy@(x,y),dxy@(dx,dy))):_)
+    (firstScore,_,firstPath,firstExits) =
+        astar h neighbors state done
+              [(0,(start,(1,0)),Data.Map.empty,Data.Set.empty)]
+    toStartPath (xyDxy,score) =
+        neighbors (score,xyDxy,Data.Map.empty,Data.Set.empty)
+
+    h (score,(xy@(x,y),dxy@(dx,dy)),_,_)
       | xy == end = score
       | signum (endX-x) == dx && y == endY = score + abs (endX-x)
       | signum (endX-x) == dx = score + abs (endX-x) + abs (endY-y) + 1000
       | signum (endY-y) == dy && x == endX = score + abs (endY-y)
       | signum (endY-y) == dy = score + abs (endX-x) + abs (endY-y) + 1000
       | otherwise = score + abs (endX-x) + abs (endY-y) + 2000
-    state :: Path -> (XY,DXY)
-    state ((_,xyDxy):_) = xyDxy
-    neighbors :: Path -> [Path]
-    neighbors ((score,(srcXY,srcDxy)):path) =
-        [(score+turnScore+cost,dest):(score+turnScore,src):path
-         | (turnScore,src) <- [(0,(srcXY,srcDxy)),
+
+    state (_,xyDxy,_,_) = xyDxy
+
+    done (_,(xy,_),_,_) = xy == end
+
+    neighbors :: Path2 -> [Path2]
+    neighbors (score,src@(srcXY,srcDxy),path,exitsTaken) =
+        [(score+turnCost+cost,dest,insert src score path,
+                               Data.Set.insert exit exitsTaken)
+         | (turnCost,exit) <- [(0,(srcXY,srcDxy)),
                                (1000,(srcXY,turnL srcDxy)),
                                (1000,(srcXY,turnR srcDxy))],
-           member src graph,
-           (cost,dest) <- [graph Data.Map.! src]]
-    done :: Path -> Bool
-    done ((_,(xy,_)):_) = xy == end
+           member exit graph,
+           (cost,dest) <- [graph Data.Map.! exit]]
+
+    mergeBest best@(bestPath,bestExits) (score,xyDxy@(xy,_),path,exits)
+      | score > firstScore = Just best -- prune
+      | xy == end =
+          Just (unionWith min path bestPath,union exits bestExits) -- merge
+      | not (member xyDxy bestPath) = Nothing -- keep going
+      | score > bestPath Data.Map.! xyDxy = Just best -- prune
+      | otherwise =
+          Just (unionWith min path bestPath,union exits bestExits) -- merge

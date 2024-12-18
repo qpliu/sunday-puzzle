@@ -143,24 +143,28 @@ astar heuristic neighbors toState done initialPaths =
 
 astarAll :: (Ord cost, Ord path, Ord state) =>
     (path -> cost) -> (path -> [path]) -> (path -> state)
-    -> (path -> Bool) -> [path] -> [path]
-astarAll heuristic neighbors toState done initialPaths =
-    search Nothing
-           (Data.Set.fromList [(heuristic p,p) | p <- initialPaths], 
-            Data.Map.empty)
+    -> (path -> Bool) -> (best -> path -> Maybe best) -> best
+    -> [path] -> best
+astarAll heuristic neighbors toState done mergeBest best initialPaths =
+    search ((Data.Set.fromList [(heuristic p,p) | p <- initialPaths], 
+             Data.Map.empty),best)
   where
-    search best (open,visited)
-      | Data.Set.null open = []
-      | curDone && maybe False (curCost >) best = []
-      | curDone = curPath : search (Just curCost) (poppedOpen,visited)
+    search ((open,visited),best)
+      | Data.Set.null open = best
+      | curDone = maybe best (search . (,) (poppedOpen,visited))
+                      $ mergeBest best curPath
       | otherwise =
-          search best $ foldr check (poppedOpen,visited) $ neighbors curPath
+          maybe (search $ foldr check ((poppedOpen,visited),best)
+                        $ neighbors curPath)
+                (search . (,) (poppedOpen,visited)) $ mergeBest best curPath
       where
         Just ((curCost,curPath),poppedOpen) = Data.Set.minView open
         curDone = done curPath
-        check nextPath (open,visited)
-          | maybe True (cost <=) $ Data.Map.lookup (toState nextPath) visited =
-              (Data.Set.insert (cost,nextPath) open,
-               Data.Map.insert (toState nextPath) cost visited)
-          | otherwise = (open,visited)
+        check nextPath ((open,visited),best)
+          | maybe True (cost <=) $
+                  Data.Map.lookup (toState nextPath) visited =
+              ((Data.Set.insert (cost,nextPath) open,
+                Data.Map.insert (toState nextPath) cost visited),
+               best)
+          | otherwise = ((open,visited),best)
           where cost = heuristic nextPath

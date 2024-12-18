@@ -62,20 +62,35 @@ result xymax byteCount input = fst $ astar h neighbors snd done [(0,(0,0))]
            not (member (x+dx,y+dy) space)]
     done (_,(x,y)) = (x,y) == (xymax,xymax)
 
+data Corruption = BottomLeft | TopRight | Island deriving Eq
+
 result2 xymax input = add empty input
   where
-    -- (hits top,hits left,hits right,hits bottom)
-    add grid (xy@(x,y):rest)
-      | (stp && slt) || (srt && sbt) || (srt && slt) || (stp && sbt) = xy
-      | otherwise = add (fill state (insert xy state grid) (neighbors xy)) rest
+    add grid (xy@(x,y):rest) =
+        join xyCorruption []
+             [(nxy,grid!nxy) | nxy <- neighbors xy, Data.Map.member nxy grid]
       where
-        state@(stp,slt,srt,sbt) =
-            foldr join (y == 0,x == 0,x == xymax,y == xymax) (neighbors xy)
-        join nxy st@(tp,lt,rt,bt) = maybe st j $ Data.Map.lookup nxy grid
-          where j (tp2,lt2,rt2,bt2) = (tp || tp2,lt || lt2,rt || rt2,bt || bt2)
+        xyCorruption
+          | x == 0 || y == xymax = BottomLeft
+          | x == xymax || y == 0 = TopRight
+          | otherwise = Island
+
+        join Island _ [] = add (insert xy Island grid) rest
+        join corruption islands [] =
+            fill corruption (insert xy corruption grid) islands
+        join corruption islands ((nxy,Island):ns) =
+            join corruption (nxy:islands) ns
+        join Island islands ((_,corruption):ns) = join corruption islands ns
+        join corruption1 islands ((_,corruption2):ns)
+          | corruption1 == corruption2 = join corruption1 islands ns
+          | otherwise = xy
+
+        fill corruption g [] = add g rest
+        fill corruption g (nxy:queue)
+          | maybe True (== corruption) (Data.Map.lookup nxy g) =
+              fill corruption g queue
+          | otherwise =
+              fill corruption (insert nxy corruption g)
+                              (neighbors nxy ++ queue)
     neighbors (x,y) =
         [(x+dx,y+dy) | dx <- [-1,0,1], dy <- [-1,0,1], (dx,dy) /= (0,0)]
-    fill state g [] = g
-    fill state g (xy:queue)
-      | not (Data.Map.member xy g) || g!xy == state = fill state g queue
-      | otherwise = fill state (insert xy state g) ((neighbors xy) ++ queue)

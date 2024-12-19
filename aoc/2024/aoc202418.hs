@@ -51,8 +51,9 @@ parse = toXY . parseInts
     toXY [] = []
     toXY (x:y:rest) = (x,y):toXY rest
 
-result xymax byteCount input = fst $ astar h neighbors snd done [(0,(0,0))]
+result xymax byteCount input = steps
   where
+    Just (steps,_) = astar h neighbors snd done [(0,(0,0))]
     space = fromList $ take byteCount input
     h (n,(x,y)) = n+xymax-x+xymax-y
     neighbors (n,(x,y)) =

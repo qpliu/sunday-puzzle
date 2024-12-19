@@ -137,15 +137,17 @@ memoize f a = do
         modify (Data.Map.insert a b)
         return b
 
-astar :: (Ord cost, Ord path, Ord state) =>
-    (path -> cost) -> (path -> [path]) -> (path -> state)
-    -> (path -> Bool) -> [path] -> path
-astar heuristic neighbors toState done initialPaths =
+astarWithVisited :: (Ord cost, Ord path, Ord state) =>
+    (path -> Map state cost -> result)
+    -> (path -> cost) -> (path -> [path]) -> (path -> state)
+    -> (path -> Bool) -> [path] -> Maybe result
+astarWithVisited makeResult heuristic neighbors toState done initialPaths =
     search (Data.Set.fromList [(heuristic p,p) | p <- initialPaths], 
             Data.Map.empty)
   where
-    search (open,visited)
-      | done curPath = curPath
+   search (open,visited)
+      | Data.Set.null open = Nothing
+      | done curPath = Just $ makeResult curPath visited
       | otherwise =
           search $ foldr check (poppedOpen,visited) $ neighbors curPath
       where
@@ -157,30 +159,75 @@ astar heuristic neighbors toState done initialPaths =
           | otherwise = (open,visited)
           where cost = heuristic nextPath
 
+astar :: (Ord cost, Ord path, Ord state) =>
+    (path -> cost) -> (path -> [path]) -> (path -> state)
+    -> (path -> Bool) -> [path] -> Maybe path
+astar = astarWithVisited const
+
 astarAll :: (Ord cost, Ord path, Ord state) =>
     (path -> cost) -> (path -> [path]) -> (path -> state)
-    -> (path -> Bool) -> (best -> path -> Maybe best) -> best
-    -> [path] -> best
-astarAll heuristic neighbors toState done mergeBest best initialPaths =
-    search ((Data.Set.fromList [(heuristic p,p) | p <- initialPaths], 
-             Data.Map.empty),best)
+    -> (path -> Bool) -> ([path] -> best) -> (best -> [path] -> best)
+    -> [path] -> Maybe best
+astarAll heuristic neighbors toState done makeBest mergeBest initialPaths =
+    maybe Nothing init firstSearch
   where
-    search ((open,visited),best)
-      | Data.Set.null open = best
-      | curDone = maybe best (search . (,) (poppedOpen,visited))
-                      $ mergeBest best curPath
-      | otherwise =
-          maybe (search $ foldr check ((poppedOpen,visited),best)
-                        $ neighbors curPath)
-                (search . (,) (poppedOpen,visited)) $ mergeBest best curPath
+    heuristicA (path:_) = heuristic path
+    neighborsA (history@(path:_)) = map (:history) (neighbors path)
+    toStateA (path:_) = toState path
+    doneA (path:_) = done path
+    firstSearch = astarWithVisited (,) heuristicA neighborsA toStateA doneA
+                                   (map (:[]) initialPaths)
+    init (firstBestPath,firstVisited) =
+        search (initialBranches,firstVisited,visitedBest,initialBest,bestCost)
+      where
+        toVisitedBest path = (toState path,heuristic path)
+        visitedBest = Data.Map.fromList $ map toVisitedBest firstBestPath
+        bestCost = heuristicA firstBestPath
+
+        initialBest = makeBest firstBestPath
+
+        initialBranches =
+            Data.Set.fromList $ map toOpen
+                              $ filter viableBranch
+                              $ concatMap neighbors firstBestPath
+          where toOpen path = (heuristic path,[path])
+        viableBranch path
+          | Data.Map.member (toState path) visitedBest = False
+          | otherwise = maybe True (heuristic path ==)
+                              $ Data.Map.lookup (toState path) firstVisited
+
+    search (open,visited,visitedBest,best,bestCost)
+      | Data.Set.null open = Just best
+      | curDone && curCost == bestCost = search mergeCurrent
+      | curDone = search visitCurrent
+      | maybe False (curCost ==)
+              (Data.Map.lookup (toStateA curPath) visitedBest) =
+          search mergeCurrent
+      | otherwise = search enqueueNeighbors
       where
         Just ((curCost,curPath),poppedOpen) = Data.Set.minView open
-        curDone = done curPath
-        check nextPath ((open,visited),best)
-          | maybe True (cost <=) $
-                  Data.Map.lookup (toState nextPath) visited =
-              ((Data.Set.insert (cost,nextPath) open,
-                Data.Map.insert (toState nextPath) cost visited),
-               best)
-          | otherwise = ((open,visited),best)
-          where cost = heuristic nextPath
+        curDone = doneA curPath
+
+        mergeCurrent = (poppedOpen,
+                        foldr visit visited curPath,
+                        foldr visit visitedBest curPath,
+                        mergeBest best curPath,
+                        bestCost)
+        visitCurrent = (poppedOpen,
+                        foldr visit visited curPath,
+                        visitedBest,best,bestCost)
+        enqueueNeighbors = foldr enqueue
+                                 (poppedOpen,visited,visitedBest,best,bestCost)
+                               $ neighborsA curPath
+
+        visit path dict =
+            Data.Map.alter
+                (Just . maybe (heuristic path) (min (heuristic path)))
+                (toState path) dict
+        enqueue path (open,visited,visitedBest,best,bestCost)
+          | maybe True (cost <=) $ Data.Map.lookup (toStateA path) visited =
+              (Data.Set.insert (cost,path) open,
+               Data.Map.insert (toStateA path) cost visited,
+               visitedBest,best,bestCost)
+          | otherwise = (open,visited,visitedBest,best,bestCost)
+          where cost = heuristicA path

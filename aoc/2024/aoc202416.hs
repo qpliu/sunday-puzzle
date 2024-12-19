@@ -4,6 +4,7 @@ import Data.Array(Array,assocs,(!))
 import qualified Data.Array
 import Data.Map(Map,empty,insert,mapWithKey,member,unionWith)
 import qualified Data.Map
+import Data.Maybe(catMaybes)
 import Data.Set(Set,fromList,size,toList,union,unions)
 import qualified Data.Set
 
@@ -93,9 +94,11 @@ toGraph grid = dfs empty (empty,[start])
                          grid Data.Array.!(xy<<turnL dxy) /= '#',
                          grid Data.Array.!(xy<<turnR dxy) /= '#')
 
-result (start,end@(endX,endY),graph) =
-    h $ astar h neighbors snd done [(0,(start,(1,0)))]
+type Path1 = (Int,(XY,DXY))
+
+result (start,end@(endX,endY),graph) = bestScore
   where
+    Just (bestScore,_) = astar h neighbors snd done [(0,(start,(1,0)))]
     h (score,(xy@(x,y),dxy@(dx,dy)))
       | xy == end = score
       | signum (endX-x) == dx && y == endY = score + abs (endX-x)
@@ -130,48 +133,37 @@ getTiles grid graph = (tiles Data.Map.!)
           | grid Data.Array.! (xy<<turnL dxy) /= '#' = xy : walk (xy<<turnL dxy,turnL dxy)
           | otherwise = xy : walk (xy<<turnR dxy,turnR dxy)
 
-type Path2 = (Int,(XY,DXY),Map (XY,DXY) Int,Set (XY,DXY))
+type Path2 = (Int,((XY,DXY),Maybe (XY,DXY)))
 
 result2 :: (XY,XY,Map (XY,DXY) (Int,(XY,DXY)),(XY,DXY) -> Set XY) -> Int
 result2 (start,end@(endX,endY),graph,tiles) =
-    (1 +) -- end tile not counted in the following code
-        $ size $ unions $ map tiles $ toList $ snd
-        $ astarAll h neighbors state done mergeBest (firstPath,firstExits)
-                   (concatMap toStartPath $ Data.Map.toList firstPath)
+    size bestXYs + 1 -- end tile not included in the search
   where
-    (firstScore,_,firstPath,firstExits) =
-        astar h neighbors state done
-              [(0,(start,(1,0)),Data.Map.empty,Data.Set.empty)]
-    toStartPath (xyDxy,score) =
-        neighbors (score,xyDxy,Data.Map.empty,Data.Set.empty)
-
-    h (score,(xy@(x,y),dxy@(dx,dy)),_,_)
+    Just bestXYs = astarAll h neighbors toState done makeBest mergeBest
+                            [(0,((start,(1,0)),Nothing))]
+    h (score,((xy@(x,y),dxy@(dx,dy)),_))
       | xy == end = score
       | signum (endX-x) == dx && y == endY = score + abs (endX-x)
       | signum (endX-x) == dx = score + abs (endX-x) + abs (endY-y) + 1000
       | signum (endY-y) == dy && x == endX = score + abs (endY-y)
       | signum (endY-y) == dy = score + abs (endX-x) + abs (endY-y) + 1000
       | otherwise = score + abs (endX-x) + abs (endY-y) + 2000
-
-    state (_,xyDxy,_,_) = xyDxy
-
-    done (_,(xy,_),_,_) = xy == end
-
-    neighbors :: Path2 -> [Path2]
-    neighbors (score,src@(srcXY,srcDxy),path,exitsTaken) =
-        [(score+turnCost+cost,dest,insert src score path,
-                               Data.Set.insert exit exitsTaken)
-         | (turnCost,exit) <- [(0,(srcXY,srcDxy)),
+    neighbors (score,((srcXY,srcDxy),_)) =
+        [(score+turnScore+cost,(dest,Just src))
+         | (turnScore,src) <- [(0,(srcXY,srcDxy)),
                                (1000,(srcXY,turnL srcDxy)),
                                (1000,(srcXY,turnR srcDxy))],
-           member exit graph,
-           (cost,dest) <- [graph Data.Map.! exit]]
+           member src graph,
+           (cost,dest) <- [graph Data.Map.! src]]
+    toState (_,(xyDxy,_)) = xyDxy
+    done (_,((xy,_),_)) = xy == end
 
-    mergeBest best@(bestPath,bestExits) (score,xyDxy@(xy,_),path,exits)
-      | score > firstScore = Just best -- prune
-      | xy == end =
-          Just (unionWith min path bestPath,union exits bestExits) -- merge
-      | not (member xyDxy bestPath) = Nothing -- keep going
-      | score > bestPath Data.Map.! xyDxy = Just best -- prune
-      | otherwise =
-          Just (unionWith min path bestPath,union exits bestExits) -- merge
+    makeBest :: [Path2] -> Set XY
+    makeBest = Data.Set.unions . map getTiles
+
+    mergeBest :: Set XY -> [Path2] -> Set XY
+    mergeBest best = Data.Set.unions . (best:) . map getTiles
+
+    getTiles :: Path2 -> Set XY
+    getTiles (_,(_,Just src)) = tiles src
+    getTiles _ = Data.Set.empty

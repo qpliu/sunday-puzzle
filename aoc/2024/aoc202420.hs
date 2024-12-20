@@ -1,12 +1,8 @@
 module AOC202420 where
 
-import Data.Array(Array,assocs,bounds,inRange,(!))
-import Data.Map(Map)
-import qualified Data.Map
-import Data.Set(Set)
-import qualified Data.Set
-
-import Debug.Trace(traceShow)
+import Data.Array(Array,assocs)
+import qualified Data.Array
+import Data.Map(Map,fromList,member,(!))
 
 import AOC
 
@@ -33,11 +29,11 @@ aoc = AOC {
     testData2="",
     testResult2="285",
     aocParse=parse2da,
-    aocTest=result 2,
-    aocResult=result 100,
+    aocTest=result 2 cheats1,
+    aocResult=result 100 cheats1,
     aocParse2=parse2da,
-    aocTest2=result2 50,
-    aocResult2=result2 100
+    aocTest2=result 50 cheats2,
+    aocResult2=result 100 cheats2
     }
 
 type Grid = Array (Int,Int) Char
@@ -46,70 +42,32 @@ getStart = fst . head . filter ((== 'S') . snd) . assocs
 
 getEnd = fst . head . filter ((== 'E') . snd) . assocs
 
-makeTrail :: Grid -> Map (Int,Int) Int
-makeTrail grid = bfs Data.Map.empty [(end,0)]
+makeTrail :: Grid -> [((Int,Int),Int)]
+makeTrail grid = walk (getStart grid) 0 (0,0)
   where
-    bfs trail [] = trail
-    bfs trail ((xy@(x,y),t):queue)
-      -- start is only reachable from one spot in my input
-      | xy == start = Data.Map.insert xy t trail
-      | Data.Map.member xy trail = bfs trail queue
-      | otherwise = bfs (Data.Map.insert xy t trail) (queue ++ neighbors)
-      where
-        neighbors = [(newxy,t+1)
-                     | newxy <- [(x+1,y),(x-1,y),(x,y+1),(x,y-1)],
-                       not $ Data.Map.member newxy trail, grid!newxy /= '#']
-    start = getStart grid
     end = getEnd grid
+    walk xy@(x,y) t dxy
+      | xy == end = [(xy,t)]
+      | otherwise = (xy,t) : walk nxy (t+1) ndxy
+      where [(nxy,ndxy)] = [((x+dx,y+dy),ndxy)
+                            | ndxy@(dx,dy) <- [(1,0),(-1,0),(0,1),(0,-1)],
+                            dxy /= (-dx,-dy),
+                            grid Data.Array.! (x+dx,y+dy) /= '#']
 
-findCheats :: Int -> Grid -> [(Int,(Int,Int),(Int,Int))]
-findCheats threshold grid = bfs Data.Set.empty [(start,0)]
-  where
-    start = getStart grid
-    trail = makeTrail grid
-    limit = (trail Data.Map.! start) - threshold
-    bfs seen [] = []
-    bfs seen ((xy@(x,y),t):queue)
-      | t > limit = []
-      | Data.Set.member xy seen = bfs seen queue
-      | otherwise = cheats ++ bfs (Data.Set.insert xy seen) (queue++neighbors)
-      where
-        -- no diagonal cheats possible in my input
-        cheats = [(finishTime,xy,cheatXY)
-                  | (wallXY,cheatXY) <-
-                      [((x+1,y),(x+2,y)),((x-1,y),(x-2,y)),
-                       ((x,y+1),(x,y+2)),((x,y-1),(x,y-2))],
-                    grid!wallXY == '#',
-                    Data.Map.member cheatXY trail,
-                    finishTime <- [t + 2 + trail Data.Map.! cheatXY],
-                    finishTime <= limit]
-        neighbors = [(newxy,t+1)
-                     | newxy <- [(x+1,y),(x-1,y),(x,y+1),(x,y-1)],
-                       not $ Data.Set.member newxy seen, grid!newxy /= '#']
+countCheats :: Int -> [(Int,Int)] -> Map (Int,Int) Int -> ((Int,Int),Int)
+            -> Int
+countCheats threshold cheatTargets trail ((x,y),t) =
+    length $ [() | (dx,dy) <- cheatTargets,
+                   member (x+dx,y+dy) trail,
+                   trail!(x+dx,y+dy) >= t + abs dx + abs dy + threshold]
 
-result threshold = length . findCheats threshold
+cheats1 :: [(Int,Int)]
+cheats1 =
+    [(2,0),(0,2),(-2,0),(0,-2)] -- diagonal cheats are not possible in my input
 
-findCheats2 :: Int -> Grid -> [(Int,(Int,Int),(Int,Int))]
-findCheats2 threshold grid = bfs Data.Set.empty [(start,0)]
-  where
-    start = getStart grid
-    trail = makeTrail grid
-    limit = (trail Data.Map.! start) - threshold
-    bfs seen [] = []
-    bfs seen ((xy@(x,y),t):queue)
-      | t > limit = []
-      | Data.Set.member xy seen = bfs seen queue
-      | otherwise = cheats ++ bfs (Data.Set.insert xy seen) (queue++neighbors)
-      where
-        cheats = [(finishTime,xy,cheatXY)
-                  | dx <- [-20..20], dy <- [-20..20],
-                    dt <- [abs dx + abs dy], dt <= 20,
-                    cheatXY <- [(x+dx,y+dy)],
-                    Data.Map.member cheatXY trail,
-                    finishTime <- [t + dt + trail Data.Map.! cheatXY],
-                    finishTime <= limit]
-        neighbors = [(newxy,t+1)
-                     | newxy <- [(x+1,y),(x-1,y),(x,y+1),(x,y-1)],
-                       not $ Data.Set.member newxy seen, grid!newxy /= '#']
+cheats2 :: [(Int,Int)]
+cheats2 = [(dx,dy) | dx <- [-20..20], dy <- [-20..20], abs dx + abs dy <= 20]
 
-result2 threshold = length . findCheats2 threshold
+result threshold cheatTargets grid =
+    sum $ map (countCheats threshold cheatTargets (fromList trail)) trail
+  where trail = makeTrail grid

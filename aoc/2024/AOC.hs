@@ -1,5 +1,6 @@
 module AOC where
 
+import Control.Monad.State(State,evalState,get,modify)
 import Data.Array(Array,array)
 import Data.Char(isDigit)
 import Data.Map(Map,keys)
@@ -120,6 +121,21 @@ parseInts = p . dropWhile notStart
       where (n,rest) = span isDigit str
     p str = read n : parseInts rest
       where (n,rest) = span isDigit str
+
+type Memo a b = State (Map a b)
+
+evalMemoized :: Memo a b c -> c
+evalMemoized expr = evalState expr Data.Map.empty
+
+memoize :: Ord a => (a -> Memo a b b) -> a -> Memo a b b
+memoize f a = do
+    memo <- get
+    maybe eval return $ Data.Map.lookup a memo
+  where
+    eval = do
+        b <- f a
+        modify (Data.Map.insert a b)
+        return b
 
 astar :: (Ord cost, Ord path, Ord state) =>
     (path -> cost) -> (path -> [path]) -> (path -> state)

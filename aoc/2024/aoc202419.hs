@@ -1,7 +1,6 @@
 module AOC202419 where
 
-import Data.List(sort)
-import Data.Set(elems,empty,fromList,insert,member)
+import Data.Set(Set,fromList,member)
 
 import AOC
 
@@ -30,51 +29,44 @@ aoc = AOC {
     aocResult2=result2
     }
 
+maxLen = 8 -- hard coded maximum pattern length
+
+parse :: String -> (Set String,[String])
 parse = p . lines
-  where p (patterns:"":designs) = (words $ filter (/= ',') patterns,designs)
+  where p (patterns:"":designs) =
+            (fromList $ words $ filter (/= ',') patterns,designs)
 
-possible maxlen patterns design
-  | null design = True
-  | otherwise = any matches [1..l]
+possible :: Set String -> String -> Bool
+possible patterns design = evalMemoized (possibleM design)
   where
-    l = min maxlen (length design)
-    matches len
-      | null design = True
-      | len > length design = False
-      | member h patterns = possible maxlen patterns t
-      | otherwise = False
-      where (h,t) = splitAt len design
-
-minPatSet pats = foldl add empty sortedByLength
-  where
-    add patset pat
-      | possible (length pat) patset pat = patset
-      | otherwise = insert pat patset
-    sortedByLength = map snd $ sort $ zip (map length pats) pats
-
-possibles (patterns,designs) = filter (possible minmaxlen minpats) designs
-  where
-    minpats = minPatSet patterns
-    minmaxlen = maximum $ map length $ elems minpats
-
-result = length . possibles
-
-result2 (patterns,designs) = sum $ map (waysToMake maxlen pats) designs
-  where
-    pats = fromList patterns
-    maxlen = maximum $ map length patterns
-
-waysToMake maxlen pats design = w design
-  where
-    w [] = 1
-    w des@[_]
-      | member des pats = 1
-      | otherwise = 0
-    w des = w left*w right
-          + sum [w (reverse (drop i rleft)) * w (drop j right)
-                 | i <- [1 .. min maxlen (length left)],
-                   j <- [1 .. min (maxlen-i) (length right)],
-                   member (reverse (take i rleft) ++ take j right) pats]
+    possibleM = memoize p
+    p design
+      | null design = return True
+      | otherwise = check [1..maxLen]
       where
-        (left,right) = splitAt ((length des) `div` 2) des
-        rleft = reverse left
+        check [] = return False
+        check (n:ns)
+          | take n design `member` patterns = do
+              res <- possibleM (drop n design)
+              if res
+                then return True
+                else check ns
+          | otherwise = check ns
+
+result (patterns,designs) = length $ filter (possible patterns) designs
+
+ways :: Set String -> String -> Int
+ways patterns design = evalMemoized (waysM design)
+  where
+    waysM = memoize w
+    w design
+      | null design = return 1
+      | otherwise = do
+          results <- mapM check [1..min maxLen (length design)]
+          return $ sum results
+      where
+        check n
+          | take n design `member` patterns = waysM $ drop n design
+          | otherwise = return 0
+
+result2 (patterns,designs) = sum $ map (ways patterns) designs

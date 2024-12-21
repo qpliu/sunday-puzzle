@@ -22,6 +22,7 @@ import AOC202417
 import AOC202418
 import AOC202419
 import AOC202420
+import AOC202421
 
 main :: IO ()
 main = getArgs >>= execute . foldr parseArg (empty,empty)
@@ -55,7 +56,8 @@ execute (includes,excludes) = do
         r AOC202417.aoc,
         r AOC202418.aoc,
         r AOC202419.aoc,
-        r AOC202420.aoc
+        r AOC202420.aoc,
+        r AOC202421.aoc
         ]
     putStrLn ("Total time: " ++ show (sum times))
   where

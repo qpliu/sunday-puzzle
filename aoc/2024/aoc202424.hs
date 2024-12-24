@@ -2,7 +2,7 @@ module AOC202424 where
 
 import Data.Bits(xor,(.&.),(.|.))
 import Data.List(intercalate,sort)
-import Data.Map(fromList,keys,(!))
+import Data.Map(elems,fromList,keys,toList,(!))
 
 import AOC
 
@@ -68,37 +68,44 @@ aoc = AOC {
     aocResult2=result2
     }
 
-data Expr = C Int | I String | XOR Expr Expr | OR Expr Expr | AND Expr Expr
+data Expr = C Int
+          | I String
+          | XOR Expr Expr String
+          | OR  Expr Expr String
+          | AND Expr Expr String
     deriving (Eq,Ord,Show)
 
 parse = map p . filter (not . null) . map words . lines
   where
     p [a,b] = (I (init a),C (read b))
-    p [a,"XOR",b,"->",c] = (I c,XOR (I a) (I b))
-    p [a,"OR", b,"->",c] = (I c,OR  (I a) (I b))
-    p [a,"AND",b,"->",c] = (I c,AND (I a) (I b))
+    p [a,"XOR",b,"->",c] = (I c,XOR (I a) (I b) c)
+    p [a,"OR", b,"->",c] = (I c,OR  (I a) (I b) c)
+    p [a,"AND",b,"->",c] = (I c,AND (I a) (I b) c)
 
 result input = sum $ zipWith (*) (map (table!) (zs table)) [2^n | n <- [0..]]
   where
     table = fromList $ map f input
 
     f (k,C v) = (k,v)
-    f (k,XOR a b) = (k,(table!a) `xor` (table!b))
-    f (k,OR  a b) = (k,(table!a) .|.   (table!b))
-    f (k,AND a b) = (k,(table!a) .&.   (table!b))
+    f (k,XOR a b _) = (k,(table!a) `xor` (table!b))
+    f (k,OR  a b _) = (k,(table!a) .|.   (table!b))
+    f (k,AND a b _) = (k,(table!a) .&.   (table!b))
 
 zs table = sort $ filter isZ $ keys table
   where
     isZ (I ('z':_)) = True
     isZ _ = False
 
-showWire c n
-  | n < 10 = c:'0':show n
-  | otherwise = c:show n
+prev (I ['z',c,'0']) = (I ['z',pred c,'9'])
+prev (I ['z',c,d]) = (I ['z',c,pred d])
 
-showX = showWire 'x'
-showY = showWire 'y'
-showZ = showWire 'z'
+x (I ('z':i)) = I ('x':i)
+x _ = C 2
+y (I ('z':i)) = I ('y':i)
+y _ = C 3
+toz (I ('x':i)) = I ('z':i)
+toz _ = C 4
+z00 = I "z00"
 
 makeTable swaps input = table
   where
@@ -113,38 +120,79 @@ makeTable swaps input = table
       | otherwise = swap a rest
 
     f (k,C _) = (k,k)
-    f (k,XOR a b) = (k,XOR (table!a) (table!b))
-    f (k,OR  a b) = (k,OR  (table!a) (table!b))
-    f (k,AND a b) = (k,AND (table!a) (table!b))
+    f (k,XOR a b i) = kv k XOR a b i
+    f (k,OR  a b i) = kv k OR  a b i
+    f (k,AND a b i) = kv k AND a b i
 
+    kv k op a b i = (k,op (min aexpr bexpr) (max aexpr bexpr) i)
+      where
+        aexpr = table!a
+        bexpr = table!b
 
-isXOR n (XOR (I a) (I b)) =
-    (a == showX n && b == showY n) || (a == showY n && b == showX n)
+isXOR z (XOR a b _) = a == x z && b == y z
 isXOR _ _ = False
 
-isAdd n expr@(XOR a b)
-  | n == 0 = isXOR n expr
-  | otherwise =
-        (isXOR n a && isCarry (n-1) b) || (isXOR n b && isCarry (n-1) a)
-isAdd n expr
-  | n == 45 = isCarry (n-1) expr
+isAdd zmax z expr@(XOR a b _)
+  | z == z00 = isXOR z expr
+  | otherwise = isXOR z a && isCarry (prev z) b
+isAdd zmax z expr
+  | z == zmax = isCarry (prev z) expr
   | otherwise = False
 
-isCarry n _ = True -- not needed for my input
+-- with zNN, just checking that [xNN AND yNN] exists somewhere in
+-- the expression is enough for my input
+isCarry z (AND a b _)
+  | a == x z && b == y z = True
+  | otherwise = isCarry z a || isCarry z b
+isCarry z (XOR a b _) = isCarry z a || isCarry z b
+isCarry z (OR a b _) = isCarry z a || isCarry z b
+isCarry z _ = False
 
-result2 input
-  | not $ null bad = "bad:" ++ format bad
-  | otherwise = format $ concat swaps
+findSwap input swaps = check $ zs table
   where
-    -- from manual inspection
-    swaps = [["z10","ggn"],["z39","twr"],["z32","grm"],["ndw","jcb"]]
     table = makeTable swaps input
-    bad = [zid | z@(I zid) <- zs table,
-                     expr <- [table!z],
-                     n <- [makeN z],
-                     not ((z == maxZ && isCarry (n-1) expr)
-                          || isAdd n expr)]
-    maxZ = maximum $ zs table
-    makeN (I ('z':'0':n)) = read n
-    makeN (I ('z':n)) = read n
-    format = intercalate "," . sort
+    zmax = maximum $ zs table
+
+    xorXYs = fromList [(z,expr) | expr <- elems table, z <- zForXORxy expr]
+    zForXORxy (XOR x1 y1 _)
+      | x1 == x (toz x1) && y1 == y (toz x1) = [toz x1]
+      | otherwise = []
+    zForXORxy _ = []
+
+    addXYs = fromList [(z,expr) | expr <- elems table, z <- zForAddXY expr]
+    zForAddXY (XOR (XOR x1 y1 _) _ _)
+      | x1 == x (toz x1) && y1 == y (toz x1) = [toz x1]
+      | otherwise = []
+    zForAddXY (XOR _ (XOR x1 y1 _) _)
+      | x1 == x (toz x1) && y1 == y (toz x1) = [toz x1]
+      | otherwise = []
+    zForAddXY _ = []
+
+    check [] = []
+    check (z@(I zi):rest)
+      | z == z00 && table!z == xorXYs!z = check rest
+      | z == zmax = checkCarry (prev z) (table!z)
+      | otherwise = checkAdd (table!z)
+      where
+        checkAdd (XOR a b _)
+          | a == xorXY = checkCarry (prev z) b
+          | b == xorXY = checkCarry (prev z) a
+          | isCarry (prev z) a = makeSwap b
+          | isCarry (prev z) b = makeSwap a
+          | otherwise = error (show z)
+          where
+            xorXY@(XOR _ _ xorXYi) = xorXYs!z
+            makeSwap (XOR _ _ i) = [i,xorXYi]
+            makeSwap (OR _ _ i) = [i,xorXYi]
+            makeSwap (AND _ _ i) = [i,xorXYi]
+        checkAdd _ = zi : [ai | (XOR _ _ ai) <- [addXYs!z]]
+
+        checkCarry zc _ = check rest -- not needed for my input
+
+result2 input = format $ swaps []
+  where
+    swaps swapList
+      | null swap = []
+      | otherwise = swap : swaps (swap:swapList)
+      where swap = findSwap input swapList
+    format = intercalate "," . sort . concat

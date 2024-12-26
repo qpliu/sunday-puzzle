@@ -37,7 +37,7 @@ aoc = AOC {
     aocParse=parse,
     aocTest=result,
     aocResult=result,
-    aocParse2=parse2,
+    aocParse2=parse,
     aocTest2=result2,
     aocResult2=result2
     }
@@ -61,12 +61,12 @@ type XY = (Int,Int)
 
 type DXY = (Int,Int)
 
-toGraph :: Array XY Char -> Map (XY,DXY) (Int,(XY,DXY))
+toGraph :: Array XY Char -> Map (XY,DXY) (Int,(XY,DXY),Set XY)
 toGraph grid = dfs empty (empty,[start])
   where
     start = getStart grid
     end = getEnd grid
-    dfs :: Map XY () -> (Map (XY,DXY) (Int,(XY,DXY)),[XY]) -> Map (XY,DXY) (Int,(XY,DXY))
+    dfs :: Map XY () -> (Map (XY,DXY) (Int,(XY,DXY),Set XY),[XY]) -> Map (XY,DXY) (Int,(XY,DXY),Set XY)
     dfs seen (graph,[]) = graph
     dfs seen (graph,(xy0:queue))
       | member xy0 seen = dfs seen (graph,queue)
@@ -74,96 +74,69 @@ toGraph grid = dfs empty (empty,[start])
           dfs (insert xy0 () seen) $ foldr walk (graph,queue)
                                            [(1,0),(-1,0),(0,1),(0,-1)]
       where
-        walk :: DXY -> (Map (XY,DXY) (Int,(XY,DXY)),[XY]) -> (Map (XY,DXY) (Int,(XY,DXY)),[XY])
+        walk :: DXY -> (Map (XY,DXY) (Int,(XY,DXY),Set XY),[XY]) -> (Map (XY,DXY) (Int,(XY,DXY),Set XY),[XY])
         walk dxy0 gq@(g,q)
           | grid Data.Array.!(xy0<<dxy0) == '#' = gq
-          | otherwise = walk1 (xy0<<dxy0) dxy0 1
+          | otherwise = walk1 (xy0<<dxy0) dxy0 [xy0] 1
           where
-            walk1 :: XY -> DXY -> Int -> (Map (XY,DXY) (Int,(XY,DXY)),[XY])
-            walk1 xy dxy cost
-              | xy == end = (insert (xy0,dxy0) (cost,(xy,dxy)) g,q)
+            walk1 :: XY -> DXY -> [XY] -> Int -> (Map (XY,DXY) (Int,(XY,DXY),Set XY),[XY])
+            walk1 xy dxy tiles cost
+              | xy == end = (insert (xy0,dxy0) (cost,(xy,dxy),fromList tiles) g,q)
               | exits == (False,False,False) = gq -- dead end
-              | exits == (True,False,False) = walk1 (xy<<dxy) dxy (cost+1)
+              | exits == (True,False,False) = walk1 (xy<<dxy) dxy (xy:tiles) (cost+1)
               | exits == (False,True,False) =
-                  walk1 (xy<<turnL dxy) (turnL dxy) (cost+1001)
+                  walk1 (xy<<turnL dxy) (turnL dxy) (xy:tiles) (cost+1001)
               | exits == (False,False,True) =
-                  walk1 (xy<<turnR dxy) (turnR dxy) (cost+1001)
-              | otherwise = (insert (xy0,dxy0) (cost,(xy,dxy)) g,xy:q)
+                  walk1 (xy<<turnR dxy) (turnR dxy) (xy:tiles) (cost+1001)
+              | otherwise = (insert (xy0,dxy0) (cost,(xy,dxy),fromList tiles) g,xy:q)
               where
                 exits = (grid Data.Array.!(xy<<dxy) /= '#',
                          grid Data.Array.!(xy<<turnL dxy) /= '#',
                          grid Data.Array.!(xy<<turnR dxy) /= '#')
 
-type Path1 = (Int,(XY,DXY))
+type State = (XY,DXY)
+type Path = (Int,(State,Set XY))
+
+heuristic :: XY -> Path -> Int
+heuristic end@(endX,endY) (score,((xy@(x,y),dxy@(dx,dy)),_))
+  | xy == end = score
+  | signum (endX-x) == dx && y == endY = score + abs (endX-x)
+  | signum (endX-x) == dx = score + abs (endX-x) + abs (endY-y) + 1000
+  | signum (endY-y) == dy && x == endX = score + abs (endY-y)
+  | signum (endY-y) == dy = score + abs (endX-x) + abs (endY-y) + 1000
+  | otherwise = score + abs (endX-x) + abs (endY-y) + 2000
+
+neighbors :: Map (XY,DXY) (Int,(XY,DXY),Set XY) -> Path -> [Path]
+neighbors graph (score,((srcXY,srcDxy),_)) =
+    [(score+turnScore+cost,(dest,tiles))
+     | (turnScore,src) <- [(0,(srcXY,srcDxy)),
+                           (1000,(srcXY,turnL srcDxy)),
+                           (1000,(srcXY,turnR srcDxy))],
+       member src graph,
+       (cost,dest,tiles) <- [graph Data.Map.! src]]
+
+toState :: Path -> State
+toState (_,(xyDxy,_)) = xyDxy
+
+done :: XY -> Path -> Bool
+done end (_,((xy,_),_)) = xy == end
+
+initialPaths :: XY -> [Path]
+initialPaths start = [(0,((start,(1,0)),Data.Set.empty))]
 
 result (start,end@(endX,endY),graph) = bestScore
   where
-    Just (bestScore,_) = astar h neighbors snd done [(0,(start,(1,0)))]
-    h (score,(xy@(x,y),dxy@(dx,dy)))
-      | xy == end = score
-      | signum (endX-x) == dx && y == endY = score + abs (endX-x)
-      | signum (endX-x) == dx = score + abs (endX-x) + abs (endY-y) + 1000
-      | signum (endY-y) == dy && x == endX = score + abs (endY-y)
-      | signum (endY-y) == dy = score + abs (endX-x) + abs (endY-y) + 1000
-      | otherwise = score + abs (endX-x) + abs (endY-y) + 2000
-    neighbors (score,(srcXY,srcDxy)) =
-        [(score+turnScore+cost,dest)
-         | (turnScore,src) <- [(0,(srcXY,srcDxy)),
-                               (1000,(srcXY,turnL srcDxy)),
-                               (1000,(srcXY,turnR srcDxy))],
-           member src graph,
-           (cost,dest) <- [graph Data.Map.! src]]
-    done (_,(xy,_)) = xy == end
+    Just (bestScore,_) =
+        astar (heuristic end) (neighbors graph) toState (done end)
+              (initialPaths start)
 
-parse2 :: String -> (XY,XY,Map (XY,DXY) (Int,(XY,DXY)),(XY,DXY) -> Set XY)
-parse2 input = (getStart grid,getEnd grid,graph,getTiles grid graph)
-  where
-    grid = parse2da input
-    graph = toGraph grid
-
-getTiles :: Array XY Char -> Map (XY,DXY) (Int,(XY,DXY)) -> (XY,DXY) -> Set XY
-getTiles grid graph = (tiles Data.Map.!)
-  where
-    tiles = mapWithKey toTiles graph
-    toTiles xyDxy0 (_,xyDxy1) = fromList $ walk xyDxy0
-      where
-        walk xyDxy@(xy,dxy)
-          | xyDxy == xyDxy1 = []
-          | grid Data.Array.! (xy<<dxy) /= '#' = xy : walk (xy<<dxy,dxy)
-          | grid Data.Array.! (xy<<turnL dxy) /= '#' = xy : walk (xy<<turnL dxy,turnL dxy)
-          | otherwise = xy : walk (xy<<turnR dxy,turnR dxy)
-
-type Path2 = (Int,((XY,DXY),Maybe (XY,DXY)))
-
-result2 :: (XY,XY,Map (XY,DXY) (Int,(XY,DXY)),(XY,DXY) -> Set XY) -> Int
-result2 (start,end@(endX,endY),graph,tiles) =
+result2 (start,end@(endX,endY),graph) =
     size bestXYs + 1 -- end tile not included in the search
   where
-    Just bestXYs = astarAll h neighbors toState done makeBest mergeBest
-                            [(0,((start,(1,0)),Nothing))]
-    h (score,((xy@(x,y),dxy@(dx,dy)),_))
-      | xy == end = score
-      | signum (endX-x) == dx && y == endY = score + abs (endX-x)
-      | signum (endX-x) == dx = score + abs (endX-x) + abs (endY-y) + 1000
-      | signum (endY-y) == dy && x == endX = score + abs (endY-y)
-      | signum (endY-y) == dy = score + abs (endX-x) + abs (endY-y) + 1000
-      | otherwise = score + abs (endX-x) + abs (endY-y) + 2000
-    neighbors (score,((srcXY,srcDxy),_)) =
-        [(score+turnScore+cost,(dest,Just src))
-         | (turnScore,src) <- [(0,(srcXY,srcDxy)),
-                               (1000,(srcXY,turnL srcDxy)),
-                               (1000,(srcXY,turnR srcDxy))],
-           member src graph,
-           (cost,dest) <- [graph Data.Map.! src]]
-    toState (_,(xyDxy,_)) = xyDxy
-    done (_,((xy,_),_)) = xy == end
+    Just bestXYs =
+        astarAll (heuristic end) (neighbors graph) toState (done end)
+                 makeBest mergeBest (initialPaths start)
 
-    makeBest :: [Path2] -> Set XY
-    makeBest = Data.Set.unions . map getTiles
-
-    mergeBest :: Set XY -> [Path2] -> Set XY
-    mergeBest best = Data.Set.unions . (best:) . map getTiles
-
-    getTiles :: Path2 -> Set XY
-    getTiles (_,(_,Just src)) = tiles src
-    getTiles _ = Data.Set.empty
+    makeBest = unions . map getTiles
+    mergeBest best = unions . (best:) . map getTiles
+    getTiles (_,(_,tiles)) = tiles

@@ -1,5 +1,7 @@
 module AOC where
 
+import Control.Monad.Par(NFData,Par,runPar,spawn)
+import qualified Control.Monad.Par
 import Control.Monad.State(State,evalState,get,modify)
 import Data.Array(Array,array)
 import Data.Char(isDigit)
@@ -50,13 +52,15 @@ part2 AOC { day=d, aocParse2=p, aocResult2=r } = do
 
 run :: (Show result, Show result2) => AOC parsed result parsed2 result2 -> IO NominalDiffTime
 run aoc = do
-    putStr ("Day " ++ day aoc ++ " test part 1: ")
-    print $ test aoc
+    if test aoc /= ()
+      then error ("Day " ++ day aoc ++ " test part 1 fail")
+      else return ()
     putStr ("Day " ++ day aoc ++ " part 1: ")
     dt1 <- part1 aoc
     putStrLn ("Day " ++ day aoc ++ " part 1 time: " ++ show dt1)
-    putStr ("Day " ++ day aoc ++ " test part 2: ")
-    print $ test2 aoc
+    if test2 aoc /= ()
+      then error ("Day " ++ day aoc ++ " test part 2 fail")
+      else return ()
     putStr ("Day " ++ day aoc ++ " part 2: ")
     dt2 <- part2 aoc
     putStrLn ("Day " ++ day aoc ++ " part 2 time: " ++ show dt2)
@@ -231,3 +235,19 @@ astarAll heuristic neighbors toState done makeBest mergeBest initialPaths =
                visitedBest,best,bestCost)
           | otherwise = (open,visited,visitedBest,best,bestCost)
           where cost = heuristicA path
+
+ncpu :: Num a => a
+ncpu = 8
+
+parallelMapReduce :: NFData b => Int -> (a -> b) -> ([b] -> b) -> [a] -> b
+parallelMapReduce ncpu m r as = runPar $ do
+    tasks <- mapM (spawn . return . r . map m)
+                  (groupsOf (length as `div` ncpu + 1) as)
+    results <- mapM Control.Monad.Par.get tasks
+    return $ r results
+
+groupsOf :: Int -> [a] -> [[a]]
+groupsOf n as
+  | null a2s = [as]
+  | otherwise = a1s : groupsOf n a2s
+  where (a1s,a2s) = splitAt n as

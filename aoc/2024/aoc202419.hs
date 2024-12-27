@@ -69,4 +69,4 @@ ways patterns design = evalMemoized (waysM design)
           | take n design `member` patterns = waysM $ drop n design
           | otherwise = return 0
 
-result2 (patterns,designs) = sum $ map (ways patterns) designs
+result2 (patterns,designs) = parallelMapReduce ncpu (ways patterns) sum designs

@@ -69,5 +69,6 @@ cheats2 :: [(Int,Int)]
 cheats2 = [(dx,dy) | dx <- [-20..20], dy <- [-20..20], abs dx + abs dy <= 20]
 
 result threshold cheatTargets grid =
-    sum $ map (countCheats threshold cheatTargets (fromList trail)) trail
+    parallelMapReduce ncpu
+        (countCheats threshold cheatTargets (fromList trail)) sum trail
   where trail = makeTrail grid

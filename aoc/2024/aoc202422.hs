@@ -37,7 +37,7 @@ next x0 = x3
 nextN :: Int -> Int -> Int
 nextN n = head . drop n . iterate next
 
-result = sum . map (nextN 2000)
+result = parallelMapReduce ncpu (nextN 2000) sum
 
 gen :: (Int,Int,Int) -> (Int,Int,Int)
 gen (secret,changes,price) = (nsecret,nchanges,nprice)
@@ -56,4 +56,4 @@ prices :: Int -> Map Int Int
 prices secret =
     foldl collect empty $ drop 4 $ take 2001 $ iterate gen (secret,0,0)
 
-result2 = maximum . unionsWith (+) . map prices
+result2 = maximum . parallelMapReduce ncpu prices (unionsWith (+))

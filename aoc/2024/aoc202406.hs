@@ -62,19 +62,17 @@ toCounts grid = countsArray
       where nextXY = step dir xy
 
 result2 :: Array (Int,Int) Char -> Int
-result2 grid = walk empty empty (start grid) N
+result2 grid =
+    parallelMapReduce ncpu id sum $ walk empty (start grid) N
   where
     out = not . inRange (bounds grid)
     graph = makeGraph grid
-    walk loop noloop xy dir
-      | out nextXY = size loop
-      | grid!nextXY == '#' = walk loop noloop xy (turn dir)
-      | member nextXY loop || member nextXY noloop =
-          walk loop noloop nextXY dir
-      | hasLoop graph xy dir =
-          walk (insert nextXY loop) noloop nextXY dir
+    walk tried xy dir
+      | out nextXY = []
+      | grid!nextXY == '#' = walk tried xy (turn dir)
+      | member nextXY tried = walk tried nextXY dir
       | otherwise =
-          walk loop (insert nextXY noloop) nextXY dir
+          hasLoop graph xy dir : walk (insert nextXY tried) nextXY dir
       where nextXY = step dir xy
 
 makeGraph :: Array (Int,Int) Char -> Array ((Int,Int),Dir) (Int,Int)
@@ -90,14 +88,14 @@ makeGraph grid = graph
       | otherwise = (idx,graph!(nextXY,dir))
       where nextXY = step dir xy
 
-hasLoop :: Array ((Int,Int),Dir) (Int,Int) -> (Int,Int) -> Dir -> Bool
+hasLoop :: Array ((Int,Int),Dir) (Int,Int) -> (Int,Int) -> Dir -> Int
 hasLoop graph xy dir = walk empty (xy,dir)
   where
     out = not . inRange (bounds graph)
     (xobs,yobs) = step dir xy
     walk path idx@((x,y),dir)
-      | out idx = False
-      | member idx path = True
+      | out idx = 0
+      | member idx path = 1
       | x == xobs && y < yobs && yobs <= nexty =
           walk (insert idx path) ((x,yobs-1),turn dir)
       | x == xobs && y > yobs && yobs >= nexty =

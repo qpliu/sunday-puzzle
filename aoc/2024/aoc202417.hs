@@ -8,28 +8,38 @@ import AOC
 
 aoc = AOC {
     day="17",
-    testData=unlines [
-    "Register A: 729",
-    "Register B: 0",
-    "Register C: 0",
-    "",
-    "Program: 0,1,5,4,3,0"
-    ],
-    testResult="[4,6,3,5,6,3,5,2,1,0]",
-    testData2=unlines [
-    "Register A: 2024",
-    "Register B: 0",
-    "Register C: 0",
-    "",
-    "Program: 0,3,5,4,3,0"
-    ],
-    testResult2="117440",
-    aocParse=parseInts,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parseInts,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "Register A: 729",
+                "Register B: 0",
+                "Register C: 0",
+                "",
+                "Program: 0,1,5,4,3,0"
+                ],
+            testResult=Just "[4,6,3,5,6,3,5,2,1,0]",
+            testResult2=Nothing
+            },
+        AOCTest {
+            testData=unlines [
+                "Register A: 2024",
+                "Register B: 0",
+                "Register C: 0",
+                "",
+                "Program: 0,3,5,4,3,0"
+                ],
+            testResult=Nothing,
+            testResult2=Just "117440"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parseInts,
+        codeParse2=parseInts,
+        codeTest=result,
+        codeTest2=result2,
+        codeResult=result,
+        codeResult2=result2
+        }
     }
 
 result (a:b:c:rest) =

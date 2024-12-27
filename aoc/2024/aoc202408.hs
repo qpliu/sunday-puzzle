@@ -7,29 +7,34 @@ import AOC
 
 aoc = AOC {
     day="08",
-    testData=unlines [
-    "............",
-    "........0...",
-    ".....0......",
-    ".......0....",
-    "....0.......",
-    "......A.....",
-    "............",
-    "............",
-    "........A...",
-    ".........A..",
-    "............",
-    "............"
-    ],
-    testResult="14",
-    testData2="",
-    testResult2="34",
-    aocParse=parse2d,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse2d,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "............",
+                "........0...",
+                ".....0......",
+                ".......0....",
+                "....0.......",
+                "......A.....",
+                "............",
+                "............",
+                "........A...",
+                ".........A..",
+                "............",
+                "............"
+                ],
+            testResult=Just "14",
+            testResult2=Just "34"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse2d,
+        codeParse2=parse2d,
+        codeTest=result,
+        codeTest2=result2,
+        codeResult=result,
+        codeResult2=result2
+        }
     }
 
 result mp =

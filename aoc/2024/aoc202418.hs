@@ -8,42 +8,47 @@ import AOC
 
 aoc = AOC {
     day="18",
-    testData=unlines [
-    "5,4",
-    "4,2",
-    "4,5",
-    "3,0",
-    "2,1",
-    "6,3",
-    "2,4",
-    "1,5",
-    "0,6",
-    "3,3",
-    "2,6",
-    "5,1",
-    "1,2",
-    "5,5",
-    "2,5",
-    "6,5",
-    "1,4",
-    "0,4",
-    "6,4",
-    "1,1",
-    "6,1",
-    "1,0",
-    "0,5",
-    "1,6",
-    "2,0"
-    ],
-    testResult="22",
-    testData2="",
-    testResult2="(6,1)",
-    aocParse=parse,
-    aocTest=result 6 12,
-    aocResult=result 70 1024,
-    aocParse2=parse,
-    aocTest2=result2 6,
-    aocResult2=result2 70
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "5,4",
+                "4,2",
+                "4,5",
+                "3,0",
+                "2,1",
+                "6,3",
+                "2,4",
+                "1,5",
+                "0,6",
+                "3,3",
+                "2,6",
+                "5,1",
+                "1,2",
+                "5,5",
+                "2,5",
+                "6,5",
+                "1,4",
+                "0,4",
+                "6,4",
+                "1,1",
+                "6,1",
+                "1,0",
+                "0,5",
+                "1,6",
+                "2,0"
+                ],
+            testResult=Just "22",
+            testResult2=Just "(6,1)"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse,
+        codeParse2=parse,
+        codeTest=result 6 12,
+        codeTest2=result2 6,
+        codeResult=result 70 1024,
+        codeResult2=result2 70
+        }
     }
 
 parse = toXY . parseInts

@@ -8,32 +8,37 @@ import AOC
 
 aoc = AOC {
     day="20",
-    testData=unlines [
-    "###############",
-    "#...#...#.....#",
-    "#.#.#.#.#.###.#",
-    "#S#...#.#.#...#",
-    "#######.#.#.###",
-    "#######.#.#...#",
-    "#######.#.###.#",
-    "###..E#...#...#",
-    "###.#######.###",
-    "#...###...#...#",
-    "#.#####.#.###.#",
-    "#.#...#.#.#...#",
-    "#.#.#.#.#.#.###",
-    "#...#...#...###",
-    "###############"
-    ],
-    testResult="44",
-    testData2="",
-    testResult2="285",
-    aocParse=parse2da,
-    aocTest=result 2 cheats1,
-    aocResult=result 100 cheats1,
-    aocParse2=parse2da,
-    aocTest2=result 50 cheats2,
-    aocResult2=result 100 cheats2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "###############",
+                "#...#...#.....#",
+                "#.#.#.#.#.###.#",
+                "#S#...#.#.#...#",
+                "#######.#.#.###",
+                "#######.#.#...#",
+                "#######.#.###.#",
+                "###..E#...#...#",
+                "###.#######.###",
+                "#...###...#...#",
+                "#.#####.#.###.#",
+                "#.#...#.#.#...#",
+                "#.#.#.#.#.#.###",
+                "#...#...#...###",
+                "###############"
+                ],
+            testResult=Just "44",
+            testResult2=Just "285"
+            }
+        ],
+    aocCode=ParallelCode {
+        pcodeParse=const parse2da,
+        pcodeParse2=const parse2da,
+        pcodeTest=result 2 cheats1,
+        pcodeTest2=result 50 cheats2,
+        pcodeResult=result 100 cheats1,
+        pcodeResult2=result 100 cheats2
+        }
     }
 
 type Grid = Array (Int,Int) Char
@@ -68,7 +73,7 @@ cheats1 =
 cheats2 :: [(Int,Int)]
 cheats2 = [(dx,dy) | dx <- [-20..20], dy <- [-20..20], abs dx + abs dy <= 20]
 
-result threshold cheatTargets grid =
+result threshold cheatTargets ncpu grid =
     parallelMapReduce ncpu
         (countCheats threshold cheatTargets (fromList trail)) sum trail
   where trail = makeTrail grid

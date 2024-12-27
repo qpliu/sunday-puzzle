@@ -8,23 +8,28 @@ import AOC
 
 aoc = AOC {
     day="01",
-    testData=unlines [
-    "3   4",
-    "4   3",
-    "2   5",
-    "1   3",
-    "3   9",
-    "3   3"
-    ],
-    testResult="11",
-    testData2="",
-    testResult2="31",
-    aocParse=parse,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "3   4",
+                "4   3",
+                "2   5",
+                "1   3",
+                "3   9",
+                "3   3"
+                ],
+            testResult=Just "11",
+            testResult2=Just "31"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse,
+        codeParse2=parse,
+        codeTest=result,
+        codeTest2=result2,
+        codeResult=result,
+        codeResult2=result2
+        }
     }
 
 parse = p ([],[]) . words

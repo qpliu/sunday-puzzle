@@ -7,16 +7,21 @@ import AOC
 
 aoc = AOC {
     day="09",
-    testData="2333133121414131402",
-    testResult="1928",
-    testData2="",
-    testResult2="2858",
-    aocParse=parse,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse2,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData="2333133121414131402",
+            testResult=Just "1928",
+            testResult2=Just "2858"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse,
+        codeParse2=parse2,
+        codeTest=result,
+        codeTest2=result2,
+        codeResult=result,
+        codeResult2=result2
+        }
     }
 
 parse :: String -> [((Int,Int),Int)]

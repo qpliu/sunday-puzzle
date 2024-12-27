@@ -7,21 +7,31 @@ import AOC
 
 aoc = AOC {
     day="22",
-    testData=unlines [
-    "1",
-    "10",
-    "100",
-    "2024"
-    ],
-    testResult="37327623",
-    testData2=unlines ["1","2","3","2024"],
-    testResult2="23",
-    aocParse=parse,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "1",
+                "10",
+                "100",
+                "2024"
+                ],
+            testResult=Just "37327623",
+            testResult2=Nothing
+            },
+        AOCTest {
+            testData=unlines ["1","2","3","2024"],
+            testResult=Nothing,
+            testResult2=Just "23"
+            }
+        ],
+    aocCode=ParallelCode {
+        pcodeParse=const parse,
+        pcodeParse2=const parse,
+        pcodeTest=result,
+        pcodeTest2=result2,
+        pcodeResult=result,
+        pcodeResult2=result2
+        }
     }
 
 parse :: String -> [Int]
@@ -37,7 +47,7 @@ next x0 = x3
 nextN :: Int -> Int -> Int
 nextN n = head . drop n . iterate next
 
-result = parallelMapReduce ncpu (nextN 2000) sum
+result ncpu = parallelMapReduce ncpu (nextN 2000) sum
 
 gen :: (Int,Int,Int) -> (Int,Int,Int)
 gen (secret,changes,price) = (nsecret,nchanges,nprice)
@@ -56,4 +66,4 @@ prices :: Int -> Map Int Int
 prices secret =
     foldl collect empty $ drop 4 $ take 2001 $ iterate gen (secret,0,0)
 
-result2 = maximum . parallelMapReduce ncpu prices (unionsWith (+))
+result2 ncpu = maximum . parallelMapReduce ncpu prices (unionsWith (+))

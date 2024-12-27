@@ -7,27 +7,32 @@ import AOC
 
 aoc = AOC {
     day="06",
-    testData=unlines [
-    "....#.....",
-    ".........#",
-    "..........",
-    "..#.......",
-    ".......#..",
-    "..........",
-    ".#..^.....",
-    "........#.",
-    "#.........",
-    "......#..."
-    ],
-    testResult="41",
-    testData2="",
-    testResult2="6",
-    aocParse=parse2da,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse2da,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "....#.....",
+                ".........#",
+                "..........",
+                "..#.......",
+                ".......#..",
+                "..........",
+                ".#..^.....",
+                "........#.",
+                "#.........",
+                "......#..."
+                ],
+            testResult=Just "41",
+            testResult2=Just "6"
+            }
+        ],
+    aocCode=ParallelCode {
+        pcodeParse=const parse2da,
+        pcodeParse2=const parse2da,
+        pcodeTest=const result,
+        pcodeTest2=result2,
+        pcodeResult=const result,
+        pcodeResult2=result2
+        }
     }
 
 result :: Array (Int,Int) Char -> Int
@@ -61,8 +66,8 @@ toCounts grid = countsArray
       | otherwise = (idx,insert xy (countsArray!(nextXY,dir)))
       where nextXY = step dir xy
 
-result2 :: Array (Int,Int) Char -> Int
-result2 grid =
+result2 :: Int -> Array (Int,Int) Char -> Int
+result2 ncpu grid =
     parallelMapReduce ncpu id sum $ walk empty (start grid) N
   where
     out = not . inRange (bounds grid)

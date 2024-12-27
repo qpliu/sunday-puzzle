@@ -4,22 +4,27 @@ import AOC
 
 aoc = AOC {
     day="21",
-    testData=unlines [
-    "029A",
-    "980A",
-    "179A",
-    "456A",
-    "379A"
-    ],
-    testResult="126384",
-    testData2="",
-    testResult2="126384",
-    aocParse=words,
-    aocTest=result 2,
-    aocResult=result 2,
-    aocParse2=words,
-    aocTest2=result 2,
-    aocResult2=result 25
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "029A",
+                "980A",
+                "179A",
+                "456A",
+                "379A"
+                ],
+            testResult=Just "126384",
+            testResult2=Nothing
+            }
+        ],
+    aocCode=Code {
+        codeParse=words,
+        codeParse2=words,
+        codeTest=result 2,
+        codeTest2=undefined,
+        codeResult=result 2,
+        codeResult2=result 25
+        }
     }
 
 npadMoves :: (Char,Char) -> [String]

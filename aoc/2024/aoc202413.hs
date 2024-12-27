@@ -4,32 +4,37 @@ import AOC
 
 aoc = AOC {
     day="13",
-    testData=unlines [
-    "Button A: X+94, Y+34",
-    "Button B: X+22, Y+67",
-    "Prize: X=8400, Y=5400",
-    "",
-    "Button A: X+26, Y+66",
-    "Button B: X+67, Y+21",
-    "Prize: X=12748, Y=12176",
-    "",
-    "Button A: X+17, Y+86",
-    "Button B: X+84, Y+37",
-    "Prize: X=7870, Y=6450",
-    "",
-    "Button A: X+69, Y+23",
-    "Button B: X+27, Y+71",
-    "Prize: X=18641, Y=10279"
-    ],
-    testResult="480",
-    testData2="",
-    testResult2="875318608908",
-    aocParse=parse,
-    aocTest=result 0,
-    aocResult=result 0,
-    aocParse2=parse,
-    aocTest2=result 10000000000000,
-    aocResult2=result 10000000000000
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "Button A: X+94, Y+34",
+                "Button B: X+22, Y+67",
+                "Prize: X=8400, Y=5400",
+                "",
+                "Button A: X+26, Y+66",
+                "Button B: X+67, Y+21",
+                "Prize: X=12748, Y=12176",
+                "",
+                "Button A: X+17, Y+86",
+                "Button B: X+84, Y+37",
+                "Prize: X=7870, Y=6450",
+                "",
+                "Button A: X+69, Y+23",
+                "Button B: X+27, Y+71",
+                "Prize: X=18641, Y=10279"
+                ],
+            testResult=Just "480",
+            testResult2=Just "875318608908"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse,
+        codeParse2=parse,
+        codeTest=result 0,
+        codeTest2=result 10000000000000,
+        codeResult=result 0,
+        codeResult2=result 10000000000000
+        }
     }
 
 parse :: String -> [((Int,Int),(Int,Int),(Int,Int))]

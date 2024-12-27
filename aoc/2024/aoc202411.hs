@@ -6,16 +6,21 @@ import AOC
 
 aoc = AOC {
     day="11",
-    testData="125 17",
-    testResult="55312",
-    testData2="",
-    testResult2="65601038650482",
-    aocParse=parse,
-    aocTest=result 25,
-    aocResult=result 25,
-    aocParse2=parse,
-    aocTest2=result 75,
-    aocResult2=result 75
+    aocTests=[
+        AOCTest {
+            testData="125 17",
+            testResult=Just "55312",
+            testResult2=Just "65601038650482"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse,
+        codeParse2=parse,
+        codeTest=result 25,
+        codeTest2=result 75,
+        codeResult=result 25,
+        codeResult2=result 75
+        }
     }
 
 parse :: String -> [Int]

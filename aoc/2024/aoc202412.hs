@@ -7,27 +7,65 @@ import AOC
 
 aoc = AOC {
     day="12",
-    testData=unlines [
-    "RRRRIICCFF",
-    "RRRRIICCCF",
-    "VVRRRCCFFF",
-    "VVRCCCJFFF",
-    "VVVVCJJCFE",
-    "VVIVCCJJEE",
-    "VVIIICJJEE",
-    "MIIIIIJJEE",
-    "MIIISIJEEE",
-    "MMMISSJEEE"
-    ],
-    testResult="1930",
-    testData2="",
-    testResult2="1206",
-    aocParse=parse2da,
-    aocTest=result perimeter,
-    aocResult=result perimeter,
-    aocParse2=parse2da,
-    aocTest2=result sides,
-    aocResult2=result sides
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "AAAA",
+                "BBCD",
+                "BBCC",
+                "EEEC"
+                ],
+            testResult=Just "140",
+            testResult2=Just "80"
+            },
+        AOCTest {
+            testData=unlines [
+                "OOOOO",
+                "OXOXO",
+                "OOOOO",
+                "OXOXO",
+                "OOOOO"
+                ],
+            testResult=Just "772",
+            testResult2=Just "436"
+            },
+        AOCTest {
+            testData=unlines [
+                "AAAAAA",
+                "AAABBA",
+                "AAABBA",
+                "ABBAAA",
+                "ABBAAA",
+                "AAAAAA"
+                ],
+            testResult=Nothing,
+            testResult2=Just "368"
+            },
+        AOCTest {
+            testData=unlines [
+                "RRRRIICCFF",
+                "RRRRIICCCF",
+                "VVRRRCCFFF",
+                "VVRCCCJFFF",
+                "VVVVCJJCFE",
+                "VVIVCCJJEE",
+                "VVIIICJJEE",
+                "MIIIIIJJEE",
+                "MIIISIJEEE",
+                "MMMISSJEEE"
+                ],
+            testResult=Just "1930",
+            testResult2=Just "1206"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse2da,
+        codeParse2=parse2da,
+        codeTest=result perimeter,
+        codeTest2=result sides,
+        codeResult=result perimeter,
+        codeResult2=result sides
+        }
     }
 
 measureRegions :: (Array (Int,Int) Char -> Char -> (Int,Int) -> Int)

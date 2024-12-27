@@ -7,29 +7,34 @@ import AOC
 
 aoc = AOC {
     day="14",
-    testData=unlines [
-    "p=0,4 v=3,-3",
-    "p=6,3 v=-1,-3",
-    "p=10,3 v=-1,2",
-    "p=2,0 v=2,-1",
-    "p=0,0 v=1,3",
-    "p=3,0 v=-2,-2",
-    "p=7,6 v=-1,-3",
-    "p=3,0 v=-1,-2",
-    "p=9,3 v=2,3",
-    "p=7,3 v=-1,2",
-    "p=2,4 v=2,-3",
-    "p=9,5 v=-3,-3"
-    ],
-    testResult="12",
-    testData2="",
-    testResult2="0",
-    aocParse=parse . parseInts,
-    aocResult=result 101 103 100,
-    aocTest=result 11 7 100,
-    aocParse2=parse . parseInts,
-    aocTest2=const 0,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "p=0,4 v=3,-3",
+                "p=6,3 v=-1,-3",
+                "p=10,3 v=-1,2",
+                "p=2,0 v=2,-1",
+                "p=0,0 v=1,3",
+                "p=3,0 v=-2,-2",
+                "p=7,6 v=-1,-3",
+                "p=3,0 v=-1,-2",
+                "p=9,3 v=2,3",
+                "p=7,3 v=-1,2",
+                "p=2,4 v=2,-3",
+                "p=9,5 v=-3,-3"
+                ],
+            testResult=Just "12",
+            testResult2=Nothing
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse . parseInts,
+        codeParse2=parse . parseInts,
+        codeTest=result 11 7 100,
+        codeTest2=undefined,
+        codeResult=result 101 103 100,
+        codeResult2=result2
+        }
     }
 
 parse [] = []

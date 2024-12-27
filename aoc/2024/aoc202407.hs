@@ -4,26 +4,31 @@ import AOC
 
 aoc = AOC {
     day="07",
-    testData=unlines [
-    "190: 10 19",
-    "3267: 81 40 27",
-    "83: 17 5",
-    "156: 15 6",
-    "7290: 6 8 6 15",
-    "161011: 16 10 13",
-    "192: 17 8 14",
-    "21037: 9 7 18 13",
-    "292: 11 6 16 20"
-    ],
-    testResult="3749",
-    testData2="",
-    testResult2="11387",
-    aocParse=parse,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "190: 10 19",
+                "3267: 81 40 27",
+                "83: 17 5",
+                "156: 15 6",
+                "7290: 6 8 6 15",
+                "161011: 16 10 13",
+                "192: 17 8 14",
+                "21037: 9 7 18 13",
+                "292: 11 6 16 20"
+                ],
+            testResult=Just "3749",
+            testResult2=Just "11387"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse,
+        codeParse2=parse,
+        codeTest=result,
+        codeTest2=result2,
+        codeResult=result,
+        codeResult2=result2
+        }
     }
 
 parse :: String -> [(Int,[Int])]

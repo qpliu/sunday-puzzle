@@ -6,27 +6,32 @@ import AOC
 
 aoc = AOC {
     day="04",
-    testData=unlines [
-    "MMMSXXMASM",
-    "MSAMXMSMSA",
-    "AMXSXMAAMM",
-    "MSAMASMSMX",
-    "XMASAMXAMM",
-    "XXAMMXXAMA",
-    "SMSMSASXSS",
-    "SAXAMASAAA",
-    "MAMMMXMMMM",
-    "MXMXAXMASX"
-    ],
-    testResult="18",
-    testData2="",
-    testResult2="9",
-    aocParse=parse2da,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse2da,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "MMMSXXMASM",
+                "MSAMXMSMSA",
+                "AMXSXMAAMM",
+                "MSAMASMSMX",
+                "XMASAMXAMM",
+                "XXAMMXXAMA",
+                "SMSMSASXSS",
+                "SAXAMASAAA",
+                "MAMMMXMMMM",
+                "MXMXAXMASX"
+                ],
+            testResult=Just "18",
+            testResult2=Just "9"
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse2da,
+        codeParse2=parse2da,
+        codeTest=result,
+        codeTest2=result2,
+        codeResult=result,
+        codeResult2=result2
+        }
     }
 
 result :: Array (Int,Int) Char -> Int

@@ -6,27 +6,32 @@ import AOC
 
 aoc = AOC {
     day="19",
-    testData=unlines [
-    "r, wr, b, g, bwu, rb, gb, br",
-    "",
-    "brwrr",
-    "bggr",
-    "gbbr",
-    "rrbgbr",
-    "ubwu",
-    "bwurrg",
-    "brgr",
-    "bbrgwb"
-    ],
-    testResult="6",
-    testData2="",
-    testResult2="16",
-    aocParse=parse,
-    aocTest=result,
-    aocResult=result,
-    aocParse2=parse,
-    aocTest2=result2,
-    aocResult2=result2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "r, wr, b, g, bwu, rb, gb, br",
+                "",
+                "brwrr",
+                "bggr",
+                "gbbr",
+                "rrbgbr",
+                "ubwu",
+                "bwurrg",
+                "brgr",
+                "bbrgwb"
+                ],
+            testResult=Just "6",
+            testResult2=Just "16"
+            }
+        ],
+    aocCode=ParallelCode {
+        pcodeParse=const parse,
+        pcodeParse2=const parse,
+        pcodeTest=const result,
+        pcodeTest2=result2,
+        pcodeResult=const result,
+        pcodeResult2=result2
+        }
     }
 
 maxLen = 8 -- hard coded maximum pattern length
@@ -69,4 +74,5 @@ ways patterns design = evalMemoized (waysM design)
           | take n design `member` patterns = waysM $ drop n design
           | otherwise = return 0
 
-result2 (patterns,designs) = parallelMapReduce ncpu (ways patterns) sum designs
+result2 ncpu (patterns,designs) =
+    parallelMapReduce ncpu (ways patterns) sum designs

@@ -7,38 +7,59 @@ import AOC
 
 aoc = AOC {
     day="15",
-    testData=unlines [
-    "##########",
-    "#..O..O.O#",
-    "#......O.#",
-    "#.OO..O.O#",
-    "#..O@..O.#",
-    "#O#..O...#",
-    "#O..O..O.#",
-    "#.OO.O.OO#",
-    "#....O...#",
-    "##########",
-    "",
-    "<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^",
-    "vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v",
-    "><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<",
-    "<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^",
-    "^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><",
-    "^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^",
-    ">^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^",
-    "<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>",
-    "^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>",
-    "v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^"
-    ],
-    testResult="10092",
-    testData2="",
-    testResult2="9021",
-    aocParse=parse id,
-    aocTest=result push1,
-    aocResult=result push1,
-    aocParse2=parse (concatMap double),
-    aocTest2=result push2,
-    aocResult2=result push2
+    aocTests=[
+        AOCTest {
+            testData=unlines [
+                "##########",
+                "#..O..O.O#",
+                "#......O.#",
+                "#.OO..O.O#",
+                "#..O@..O.#",
+                "#O#..O...#",
+                "#O..O..O.#",
+                "#.OO.O.OO#",
+                "#....O...#",
+                "##########",
+                "",
+                "<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^",
+                "vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v",
+                "><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<",
+                "<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^",
+                "^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><",
+                "^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^",
+                ">^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^",
+                "<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>",
+                "^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>",
+                "v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^"
+                ],
+            testResult=Just "10092",
+            testResult2=Just "9021"
+            },
+        AOCTest {
+            testData=unlines [
+                "########",
+                "#..O.O.#",
+                "##@.O..#",
+                "#...O..#",
+                "#.#.O..#",
+                "#...O..#",
+                "#......#",
+                "########",
+                "",
+                "<^^>>>vv<v>>v<<"
+                ],
+            testResult=Just "2028",
+            testResult2=Nothing
+            }
+        ],
+    aocCode=Code {
+        codeParse=parse id,
+        codeParse2=parse (concatMap double),
+        codeTest=result push1,
+        codeTest2=result push2,
+        codeResult=result push1,
+        codeResult2=result push2
+        }
     }
 
 parse modifyMap = p . span (not . null) . lines

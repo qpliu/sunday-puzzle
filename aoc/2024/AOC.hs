@@ -1,5 +1,7 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 module AOC where
 
+import Control.Concurrent(getNumCapabilities)
 import Control.Monad.Par(NFData,Par,runPar,spawn)
 import qualified Control.Monad.Par
 import Control.Monad.State(State,evalState,get,modify)
@@ -11,54 +13,132 @@ import Data.Set(Set,elems)
 import qualified Data.Set
 import Data.Time(diffUTCTime,getCurrentTime,NominalDiffTime)
 
-data AOC parsed result parsed2 result2 = AOC {
-    day :: String,
-    testData :: String,
-    testResult :: String,
-    testData2 :: String,
-    testResult2 :: String,
-    aocParse :: String -> parsed,
-    aocTest :: parsed -> result,
-    aocResult :: parsed -> result,
-    aocParse2 :: String -> parsed2,
-    aocTest2 :: parsed2 -> result2,
-    aocResult2 :: parsed2 -> result2
+class AOCCode code parsed result parsed2 result2 where
+    aocParse :: code parsed result parsed2 result2 -> String -> IO parsed
+    aocParse2 :: code parsed result parsed2 result2 -> String -> IO parsed2
+    aocTest :: code parsed result parsed2 result2 -> parsed -> IO result
+    aocTest2 :: code parsed result parsed2 result2 -> parsed2 -> IO result2
+    aocResult :: code parsed result parsed2 result2 -> parsed -> IO result
+    aocResult2 :: code parsed result parsed2 result2 -> parsed2 -> IO result2
+
+data Code parsed result parsed2 result2 = Code {
+    codeParse :: String -> parsed,
+    codeParse2 :: String -> parsed2,
+    codeTest :: parsed -> result,
+    codeTest2 :: parsed2 -> result2,
+    codeResult :: parsed -> result,
+    codeResult2 :: parsed2 -> result2
     }
 
-test :: Show result => AOC parsed result parsed2 result2 -> ()
-test AOC { testData=td, testResult=tr, aocParse=p, aocTest=r }
-  | tr /= (show . r . p) td = error (tr ++ " /= " ++ (show . r . p) td)
-  | otherwise = ()
+instance AOCCode Code parsed result parsed2 result2 where
+    aocParse aocCode = return . codeParse aocCode
+    aocParse2 aocCode = return . codeParse2 aocCode
+    aocTest aocCode = return . codeTest aocCode
+    aocTest2 aocCode = return . codeTest2 aocCode
+    aocResult aocCode = return . codeResult aocCode
+    aocResult2 aocCode = return . codeResult2 aocCode
 
-test2 :: Show result2 => AOC parsed result parsed2 result2 -> ()
-test2 AOC { testData=td1, testData2=td2, testResult2=tr, aocParse2=p, aocTest2=r }
-  | tr /= (show . r . p) td = error (tr ++ " /= " ++ (show . r . p) td)
-  | otherwise = ()
-  where td | null td2 = td1 | otherwise = td2
+data ParallelCode parsed result parsed2 result2 = ParallelCode {
+    pcodeParse :: Int -> String -> parsed,
+    pcodeParse2 :: Int -> String -> parsed2,
+    pcodeTest :: Int -> parsed -> result,
+    pcodeTest2 :: Int -> parsed2 -> result2,
+    pcodeResult :: Int -> parsed -> result,
+    pcodeResult2 :: Int -> parsed2 -> result2
+    }
 
-part1 :: Show result => AOC parsed result parsed2 result2 -> IO NominalDiffTime
-part1 AOC { day=d, aocParse=p, aocResult=r } = do
+instance AOCCode ParallelCode parsed result parsed2 result2 where
+    aocParse aocCode input = do
+        ncpu <- getNumCapabilities
+        return $ pcodeParse aocCode ncpu input
+    aocParse2 aocCode input = do
+        ncpu <- getNumCapabilities
+        return $ pcodeParse2 aocCode ncpu input
+    aocTest aocCode parsed = do
+        ncpu <- getNumCapabilities
+        return $ pcodeTest aocCode ncpu parsed
+    aocTest2 aocCode parsed = do
+        ncpu <- getNumCapabilities
+        return $ pcodeTest2 aocCode ncpu parsed
+    aocResult aocCode parsed = do
+        ncpu <- getNumCapabilities
+        return $ pcodeResult aocCode ncpu parsed
+    aocResult2 aocCode parsed = do
+        ncpu <- getNumCapabilities
+        return $ pcodeResult2 aocCode ncpu parsed
+
+data AOCTest = AOCTest {
+    testData :: String,
+    testResult :: Maybe String,
+    testResult2 :: Maybe String
+    }
+
+data AOC code parsed result parsed2 result2 = AOC {
+    day :: String,
+    aocTests :: [AOCTest],
+    aocCode :: code parsed result parsed2 result2
+    }
+
+test :: (AOCCode code parsed result parsed2 result2, Show result) =>
+        AOC code parsed result parsed2 result2 -> IO ()
+test AOC { aocTests=tests, aocCode=code } = t tests
+  where
+    t [] = return ()
+    t (AOCTest { testData=td, testResult=Nothing } : tests) = t tests
+    t (AOCTest { testData=td, testResult=Just tr } : tests) = do
+        parsed <- aocParse code td
+        result <- aocTest code parsed
+        if show result /= tr
+          then error (show result ++ " /= " ++ tr)
+          else t tests
+
+test2 :: (AOCCode code parsed result parsed2 result2, Show result2) =>
+         AOC code parsed result parsed2 result2 -> IO ()
+test2 AOC { aocTests=tests, aocCode=code } = t tests
+  where
+    t [] = return ()
+    t (AOCTest { testData=td, testResult2=Nothing } : tests) = t tests
+    t (AOCTest { testData=td, testResult2=Just tr } : tests) = do
+        parsed <- aocParse2 code td
+        result <- aocTest2 code parsed
+        if show result /= tr
+          then error (show result ++ " /= " ++ tr)
+          else t tests
+
+part1 :: (AOCCode code parsed result parsed2 result2, Show result) =>
+         AOC code parsed result parsed2 result2 -> IO NominalDiffTime
+part1 AOC { day=d, aocCode=code } = do
+    input <- readFile ("input/" ++ d ++ ".txt")
     t0 <- getCurrentTime
-    readFile ("input/" ++ d ++ ".txt") >>= print . r . p
+    parsed <- aocParse code input
+    result <- aocResult code parsed
+    print result
     t1 <- getCurrentTime
     return $ diffUTCTime t1 t0
 
-part2 :: Show result2 => AOC parsed result parsed2 result2 -> IO NominalDiffTime
-part2 AOC { day=d, aocParse2=p, aocResult2=r } = do
+part2 :: (AOCCode code parsed result parsed2 result2, Show result2) =>
+         AOC code parsed result parsed2 result2 -> IO NominalDiffTime
+part2 AOC { day=d, aocCode=code } = do
+    input <- readFile ("input/" ++ d ++ ".txt")
     t0 <- getCurrentTime
-    readFile ("input/" ++ d ++ ".txt") >>= print . r . p
+    parsed <- aocParse2 code input
+    result <- aocResult2 code parsed
+    print result
     t1 <- getCurrentTime
     return $ diffUTCTime t1 t0
 
-run :: (Show result, Show result2) => AOC parsed result parsed2 result2 -> IO NominalDiffTime
+run :: (AOCCode code parsed result parsed2 result2, Show result, Show result2) =>
+       AOC code parsed result parsed2 result2 -> IO NominalDiffTime
 run aoc = do
-    if test aoc /= ()
+    testResult <- test aoc
+    if testResult /= ()
       then error ("Day " ++ day aoc ++ " test part 1 fail")
       else return ()
     putStr ("Day " ++ day aoc ++ " part 1: ")
     dt1 <- part1 aoc
     putStrLn ("Day " ++ day aoc ++ " part 1 time: " ++ show dt1)
-    if test2 aoc /= ()
+    testResult2 <- test2 aoc
+    if testResult2 /= ()
       then error ("Day " ++ day aoc ++ " test part 2 fail")
       else return ()
     putStr ("Day " ++ day aoc ++ " part 2: ")
@@ -67,13 +147,15 @@ run aoc = do
     putStrLn ("Day " ++ day aoc ++ " total time: " ++ show (dt1+dt2))
     return $ dt1+dt2
 
-getInput :: AOC parsed result parsed2 result2 -> IO parsed
-getInput AOC { day=d, aocParse=p } =
-    fmap p $ readFile ("input/" ++ d ++ ".txt")
+getInput :: (AOCCode code parsed result parsed2 result2) =>
+            AOC code parsed result parsed2 result2 -> IO parsed
+getInput AOC { day=d, aocCode=code } =
+    readFile ("input/" ++ d ++ ".txt") >>= aocParse code
 
-getInput2 :: AOC parsed result parsed2 result2 -> IO parsed2
-getInput2 AOC { day=d, aocParse2=p } =
-    fmap p $ readFile ("input/" ++ d ++ ".txt")
+getInput2 :: (AOCCode code parsed result parsed2 result2) =>
+             AOC code parsed result parsed2 result2 -> IO parsed2
+getInput2 AOC { day=d, aocCode=code } =
+    readFile ("input/" ++ d ++ ".txt") >>= aocParse2 code
 
 parse2d :: String -> Map (Int,Int) Char
 parse2d = Data.Map.fromList . p 0 0
@@ -236,18 +318,14 @@ astarAll heuristic neighbors toState done makeBest mergeBest initialPaths =
           | otherwise = (open,visited,visitedBest,best,bestCost)
           where cost = heuristicA path
 
-ncpu :: Num a => a
-ncpu = 8
-
 parallelMapReduce :: NFData b => Int -> (a -> b) -> ([b] -> b) -> [a] -> b
-parallelMapReduce ncpu m r as = runPar $ do
-    tasks <- mapM (spawn . return . r . map m)
-                  (groupsOf (length as `div` ncpu + 1) as)
+parallelMapReduce ncpu mapping reduce as = runPar $ do
+    tasks <- mapM (spawn . return . reduce . map mapping)
+                  (groupsOf ((ncpu - 1 + length as) `div` ncpu) as)
     results <- mapM Control.Monad.Par.get tasks
-    return $ r results
-
-groupsOf :: Int -> [a] -> [[a]]
-groupsOf n as
-  | null a2s = [as]
-  | otherwise = a1s : groupsOf n a2s
-  where (a1s,a2s) = splitAt n as
+    return $ reduce results
+  where
+    groupsOf n as
+      | null a2s = [as]
+      | otherwise = a1s : groupsOf n a2s
+      where (a1s,a2s) = splitAt n as

@@ -157,6 +157,16 @@ getInput2 :: (AOCCode code parsed result parsed2 result2) =>
 getInput2 AOC { day=d, aocCode=code } =
     readFile ("input/" ++ d ++ ".txt") >>= aocParse2 code
 
+testInputs :: (AOCCode code parsed result parsed2 result2) =>
+              AOC code parsed result parsed2 result2 -> IO [parsed]
+testInputs AOC { aocTests=tests, aocCode=code } =
+    mapM (aocParse code . testData) tests
+
+testInputs2 :: (AOCCode code parsed result parsed2 result2) =>
+               AOC code parsed result parsed2 result2 -> IO [parsed2]
+testInputs2 AOC { aocTests=tests, aocCode=code } =
+    mapM (aocParse2 code . testData) tests
+
 parse2d :: String -> Map (Int,Int) Char
 parse2d = Data.Map.fromList . p 0 0
   where
@@ -329,3 +339,27 @@ parallelMapReduce ncpu mapping reduce as = runPar $ do
       | null a2s = [as]
       | otherwise = a1s : groupsOf n a2s
       where (a1s,a2s) = splitAt n as
+
+convergences :: (Int,Int) -> (Int,Int) -> (Int,Int)
+convergences (firstX,recurX) (firstY,recurY)
+  | firstX < firstY = conv firstX recurX (firstY-firstX,recurY)
+  | otherwise = conv firstY recurY (firstX-firstY,recurX)
+  where
+    conv offset recurX (firstY,recurY)
+      | firstY `mod` recurX == 0 = (offset+firstY,lcm recurX recurY)
+      | recurX == gcd recurX recurY || recurY == gcd recurX recurY =
+          error $ show ((offset,recurX),(firstY,recurY))
+      | otherwise = (offset+nx*recurX+nrecur*recurXY,recurXY)
+          -- nx*recurX = firstY + ny*recurY
+          -- nx*recurX mod recurY = firstY mod recurY
+          -- nx*recurX*minv recurX mod recurY = firstY*minv recurX mod recurY
+          -- nx = firstY*minv recurX mod recurY
+      where
+        rY = recurY `div` gcd recurX recurY
+        nx = (minv recurX rY*firstY) `mod` rY
+        recurXY = lcm recurX recurY
+        nrecur = (max 0 (firstY - nx*recurX)) `div` recurXY
+
+        minv a n = (fst $ egcd a n) `mod` n
+        egcd 0 b = (0,1)
+        egcd a b = (y - (b `div` a)*x, x) where (x,y) = egcd (b `mod` a) a

@@ -60,5 +60,5 @@ draw t = getInput2 aoc >>= p2ds . fromList . map toXY
 result2 input = snd $ minimum [(metric t,t) | (_,a) <- c, (_,b) <- c, t <- [n a b]]
   where
     c = take 2 $ sort $ [(metric t,t) | t <- [0..102]]
-    n a b = head [a + 101*x | x <- [0..100], y <- [0..102], a+101*x == b+103*y]
+    n a b = fst $ convergences (a,101) (b,103)
     metric t = result 101 103 t input

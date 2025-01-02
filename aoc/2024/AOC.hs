@@ -342,14 +342,19 @@ parallelMapReduce ncpu mapping reduce as = runPar $ do
 
 convergences :: (Int,Int) -> (Int,Int) -> (Int,Int)
 convergences (firstX,recurX) (firstY,recurY)
-  | firstX < firstY = conv firstX recurX (firstY-firstX,recurY)
-  | otherwise = conv firstY recurY (firstX-firstY,recurX)
+  | firstX < firstY =
+      conv (fromIntegral firstX) (fromIntegral recurX)
+           (fromIntegral (firstY-firstX)) (fromIntegral recurY)
+  | otherwise =
+      conv (fromIntegral firstY) (fromIntegral recurY)
+           (fromIntegral (firstX-firstY)) (fromIntegral recurX)
   where
-    conv offset recurX (firstY,recurY)
-      | firstY `mod` recurX == 0 = (offset+firstY,lcm recurX recurY)
-      | recurX == gcd recurX recurY || recurY == gcd recurX recurY =
-          error $ show ((offset,recurX),(firstY,recurY))
-      | otherwise = (offset+nx*recurX+nrecur*recurXY,recurXY)
+    conv :: Integer -> Integer -> Integer -> Integer -> (Int,Int)
+    conv offset recurX firstY recurY
+      | firstY `mod` recurX == 0 =
+          (fromIntegral $ offset+firstY,fromIntegral recurXY)
+      | otherwise =
+          (fromIntegral $ offset+nx*recurX+nrecur*recurXY,fromIntegral recurXY)
           -- nx*recurX = firstY + ny*recurY
           -- nx*recurX mod recurY = firstY mod recurY
           -- nx*recurX*minv recurX mod recurY = firstY*minv recurX mod recurY

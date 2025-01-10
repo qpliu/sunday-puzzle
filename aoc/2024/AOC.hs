@@ -7,7 +7,7 @@ import qualified Control.Monad.Par
 import Control.Monad.State(State,evalState,get,modify)
 import Data.Array(Array,array)
 import Data.Char(isDigit)
-import Data.Map(Map,keys)
+import Data.Map(Map,findWithDefault,keys)
 import qualified Data.Map
 import Data.Set(Set,elems)
 import qualified Data.Set
@@ -187,7 +187,7 @@ show2dm :: Map (Int,Int) Char -> String
 show2dm m
   | xmax-xmin > 150 || ymax-ymin > 150 = gridSize
   | otherwise = unlines $ gridSize :
-      [[maybe '.' id $ Data.Map.lookup (x,y) m | x <- [xmin..xmax]]
+      [[findWithDefault '.' (x,y) m | x <- [xmin..xmax]]
        | y <- [ymin..ymax]]
   where
     xmax = maximum $ map fst $ keys m
@@ -241,7 +241,7 @@ astarWithVisited makeResult heuristic neighbors toState done initialPaths =
     search (Data.Set.fromList [(heuristic p,p) | p <- initialPaths], 
             Data.Map.empty)
   where
-   search (open,visited)
+    search (open,visited)
       | Data.Set.null open = Nothing
       | done curPath = Just $ makeResult curPath visited
       | otherwise =
@@ -339,6 +339,9 @@ parallelMapReduce ncpu mapping reduce as = runPar $ do
       | null a2s = [as]
       | otherwise = a1s : groupsOf n a2s
       where (a1s,a2s) = splitAt n as
+
+parallelMap :: NFData b => Int -> (a -> b) -> [a] -> [b]
+parallelMap ncpu mapping = parallelMapReduce ncpu ((:[]) . mapping) concat
 
 convergences :: (Int,Int) -> (Int,Int) -> (Int,Int)
 convergences (firstX,recurX) (firstY,recurY)

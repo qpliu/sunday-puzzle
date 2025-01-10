@@ -1,0 +1,118 @@
+Redo Advent of Code 2023 with cleaner and mostly faster code, except for day 21.
+
+Day 1:
+2023: 54388 53515 (0.005796s,0.01377s,0.019566s)
+redo: 54388 53515 (0.006009s,0.009558s,0.015567s)
+
+Day 2:
+2023: 2439 63711 (0.004328s,0.004293s,0.008621s)
+redo: 2439 63711 (0.004825s,0.005895s,0.01072s)
+
+Day 3:
+2023: 525181 84289137 (0.035199s,0.041259s,0.076458s)
+redo: 525181 84289137 (0.064394s,0.060596s,0.12499s)
+
+Day 4:
+2023: 15205 6189740 (0.021497s,0.013366s,0.034863s)
+redo: 15205 6189740 (0.005288s,0.004788s,0.010076s)
+
+Day 5: Redo parsing is cleaner due to assuming the mappings in the
+       input are in order.  Redo part 2 is more straightforward.
+2023: 1181555926 37806486 (0.005183s,0.009533s,0.014716s)
+redo: 1181555926 37806486 (0.002722s,0.004095s,0.006817s)
+
+Day 6:
+2023: 1660968 26499773 (0.002585s,0.000385s,0.00297s)
+redo: 1660968 26499773 (0.000208s,0.000136s,0.000344s)
+
+Day 7:
+2023: 251121738 251421071 (0.012876s,0.012341s,0.025217s)
+redo: 251121738 251421071 (0.010583s,0.014238s,0.024821s)
+
+Day 8: Redo code makes fewer assumptions about the loops
+       in part 2.
+2023: 20221 14616363770447 (0.037749s,0.148724s,0.186473s)
+redo: 20221 14616363770447 (0.02355s,0.344798s,0.368348s)
+
+Day 9:
+2023: 1681758908 803 (0.019465s,0.014781s,0.034246s)
+redo: 1681758908 803 (0.022078s,0.023682s,0.04576s)
+
+Day 10: Redo part 2 code uses parallel processing to go faster.
+2023: 6754 567 (0.18978s,0.23533s,0.42511s)
+redo: 6754 567 (0.094011s,0.114071s,0.208082s)
+
+Day 11:
+2023: 9550717 648458253817 (0.12717s,0.124689s,0.251859s)
+redo: 9550717 648458253817 (0.127318s,0.133102s,0.26042s)
+
+Day 12: Redo code is much cleaner with memoize from the AOC module,
+        and uses parallel processing to go faster.
+2023: 6852 8475948826693 (0.110822s,2.49508s,2.605902s)
+redo: 6852 8475948826693 (0.042287s,0.657272s,0.699559s)
+
+Day 13: Redo code is more straightforward and uses parallel processing
+        to go faster.
+2023: 37975 32497 (0.008729s,0.778877s,0.787606s)
+redo: 37975 32497 (0.029969s,0.02882s,0.058789s)
+
+Day 14: Redo is probably faster due to counting the number of rocks
+        to be moved instead of moving rocks one at a time.
+2023: 109661 90176 (0.027757s,8.361107s,8.388864s)
+redo: 109661 90176 (0.048974s,4.114263s,4.163237s)
+
+Day 15:
+2023: 513214 258826 (0.020549s,0.034036s,0.054585s)
+redo: 513214 258826 (0.025936s,0.041427s,0.067363s)
+
+Day 16: Redo uses parallel processing to go faster.
+2023: 7608 8221 (0.069376s,13.523963s,13.593339s)
+redo: 7608 8221 (0.060407s,7.97577s,8.036177s)
+
+Day 17: Redo is faster due to moving straight for multiple tiles
+        being neighbors.
+2023: 665 809 (11.257648s,63.275401s,74.533049s)
+redo: 665 809 (4.631203s,22.060678s,26.691881s)
+
+Day 18: Redo was just copying 2023 code rather than thinking about it.
+2023: 106459 63806916814808 (0.008792s,0.005237s,0.014029s)
+redo: 106459 63806916814808 (0.004144s,0.008342s,0.012486s)
+
+Day 19:
+2023: 319062 118638369682135 (0.018968s,0.035584s,0.054552s)
+redo: 319062 118638369682135 (0.018121s,0.016101s,0.034222s)
+
+Day 20: Redo does not depend on the exact details of my input like
+        the hacky 2023 code does.
+2023: 739960225 231897990075517 (0.189416s,0.628573s,0.817989s)
+redo: 739960225 231897990075517 (0.213904s,0.648509s,0.862413s)
+
+Day 21: Failed to get the right answer for part 2 when trying to redo it.
+        Not motivated to track down where it's wrong.
+2023: 3562 592723929260582 (0.147751s,4.997018s,5.144769s)
+redo: 3562                 (0.478311s)
+
+Day 22:
+2023: 530 93292 (0.069922s,0.704216s,0.774138s)
+redo: 530 93292 (0.089917s,1.255097s,1.345014s)
+
+Day 23:
+2023: 2366 6682 (0.111305s,50.714462s,50.825767s)
+redo: 2366 6682 (0.099874s,53.663775s,53.763649s)
+
+Day 24: Redo uses parallel processing for part 1 to go faster, and
+        uses the direct solution for part 2, inverting the matrix
+	analytically rather than numerically as in the 2023 code.
+2023: 23760 888708704663413 % 1 (0.753289s,0.000969s,0.754258s)
+redo: 23760 888708704663413 (0.259254s,0.00146s,0.260714s)
+
+Day 25: Redo properly implements edge contraction in Karger's
+        Algorithm by retaining multiple edges between non-merged
+	vertices, which is key to making it work, instead of
+	merging the edges to the merged vertex like in the 2023
+	code.  I vaguely recall doing manual exploration to get
+	to the answer.  Redo uses parallel processing with various
+	(non-random) edge selection schemes to find the minimum
+	cut.
+2023: 619225 () (1.591199s,0.000029s,1.591228s)
+redo: 619225 () (2.266141s,0.00004s,2.266181s)

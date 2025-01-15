@@ -1,0 +1,110 @@
+Redo Advent of Code 2021 with cleaner and mostly faster code.  The
+2021 code was actually originally written in early 2023.
+
+Day 1:
+2021: 1233 1275 (0.003877s,0.00397s,0.007847s)
+redo: 1233 1275 (0.006294s,0.006452s,0.012746s)
+
+Day 2:
+2021: 1804520 1971095320 (0.006605s,0.004021s,0.010626s)
+redo: 1804520 1971095320 (0.003676s,0.003826s,0.007502s)
+
+Day 3:
+2021: 3549854 3765399 (0.013339s,0.002515s,0.015854s)
+redo: 3549854 3765399 (0.003276s,0.001929s,0.005205s)
+
+Day 4:
+2021: 51034 5434 (0.02758s,0.022853s,0.050433s)
+redo: 51034 5434 (0.031944s,0.051727s,0.083671s)
+
+Day 5: Redo uses parallel processing to go faster.
+2021: 6113 20373 (0.204255s,0.453167s,0.657422s)
+redo: 6113 20373 (0.093494s,0.277385s,0.370879s)
+
+Day 6:
+2021: 361169 1634946868992 (0.003217s,0.000842s,0.004059s)
+redo: 361169 1634946868992 (0.001359s,0.001412s,0.002771s)
+
+Day 7: Redo is much faster due to using the median and mean
+       positions.  The 2021 code took the minimum for a large number
+       of positions that wasn't even guaranteed to include the optimum
+       position, though it did for the test data and my input.
+2021: 344535 95581659 (0.082111s,0.881879s,0.96399s)
+redo: 344535 95581659 (0.004187s,0.006136s,0.010323s)
+
+Day 8: Redo uses parallel processing to go faster.
+2021: 479 1041746 (0.005395s,0.013224s,0.018619s)
+redo: 479 1041746 (0.001327s,0.007116s,0.008443s)
+
+Day 9:
+2021: 478 1327014 (0.04769s,0.084266s,0.131956s)
+redo: 478 1327014 (0.034074s,0.046096s,0.08017s)
+
+Day 10: Redo uses parallel processing to go faster.
+2021: 345441 3235371166 (0.006199s,0.004173s,0.010372s)
+redo: 345441 3235371166 (0.003399s,0.00295s,0.006349s)
+
+Day 11:
+2021: 1749 285 (0.063821s,0.140656s,0.204477s)
+redo: 1749 285 (0.041662s,0.102237s,0.143899s)
+
+Day 12:
+2021: 3000 74222 (0.053297s,1.712375s,1.765672s)
+redo: 3000 74222 (0.069943s,1.646648s,1.716591s)
+
+Day 13: Redo did "ocr" on the pixels.  Manually got the string from
+        the pixels when using the 2021 code.
+2021: 810 "HLBUBGFR" (0.012179s,0.01183s,0.024009s)
+redo: 810 "HLBUBGFR" (0.009505s,0.010943s,0.020448s)
+
+Day 14:
+2021: 4517 4704817645083 (0.031931s,0.014894s,0.046825s)
+redo: 4517 4704817645083 (0.002416s,0.007396s,0.009812s)
+
+Day 15: Redo uses A* for both parts.  2021 did a depth-first search
+        for part 1 and my first attempt at A* for part 2.
+2021: 487 2821 (850.928245s,270.568038s,1121.496283s)
+redo: 487 2821 (0.247087s,7.159212s,7.406299s)
+
+Day 16:
+2021: 877 194435634456 (0.009002s,0.005441s,0.014443s)
+redo: 877 194435634456 (0.005689s,0.006295s,0.011984s)
+
+Day 17:
+2021: 5995 3202 (0.002302s,0.291242s,0.293544s)
+redo: 5995 3202 (0.000164s,0.060557s,0.060721s)
+
+Day 18: Redo uses parallel processing to go faster.
+2021: 4435 4802 (0.344092s,4.911091s,5.255183s)
+redo: 4435 4802 (0.291606s,1.447376s,1.738982s)
+
+Day 19: Redo uses parallel processing to go faster.
+2021: 376 10772 (105.885819s,105.276682s,211.162501s)
+redo: 376 10772 (51.311162s,50.745539s,102.056701s)
+
+Day 20: Redo uses parallel processing to go faster.
+2021: 5218 15527 (0.302813s,14.618354s,14.921167s)
+redo: 5218 15527 (0.104245s,4.709471s,4.813716s)
+
+Day 21: Redo calculates half the number of states for part 2 than the
+        2021 code does, since it's irrelevant whether the first or
+        second player wins.
+2021: 571032 49975322685009 (0.000664s,0.679452s,0.680116s)
+redo: 571032 49975322685009 (0.001109s,0.367113s,0.368222s)
+
+Day 22:
+2021: 581108 1325473814582641 (0.607299s,0.602627s,1.209926s)
+redo: 581108 1325473814582641 (0.538002s,0.504056s,1.042058s)
+
+Day 23:
+2021: 11332 49936 (1.637646s,16.108899s,17.746545s)
+redo: 11332 49936 (1.41349s,9.886428s,11.299918s)
+
+Day 24: Redo extracts the coefficients from the input file, while they
+        were hard-coded into the 2021 code.
+2021: 91699394894995 51147191161261 (0.000305s,0.000204s,0.000509s)
+redo: 91699394894995 51147191161261 (0.000524s,0.000516s,0.00104s)
+
+Day 25:
+2021: 337 () (6.595722s,0.00003s,6.595752s)
+redo: 337 () (6.231909s,0.000039s,6.231948s)

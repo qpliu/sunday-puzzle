@@ -1,4 +1,5 @@
-Redo Advent of Code 2022 with cleaner and mostly faster code.
+Redo Advent of Code 2022 with cleaner and mostly faster code.  The
+2022 code was actually originally written in early 2023.
 
 Day 1:
 2022: 66719 198551 (0.005183s,0.0043s,0.009483s)

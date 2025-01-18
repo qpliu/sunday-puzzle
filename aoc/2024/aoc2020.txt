@@ -1,0 +1,110 @@
+Redo Advent of Code 2020.  Failed at part 2 of days 15 and 23, which
+resulted in stack overflow from both the 2020 and the redo code, but
+the code in Go for both got the answer.  The 2020 code was actually
+originally written in early 2023.
+
+Day 1:
+2020: 997899 131248694 (0.00088s,0.015264s,0.016144s)
+redo: 997899 131248694 (0.000988s,0.00219s,0.003178s)
+
+Day 2: Redo uses parallel processing to go faster.
+2020: 515 711 (0.01917s,0.008633s,0.027803s)
+redo: 515 711 (0.005592s,0.008221s,0.013813s)
+
+Day 3:
+2020: 181 1260601650 (0.012079s,0.007883s,0.019962s)
+redo: 181 1260601650 (0.010248s,0.010406s,0.020654s)
+
+Day 4: Redo uses parallel processing to go faster.
+2020: 245 133 (0.011714s,0.010139s,0.021853s)
+redo: 245 133 (0.004723s,0.004571s,0.009294s)
+
+Day 5:
+2020: 850 599 (0.002398s,0.003436s,0.005834s)
+redo: 850 598 (0.005973s,0.005461s,0.011434s)
+
+Day 6:
+2020: 6335 3392 (0.009818s,0.005491s,0.015309s)
+redo: 6335 3392 (0.006547s,0.005216s,0.011763s)
+
+Day 7:
+2020: 121 3805 (0.017859s,0.003977s,0.021836s)
+redo: 121 3805 (0.017854s,0.00923s,0.027084s)
+
+Day 8:
+2020: 1553 1877 (0.004152s,0.02668s,0.030832s)
+redo: 1553 1877 (0.002114s,0.015818s,0.017932s)
+
+Day 9:
+2020: 25918798 3340942 (0.013431s,0.012683s,0.026114s)
+redo: 25918798 3340942 (0.004081s,0.003682s,0.007763s)
+
+Day 10:
+2020: 2346 6044831973376 (0.002712s,0.000881s,0.003593s)
+redo: 2346 6044831973376 (0.00045s,0.000622s,0.001072s)
+
+Day 11: Redo gets part 1 faster by precomputing the neighbors of each
+        seat.  The 2020 code precomputed the neighbors of each seat
+        for part 2.  Redo gets part 2 faster by having the precomputed
+        neighbors with the seat, while the 2020 code looked up the
+        precomputed neighbors from a table with each iteration.
+2020: 2289 2059 (6.898443s,4.446292s,11.344735s)
+redo: 2289 2059 (2.669751s,2.819762s,5.489513s)
+
+Day 12:
+2020: 1601 13340 (0.004513s,0.003166s,0.007679s)
+redo: 1601 13340 (0.002117s,0.002463s,0.00458s)
+
+Day 13:
+2020: 2845 487905974205117 (0.00224s,0.001041s,0.003281s)
+redo: 2845 487905974205117 (0.000178s,0.000341s,0.000519s)
+
+Day 14:
+2020: 11926135976176 4330547254348 (0.009406s,0.495895s,0.505301s)
+redo: 11926135976176 4330547254348 (0.009709s,0.200604s,0.210313s)
+
+Day 15: For part 2, both the redo and the 2020 code result in stack
+        overflows, got the answer from the code in Go.
+2020: 441 (0.002025s) 441 10613991 (1.238s)
+redo: 441 (0.001872s)
+
+Day 16:
+2020: 20975 910339449193 (0.022518s,0.047022s,0.06954s)
+redo: 20975 910339449193 (0.023305s,0.065994s,0.089299s)
+
+Day 17: Redo uses parallel processing to go faster.
+2020: 269 1380 (0.233252s,7.212946s,7.446198s)
+redo: 269 1380 (0.065988s,1.619525s,1.685513s)
+
+Day 18: Redo uses parallel processing to go faster.
+2020: 800602729153 92173009047076 (0.027992s,0.027694s,0.055686s)
+redo: 800602729153 92173009047076 (0.009643s,0.009025s,0.018668s)
+
+Day 19: Redo uses parallel processing to go faster.
+2020: 139 289 (0.207749s,0.901383s,1.109132s)
+redo: 139 289 (0.055758s,0.218855s,0.274613s)
+
+Day 20: Redo uses parallel processing to go faster.
+2020: 16192267830719 1909 (0.017814s,1.385801s,1.403615s)
+redo: 16192267830719 1909 (0.084125s,0.296329s,0.380454s)
+
+Day 21:
+2020: 2786 "prxmdlz,ncjv,knprxg,lxjtns,vzzz,clg,cxfz,qdfpq" (0.018895s,0.010239s,0.029134s)
+redo: 2786 "prxmdlz,ncjv,knprxg,lxjtns,vzzz,clg,cxfz,qdfpq" (0.006209s,0.004537s,0.010746s)
+
+Day 22:
+2020: 31629 35196 (0.003683s,7.150864s,7.154547s)
+redo: 31629 35196 (0.000416s,4.858s,4.858416s)
+
+Day 23: For part 2, both the redo and the 2020 code result in stack
+        overflows, got the answer from the code in Go.
+2020: 25398647 (0.000538s) 363807398885 (1.601s)
+redo: 25398647 (0.001446s)
+
+Day 24: Redo uses parallel processing to go faster for part 2.
+2020: 346 3802 (0.011429s,6.74556s,6.756989s)
+redo: 346 3802 (0.006512s,2.002242s,2.008754s)
+
+Day 25: Redo uses parallel processing to go faster.
+2020: 6408263 () (5.527318s,0.000029s,5.527347s)
+redo: 6408263 () (2.401461s,0.000042s,2.401503s)

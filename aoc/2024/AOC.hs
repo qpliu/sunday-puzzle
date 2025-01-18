@@ -218,6 +218,13 @@ parseInts = p . dropWhile notStart
     p str = read n : parseInts rest
       where (n,rest) = span isDigit str
 
+parseBlankLineSeparated :: String -> [[String]]
+parseBlankLineSeparated = p . lines
+  where
+    p [] = []
+    p items = this : p (drop 1 rest)
+      where (this,rest) = span (not . null) items
+
 type Memo a b = State (Map a b)
 
 evalMemoized :: Memo a b c -> c

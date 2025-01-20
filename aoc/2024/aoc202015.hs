@@ -1,11 +1,15 @@
 module AOC202015 where
 
-import Data.Map.Strict(Map,findWithDefault,fromList,insert)
+import Control.Monad.Primitive(PrimState)
+import Control.Monad.ST(ST,runST)
+import Data.Vector.Unboxed.Mutable(MVector,write)
+import qualified Data.Vector.Unboxed.Mutable as Vector
 
 import AOC
 
 aoc = AOC {
     day="../../2020/input/15",
+    -- part 2 code is too slow for the tests
     aocTests=[
         AOCTest {
             testData="0,3,6",
@@ -47,22 +51,26 @@ aoc = AOC {
         codeParse=parseInts,
         codeParse2=parseInts,
         codeTest=result 2020,
-        codeTest2=const (), --result 30000000,
+        codeTest2=result 30000000,
         codeResult=result 2020,
-        codeResult2=const () --result 30000000
+        codeResult2=result 30000000
         }
     }
 
-speak :: Int -> (Int,(Int,Map Int Int)) -> Int
-speak n (number,(turn,history))
-  | turn >= n = number
-  | otherwise = speak n (turn - findWithDefault turn number history,
-                         (turn+1,insert number turn history))
+speak :: Int -> Int -> Int -> MVector (PrimState (ST s)) Int -> ST s Int
+speak n turn number history
+  | turn >= n = return number
+  | otherwise = do
+      lastSpoken <- Vector.read history number
+      write history number turn
+      if lastSpoken == 0
+        then speak n (turn+1) 0 history
+        else speak n (turn+1) (turn - lastSpoken) history
 
-starting :: [Int] -> (Int,(Int,Map Int Int))
-starting numbers =
-    (last numbers,(length numbers,fromList $ zip (init numbers) [1..]))
+starting :: Int -> [Int] -> ST s Int
+starting n numbers = do
+    history <- Vector.replicate n 0
+    sequence_ [write history num i | (i,num) <- zip [1..] (init numbers)]
+    speak n (length numbers) (last numbers) history
 
-result n = speak n . starting
-
--- Part 2 results in stack overflows.
+result n numbers = runST $ starting n numbers

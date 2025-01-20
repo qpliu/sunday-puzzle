@@ -63,10 +63,10 @@ Day 14:
 2020: 11926135976176 4330547254348 (0.009406s,0.495895s,0.505301s)
 redo: 11926135976176 4330547254348 (0.009709s,0.200604s,0.210313s)
 
-Day 15: For part 2, both the redo and the 2020 code result in stack
-        overflows, got the answer from the code in Go.
-2020: 441 (0.002025s) 441 10613991 (1.238s)
-redo: 441 (0.001872s)
+Day 15: Redo successfully gets part 2.  The 2020 code results in a
+        stack overflow for part 2, got part 2 from the code in Go.
+2020: 441          (0.002025s) 441 10613991 (1.238s)
+redo: 441 10613991 (0.002281s,32.630397s,32.632678s)
 
 Day 16:
 2020: 20975 910339449193 (0.022518s,0.047022s,0.06954s)
@@ -96,8 +96,11 @@ Day 22:
 2020: 31629 35196 (0.003683s,7.150864s,7.154547s)
 redo: 31629 35196 (0.000416s,4.858s,4.858416s)
 
-Day 23: For part 2, both the redo and the 2020 code result in stack
-        overflows, got the answer from the code in Go.
+Day 23: For part 2, the 2020 code result in a stack overflow, while
+        the redo is too slow, needing to take an estimated 350-400
+        hours.  There are optimizations to minimize the amount of
+        reindexing, but I'm not motivated to pursue that.  Got the
+        part 2 answer from the code in Go.
 2020: 25398647 (0.000538s) 363807398885 (1.601s)
 redo: 25398647 (0.001446s)
 

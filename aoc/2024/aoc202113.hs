@@ -68,5 +68,4 @@ fold points (Right yFold) = Data.Set.map f points
 result (points,(instruction:_)) = size $ fold points instruction
 
 result2 (points,instructions) =
-    ocr4x6 $ unlines $ drop 1 $ lines $ show2ds
-           $ foldl fold points instructions
+    ocr4x6 $ show2ds False $ foldl fold points instructions

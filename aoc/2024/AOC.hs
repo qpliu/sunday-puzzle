@@ -183,12 +183,14 @@ parse2da = p 0 0 0 0 []
       | c == '\n' = p 0 (y+1) xmax ymax e cs
       | otherwise = p (x+1) y (max xmax x) (max ymax y) (((x,y),c):e) cs
 
-show2dm :: Map (Int,Int) Char -> String
-show2dm m
+show2dm :: Bool -> Map (Int,Int) Char -> String
+show2dm includeSize m
   | xmax-xmin > 150 || ymax-ymin > 150 = gridSize
-  | otherwise = unlines $ gridSize :
+  | includeSize = unlines $ gridSize :
       [[findWithDefault '.' (x,y) m | x <- [xmin..xmax]]
        | y <- [ymin..ymax]]
+  | otherwise = unlines [[findWithDefault '.' (x,y) m | x <- [xmin..xmax]]
+                         | y <- [ymin..ymax]]
   where
     xmax = maximum $ map fst $ keys m
     xmin = minimum $ map fst $ keys m
@@ -197,13 +199,14 @@ show2dm m
     gridSize = show (xmax-xmin) ++ "×" ++ show (ymax-ymin)
 
 p2dm :: Map (Int,Int) Char -> IO ()
-p2dm = putStr . show2dm
+p2dm = putStr . show2dm True
 
-show2ds :: Set (Int,Int) -> String
-show2ds = show2dm . Data.Map.fromList . flip zip (repeat '#') . elems
+show2ds :: Bool -> Set (Int,Int) -> String
+show2ds includeSize =
+    show2dm includeSize . Data.Map.fromList . flip zip (repeat '#') . elems
 
 p2ds :: Set (Int,Int) -> IO ()
-p2ds = putStr . show2ds
+p2ds = putStr . show2ds True
 
 parseInts :: String -> [Int]
 parseInts = p . dropWhile notStart
@@ -450,12 +453,12 @@ ocr4x6 = recognize . lines
            ".#..",
            "###."
           ],'I'),
-         ([".###",
-           "..#.",
-           "..#.",
-           "..#.",
-           "#.#.",
-           ".#.."
+         (["..##",
+           "...#",
+           "...#",
+           "...#",
+           "#..#",
+           ".##."
           ],'J'),
          (["#..#",
            "#.#.",

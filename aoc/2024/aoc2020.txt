@@ -1,6 +1,6 @@
-Redo Advent of Code 2020.  Failed at part 2 of days 15 and 23, which
-resulted in stack overflow from both the 2020 and the redo code, but
-the code in Go for both got the answer.  The 2020 code was actually
+Redo Advent of Code 2020.  Failed at part 2 of day 23, which resulted
+in stack overflow the 2020 code and the redo code was too slow, but
+the 2020 code in Go got the answer.  The 2020 code was actually
 originally written in early 2023.
 
 Day 1:

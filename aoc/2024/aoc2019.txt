@@ -1,0 +1,125 @@
+Redo Advent of Code 2019.  The 2019 code was actually originally
+written in early 2023.
+
+Day 1:
+2019: 3232358 4845669 (0.00111s,0.000758s,0.001868s)
+redo: 3232358 4845669 (0.000479s,0.001087s,0.001566s)
+
+Day 2:
+2019:
+redo: 3790689 6533 (0.000942s,0.319581s,0.320523s)
+
+Day 3:
+2019: 248 28580 (0.992571s,1.511002s,2.503573s)
+redo: 248 28580 (0.729645s,0.760612s,1.490257s)
+
+Day 4: Redo uses parallel processing to go faster.  Some smarter
+       scheme to skip invalid ranges could do better.
+2019: 889 589 (1.259982s,1.285875s,2.545857s)
+redo: 889 589 (0.460033s,0.501031s,0.961064s)
+
+Day 5:
+2019:
+redo: 16489636 9386583 (0.00364s,0.002854s,0.006494s)
+
+Day 6:
+2019: 247089 442 (0.010192s,0.016513s,0.026705s)
+redo: 247089 442 (0.00607s,0.015946s,0.022016s)
+
+Day 7:
+2019:
+redo: 95757 4275738 (0.012853s,0.026919s,0.039772s)
+
+Day 8: Redo uses "ocr" to decode the image.  Manually got the string
+       from the rendered image when using the 2019 code.
+2019: 1848 "FGJUZ" (0.006103s,0.006837s,0.01294s)
+redo: 1848 "FGJUZ" (0.002282s,0.002714s,0.004996s)
+
+Day 9:
+2019:
+redo: 3780860499 33343 (0.007587s,3.789569s,3.797156s)
+
+Day 10: Redo uses parallel processing to go faster.
+2019: 276 1321 (1.919488s,1.88706s,3.806548s)
+redo: 276 1321 (0.140304s,0.144824s,0.285128s)
+
+Day 11: Redo uses "ocr" to decode the image.  Manually got the string
+        from the rendered image when using the 2019 code.
+2019:
+redo: 1785 "HJALJZFH" (0.436796s,0.167059s,0.603855s)
+
+Day 12: Redo uses parallel processing to go faster for part 2.
+2019: 7722 292653556339368 (0.032063s,5.318497s,5.35056s)
+redo: 7722 292653556339368 (0.059833s,1.919177s,1.97901s)
+
+Day 13:
+2019:
+redo: 253 12263 (0.267383s,9.204785s,9.472168s)
+
+Day 14: Redo is slower for part 2, which must be due to part 1 being
+        slower.  Maybe using a Map to combine unmet needs instead of
+        using a list of uncombined unmet needs will speed it up.
+2019: 158482 7993831 (0.004399s,0.03072s,0.035119s)
+redo: 158482 7993831 (0.003894s,0.161756s,0.16565s)
+
+Day 15:
+2019:
+redo: 258 372 (0.156702s,0.273083s,0.429785s)
+
+Day 16: Redo uses unboxed vectors instead of lists to go faster.
+2019: "49254779" "55078585" (25.979944s,141.418955s,167.398899s)
+redo: "49254779" "55078585" (0.731636s,81.763339s,82.494975s)
+
+Day 17: Redo calculates the input for part 2, while the 2019 code has
+        the manually determined input hard-coded.  Almost all of the
+        time for part 2 is interpreting the intcode.  Maybe it's so
+        slow because my attempt to make it do in-place memory updates
+        failed and it's making copies.  Using unsafeThaw and
+        unsafeFreeze makes it about 3.7 times faster, but it's still
+        unacceptably slow.
+2019:
+redo: 4800 982279 (0.694282s,227.359954s,228.054236s)
+redo: 4800 982279 (0.672668s,60.839532s,61.5122s)
+
+Day 18: Redo uses A* rather than breadth-first search and
+        precalculates the graph between intersections/doors/keys
+        rather than going one tile at a time.  There's some bug that
+        makes it get the final test case wrong, but I'm not motivated
+        to track that down, as it gets the right answer for my actual
+        input.
+2019: 5198 1736 (41.460451s,0.835578s,42.296029s)
+redo: 5198 1736 (1.253048s,0.084454s,1.337502s)
+
+Day 19:
+2019:
+redo: 126 11351625 (3.620248s,12.384025s,16.004273s)
+
+Day 20: Redo uses A* on a precalculated graph where 2019 used bfs
+        moving one step at a time.
+2019: 626 6912 (3.090876s,292.862686s,295.953562s)
+redo: 626 6912 (0.153987s,1.018055s,1.172042s)
+
+Day 21: Redo hard-codes the script previously manually worked out from
+        2019.  Not motivated to get the code to generate the script
+        based on the results.
+2019:
+redo: 19356418 1146440619 (0.119624s,3.320071s,3.439695s)
+
+Day 22: Redo works out the answers using modular arithmetic.  The 2019
+        code was based on internet hints without understanding how it
+        works.
+2019: 7744 57817797345992 (0.007234s,0.00181s,0.009044s)
+redo: 7744 57817797345992 (0.000603s,0.000819s,0.001422s)
+
+Day 23: Redo make heavy use of continuation-passing style.
+2019:
+redo: 21089 16658 (0.358368s,12.441497s,12.799865s)
+
+Day 24:
+2019: 18370591 2040 (0.004249s,0.973929s,0.978178s)
+redo: 18370591 2040 (0.001095s,0.780959s,0.782054s)
+
+Day 25: Redo code finds the item combination that was manually worked
+        out with the 2019 code.
+2019:
+redo: "20483" () (3.036052s,0.00004s,3.036092s)

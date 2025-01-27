@@ -1,7 +1,5 @@
-Redo Advent of Code 2020.  Failed at part 2 of day 23, which resulted
-in stack overflow the 2020 code and the redo code was too slow, but
-the 2020 code in Go got the answer.  The 2020 code was actually
-originally written in early 2023.
+Redo Advent of Code 2020.  The 2020 code was actually originally
+written in early 2023.
 
 Day 1:
 2020: 997899 131248694 (0.00088s,0.015264s,0.016144s)
@@ -97,12 +95,10 @@ Day 22:
 redo: 31629 35196 (0.000416s,4.858s,4.858416s)
 
 Day 23: For part 2, the 2020 code result in a stack overflow, while
-        the redo is too slow, needing to take an estimated 350-400
-        hours.  There are optimizations to minimize the amount of
-        reindexing, but I'm not motivated to pursue that.  Got the
-        part 2 answer from the code in Go.
-2020: 25398647 (0.000538s) 363807398885 (1.601s)
-redo: 25398647 (0.001446s)
+        the redo, using a linked list, is very slow, but not too slow,
+        yet much slower than the 2020 code in Go.
+2020: 25398647              (0.000538s) 363807398885 (1.601s)
+redo: 25398647 363807398885 (0.000731s,43.394325s,43.395056s)
 
 Day 24: Redo uses parallel processing to go faster for part 2.
 2020: 346 3802 (0.011429s,6.74556s,6.756989s)

@@ -32,77 +32,61 @@ parse = map (abs . (ord '0' -) . ord) . filter isDigit
 
 type Vec s = MVector (PrimState (ST s)) Int
 
-cup :: Int -> Vec s -> Int -> ST s Int
-cup maxCup cups i = Vector.read cups (i `mod` maxCup)
-
-play :: (Vec s -> Vec s -> ST s Int) -> Int -> Int -> [Int] -> ST s Int
+play :: (Vec s -> ST s a) -> Int -> Int -> [Int] -> ST s a
 play getResult maxCup nMoves starters = do
-    cups <- Vector.new maxCup
-    sequence_ [write cups i (i+1) | i <- [0..maxCup-1]]
-    sequence_ [write cups i cup | (i,cup) <- zip [0..] starters]
-    pos <- Vector.new (maxCup+1)
-    sequence_ [write pos i (i-1) | i <- [1..maxCup]]
-    sequence_ [write pos cup i | (i,cup) <- zip [0..] starters]
-    moves maxCup nMoves cups pos
-    getResult cups pos
+    next <- Vector.new (maxCup+1)
+    sequence_ [write next i (i+1) | i <- [1..maxCup]]
+    let afterStarters
+          | maxCup == length starters = head starters
+          | otherwise = length starters + 1
+    sequence_ [write next i cup
+               | (i,cup) <- zip starters (tail starters ++ [afterStarters])]
+    if maxCup > length starters
+      then write next maxCup (head starters)
+      else return ()
+    moves maxCup nMoves next (head starters)
+    getResult next
 
-moves :: Int -> Int -> Vec s -> Vec s -> ST s ()
-moves maxCup nMoves cups pos = m 0 0
+moves :: Int -> Int -> Vec s -> Int -> ST s ()
+moves maxCup nMoves next initialCurrent = m 0 initialCurrent
   where
-    m nMove currentPos
+    m nMove current
       | nMove >= nMoves = return ()
       | otherwise = do
-          current <- cup maxCup cups currentPos
-          c1 <- cup maxCup cups (currentPos+1)
-          c2 <- cup maxCup cups (currentPos+2)
-          c3 <- cup maxCup cups (currentPos+3)
+          c1 <- Vector.read next current
+          c2 <- Vector.read next c1
+          c3 <- Vector.read next c2
+          c4 <- Vector.read next c3
           let dest = findDest c1 c2 c3 ((current-2) `mod` maxCup + 1)
-          destPos <- Vector.read pos dest
+          d1 <- Vector.read next dest
 
-          if destPos > currentPos
-            then do
-              mapM_ back3 [currentPos+1..destPos-4]
-              move dest (destPos-3)
-              move c1 (destPos-2)
-              move c2 (destPos-1)
-              move c3 destPos
-              m (nMove+1) ((currentPos+1) `mod` maxCup)
-            else do
-              mapM_ forward3 [currentPos+2,currentPos+1..destPos+4]
-              move c1 (destPos+1)
-              move c2 (destPos+2)
-              move c3 (destPos+3)
-              move current (currentPos+3)
-              m (nMove+1) ((currentPos+4) `mod` maxCup)
+          write next current c4
+          write next dest c1
+          write next c3 d1
+          m (nMove+1) c4
 
-    findDest c1 c2 c3 c
-      | c /= c1 && c /= c2 && c /= c3 = c
-      | otherwise = findDest c1 c2 c3 ((c-2) `mod` maxCup + 1)
+    findDest c1 c2 c3 d
+      | d /= c1 && d /= c2 && d /= c3 = d
+      | otherwise = findDest c1 c2 c3 ((d-2) `mod` maxCup + 1)
 
-    move c i = do
-        write cups (i `mod` maxCup) c
-        write pos c (i `mod` maxCup)
-
-    back3 i = do
-        c <- cup maxCup cups ((i+3) `mod` maxCup)
-        move c i
-
-    forward3 i = do
-        c <- cup maxCup cups ((i-3) `mod` maxCup)
-        move c i
-
-labels :: Vec s -> Vec s -> ST s Int
-labels cups pos = do
-    one <- Vector.read pos 1
-    ns <- sequence [cup 9 cups (one+i) | i <- [1..8]]
-    return $ sum $ zipWith (*) (reverse ns) [10^i | i <- [0..]]
+labels :: Vec s -> ST s Int
+labels next = do
+    c2 <- Vector.read next 1
+    c3 <- Vector.read next c2
+    c4 <- Vector.read next c3
+    c5 <- Vector.read next c4
+    c6 <- Vector.read next c5
+    c7 <- Vector.read next c6
+    c8 <- Vector.read next c7
+    c9 <- Vector.read next c8
+    return $ sum $ zipWith (*) [c9,c8,c7,c6,c5,c4,c3,c2] [10^i | i <- [0..]]
 
 result starters = runST $ play labels 9 100 starters
 
-labels2 :: Vec s -> Vec s -> ST s Int
-labels2 cups pos = do
-    one <- Vector.read pos 1
-    ns <- sequence [cup 1000000 cups (one+i) | i <- [1,2]]
-    return $ product ns
+labels2 :: Vec s -> ST s Int
+labels2 next = do
+    c2 <- Vector.read next 1
+    c3 <- Vector.read next c2
+    return $ c2*c3
 
-result2 starters = runST $ play labels2 1000000 1000000 starters
+result2 starters = runST $ play labels2 1000000 10000000 starters

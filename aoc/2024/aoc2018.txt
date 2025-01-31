@@ -1,0 +1,121 @@
+Redo Advent of Code 2018.  The 2018 code was actually originally
+written in early 2023.
+
+Day 1:
+2018: 439 124645 (0.005581s,0.174699s,0.18028s)
+redo: 439 124645 (0.004731s,0.174829s,0.17956s)
+
+Day 2: Redo does part 2 faster by doing O(N) rather than O(N^2) that
+       the 2018 code does.
+2018: 5727 "uwfmdjxyxlbgnrotcfpvswaqh" (0.005712s,0.181564s,0.187276s)
+redo: 5727 "uwfmdjxyxlbgnrotcfpvswaqh" (0.008498s,0.012797s,0.021295s)
+
+Day 3:
+2018: 116489 1260 (2.031696s,3.166852s,5.198548s)
+redo: 116489 1260 (0.686348s,0.894561s,1.580909s)
+
+Day 4:
+2018: 102688 56901 (0.027176s,0.024794s,0.05197s)
+redo: 102688 56901 (0.039227s,0.038905s,0.078132s)
+
+Day 5: Redo uses parallel processing to go faster.
+2018: 9078 5698 (0.053138s,1.375533s,1.428671s)
+redo: 9078 5698 (0.043375s,0.447717s,0.491092s)
+
+Day 6: Redo uses parallel processing to go faster.
+2018: 4060 36136 (2.35367s,2.829472s,5.183142s)
+redo: 4060 36136 (1.238903s,1.192483s,2.431386s)
+
+Day 7:
+2018: "LFMNJRTQVZCHIABKPXYEUGWDSO" 1180 (0.003506s,0.001273s,0.004779s)
+redo: "LFMNJRTQVZCHIABKPXYEUGWDSO" 1180 (0.001222s,0.001595s,0.002817s)
+
+Day 8:
+2018: 44838 22198 (0.063893s,0.031859s,0.095752s)
+redo: 44838 22198 (0.071243s,0.048981s,0.120224s)
+
+Day 9: Redo uses linked lists after looking at internet spoilers.  The
+       2018 code was too slow for part 2 and the 2018 Go code was also
+       very slow.
+2018: 390592            (0.035178s) 390592 3277920293 (0m1.195s,13m57.300s)
+redo: 390592 3277920293 (0.159617s,15.726856s,15.886473s)
+
+Day 10: Redo does "ocr", while the message was manually decoded from
+        the image from the 2018 code.
+2018: "AJZNXHKE" 10905 (3.38272s,3.313581s,6.696301s)
+redo: "AJZNXHKE" 10905 (1.498877s,1.457373s,2.95625s)
+
+Day 11: Redo uses parallel processing and, most importantly, the
+        observation that squares above a threshold size have
+        increasingily negative total energies.
+2018: (235,18) (236,227,12) (1.072831s,140.621353s,141.694184s)
+redo: (235,18) (236,227,12) (0.234356s,8.711648s,8.946004s)
+
+Day 12: Redo code finds the recurrence for part 2.  The 2018 code uses
+        the manually found recurrence.
+2018: 4110 2650000000466 (0.003088s,0.000157s,0.003245s)
+redo: 4110 2650000000466 (0.002813s,0.019163s,0.021976s)
+
+Day 13:
+2018: (83,121) (102,144) (0.048273s,0.27093s,0.319203s)
+redo: (83,121) (102,144) (0.077754s,0.41347s,0.491224s)
+
+Day 14: Redo at least gets the answer.  The 2018 code is too slow to
+        get the answer, but the 2018 Go code is fast.
+2018: 6985103122 20182290 (0m1.362s)
+redo: 6985103122 20182290 (0.870315s,99.138046s,100.008361s)
+
+Day 15: Redo does parallel processing for part 2 and abandons the
+        combat after an elf dies, where the 2018 code does complete
+        combats for part 2.
+2018: 243390 59886 (6.784086s,54.869574s,61.65366s)
+redo: 243390 59886 (1.79052s,2.273269s,4.063789s)
+
+Day 16:
+2018: 588 627 (0.053296s,0.053317s,0.106613s)
+redo: 588 627 (0.07142s,0.064586s,0.136006s)
+
+Day 17: The 2018 code was too slow to get an answer, and the 2018 code
+        in Go was very slow.  Redo is faster due to not starting over
+        from the top for each water tile by backtracking along the
+        current path.
+2018: 44743 34172 (6m2.055s)
+redo: 44743 34172 (0.679963s,0.660893s,1.340856s)
+
+Day 18: Redo uses parallel processing to go faster.
+2018: 574590 183787 (0.328047s,16.354078s,16.682125s)
+redo: 574590 183787 (0.095417s,3.977845s,4.073262s)
+
+Day 19: Redo gets the initial values by executing the input, while the
+        initial values were extracted manually for the 2018 code.
+2018: 1350 15844608 (0.002699s,0.097007s,0.099706s)
+redo: 1350 15844608 (0.000425s,0.00098s,0.001405s)
+
+Day 20:
+2018: 3806 8354 (0.175191s,0.124562s,0.299753s)
+redo: 3806 8354 (0.152701s,0.106539s,0.25924s)
+
+Day 21:
+2018: 212115 9258470 (0.000416s,0.113045s,0.113461s)
+redo: 212115 9258470 (0.000198s,0.058611s,0.058809s)
+
+Day 22: Redo uses A* where the 2018 code used bfs.
+2018: 11359 976 (0.041753s,140.98632s,141.028073s)
+redo: 11359 976 (0.036851s,7.305232s,7.342083s)
+
+Day 23: The 2018 answer for part 2 involved manually refining the
+        search volume.  Redo for part 2 has code that refines the
+        search volume.  The attempt at parallel processing in the redo
+        for part 2 fails to work.
+2018: 380          (0.044481s,0.000029s,0.04451s)
+redo: 380 95541011 (0.030824s,14.52486s,14.555684s)
+
+Day 24: The 2018 answer for part 2 involved manually finding the
+        critical boost.  Redo for part 2 has code that finds the
+        critical boost.
+2018: 13331 7476 (0.179603s,0.282448s,0.462051s)
+redo: 13331 7476 (0.140317s,1.283154s,1.423471s)
+
+Day 25:
+2018: 394 () (1.217203s,0.00003s,1.217233s)
+redo: 394 () (1.293121s,0.000038s,1.293159s)

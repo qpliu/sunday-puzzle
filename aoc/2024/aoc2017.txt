@@ -1,0 +1,113 @@
+Redo Advent of Code 2017.  The 2017 code was actually originally
+written in late 2022 to early 2023.  The 2017 code and the rewrite
+both failed for day 5 part 2.
+
+Day 1:
+2017: 1150 1064 (0.003933s,0.000535s,0.004468s)
+redo: 1150 1064 (0.000593s,0.000467s,0.00106s)
+
+Day 2:
+2017: 51139 272 (0.001831s,0.001887s,0.003718s)
+redo: 51139 272 (0.000967s,0.002695s,0.003662s)
+
+Day 3:
+2017: 419 295229 (0.000772s,0.000359s,0.001131s)
+redo: 419 295229 (0.000111s,0.000103s,0.000214s)
+
+Day 4:
+2017: 451 223 (0.006094s,0.004205s,0.010299s)
+redo: 451 223 (0.002172s,0.004588s,0.00676s)
+
+Day 5: Redo does part 1 faster by using mutable vectors, but still
+       fails on part 2 with stack overflow.  The 2017 Go code gets the
+       answer quickly for both parts.
+2017: 387096 (4.010375s) 387096 28040648 (0m0.654s)
+redo: 387096 (0.591732s)
+
+Day 6:
+2017: 14029 2765 (0.325978s,0.335497s,0.661475s)
+redo: 14029 2765 (0.486797s,0.486532s,0.973329s)
+
+Day 7:
+2017: "svugo" 1152 (0.017089s,0.015118s,0.032207s)
+redo: "svugo" 1152 (0.005169s,0.0129s,0.018069s)
+
+Day 8:
+2017: 5849 6702 (0.01887s,0.01454s,0.03341s)
+redo: 5849 6702 (0.011501s,0.011492s,0.022993s)
+
+Day 9:
+2017: 10800 4522 (0.014214s,0.008305s,0.022519s)
+redo: 10800 4522 (0.002454s,0.002534s,0.004988s)
+
+Day 10:
+2017: 1935 "dc7e7dee710d4c7201ce42713e6b8359" (0.002827s,0.129018s,0.131845s)
+redo: 1935 "dc7e7dee710d4c7201ce42713e6b8359" (0.001868s,0.118155s,0.120023s)
+
+Day 11:
+2017: 784 1558 (0.036824s,0.057536s,0.09436s)
+redo: 785 1558 (0.007417s,0.014408s,0.021825s)
+
+Day 12:
+2017: 175 213 (0.012382s,0.045693s,0.058075s)
+redo: 175 213 (0.017895s,0.029593s,0.047488s)
+
+Day 13: Redo is much faster for part 2 by merging layers with the same
+        period into a single test.
+2017: 1904 3833504 (0.002604s,13.458122s,13.460726s)
+redo: 1904 3833504 (0.000488s,2.3763s,2.376788s)
+
+Day 14: Redo is slower due to a slower knot hash implementation.
+2017: 8226 1128 (2.097663s,2.072425s,4.170088s)
+redo: 8226 1128 (6.590435s,6.630528s,13.220963s)
+
+Day 15:
+2017: 626 306 (32.692224s,28.063831s,60.756055s)
+redo: 626 306 (32.294312s,28.63397s,60.928282s)
+
+Day 16:
+2017: "ceijbfoamgkdnlph" "pnhajoekigcbflmd" (0.099936s,9.208995s,9.308931s)
+redo: "ceijbfoamgkdnlph" "pnhajoekigcbflmd" (0.121113s,5.46846s,5.589573s)
+
+Day 17:
+2017: 725 27361412 (0.033503s,46.364692s,46.398195s)
+redo: 725 27361412 (0.510146s,42.335842s,42.845988s)
+
+Day 18:
+2017: 7071 8001 (0.012029s,0.884994s,0.897023s)
+redo: 7071 8001 (0.002447s,0.272168s,0.274615s)
+
+Day 19:
+2017: "FEZDNIVJWT" 17200 (0.098664s,0.095528s,0.194192s)
+redo: "FEZDNIVJWT" 17200 (0.091313s,0.115099s,0.206412s)
+
+Day 20:
+2017: 170 571 (0.027825s,2.410342s,2.438167s)
+redo: 170 571 (0.040567s,2.326388s,2.366955s)
+
+Day 21: Redo is much faster due to the realization that a 3x3 turns
+        into a 4x4, which turns into a 6x6, which then turns into 9x9,
+        which is a 3x3 of 3x3s, and the 3x3s will no longer interact
+        with each other, so identical 3x3s can be grouped together.
+2017: 167 2425195 (0.016953s,14.79343s,14.810383s)
+redo: 167 2425195 (0.00613s,0.006354s,0.012484s)
+
+Day 22:
+2017: 5176 2512017 (0.024692s,43.62117s,43.645862s)
+redo: 5176 2512017 (0.02307s,27.819966s,27.843036s)
+
+Day 23: For part 2, redo uses an algorithm for checking if a number is
+        prime that is much faster than the algorithm used by the 2017
+        code.  Redo also extracts parameters from the input where they
+        were hard-coded in 2017 code.
+2017: 8281 911 (0.349113s,4.258277s,4.60739s)
+redo: 8281 911 (0.084685s,0.007304s,0.091989s)
+
+Day 24:
+2017: 1511 1471 (15.001683s,14.213285s,29.214968s)
+redo: 1511 1471 (3.293412s,3.272375s,6.565787s)
+
+Day 25: Trying to rerun the 2017 code results in stack overflow.  It
+        must have gotten the answer I originally wrote it.
+2017:
+redo: 3578 () (13.464242s,0.000068s,13.46431s)

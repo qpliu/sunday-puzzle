@@ -1,0 +1,116 @@
+Redo Advent of Code 2016.  The 2016 code was actually originally
+written in late 2022.
+
+Day 1:
+2016: 234 113 (0.001479s,0.001396s,0.002875s)
+redo: 234 113 (0.000732s,0.001372s,0.002104s)
+
+Day 2:
+2016: "18843" "67BB9" (0.005229s,0.003131s,0.00836s)
+redo: "18843" "67BB9" (0.004387s,0.00306s,0.007447s)
+
+Day 3:
+2016: 983 1836 (0.017176s,0.015081s,0.032257s)
+redo: 986 1858 (0.023645s,0.026767s,0.050412s)
+
+Day 4:
+2016: 245102 324 (0.033233s,0.031844s,0.065077s)
+redo: 245102 324 (0.044148s,0.0288s,0.072948s)
+
+Day 5: The 2016 code was in Go.
+2016:  801b56a7   424a0197 (0m2.904s,0m8.478s)
+redo: "801b56a7" "424a0197" (7.019967s,26.991414s,34.011381s)
+
+Day 6:
+2016: "qzedlxso" "ucmifjae" (0.005142s,0.006593s,0.011735s)
+redo: "qzedlxso" "ucmifjae" (0.002192s,0.001903s,0.004095s)
+
+Day 7:
+2016: 115 231 (0.155461s,0.204701s,0.360162s)
+redo: 115 231 (0.086883s,0.137201s,0.224084s)
+
+Day 8: Redo uses "ocr" for part 2, while the result was manually found
+       from the pixels with the 2016 code.
+2016: 116 "UPOJFLBCEZ" (0.008654s,0.025976s,0.03463s)
+redo: 116 "UPOJFLBCEZ" (0.006344s,0.006753s,0.013097s)
+
+Day 9:
+2016: 74532 11558231665 (0.003146s,0.015015s,0.018161s)
+redo: 74532 11558231665 (0.00078s,0.01167s,0.01245s)
+
+Day 10:
+2016: 56 7847 (0.00926s,0.016949s,0.026209s)
+redo: 56 7847 (0.005108s,0.004643s,0.009751s)
+
+Day 11: Redo uses A*, and the heuristic probably prunes a bunch of
+        paths that a breadth-first search follows.
+2016: 31 55 (5.192293s,398.366666s,403.558959s)
+redo: 31 55 (2.989205s,238.355923s,241.345128s)
+
+Day 12: Pretty slow, but not slow enough to consider decompiling the
+        input.
+2016: 318077 9227731 (3.443837s,103.847602s,107.291439s)
+redo: 318077 9227731 (1.370152s,38.50937s,39.879522s)
+
+Day 13:
+2016: 96 141 (0.011156s,0.004381s,0.015537s)
+redo: 96 141 (0.003755s,0.001548s,0.005303s)
+
+Day 14: The 2016 code was in Go.  Part 2 of the redo is horribly
+        slow.
+2016: 23890 22696 (0m1.305s,0m19.494s)
+redo: 23890 22696 (0.474411s,1561.937089s,1562.4115s)
+
+Day 15:
+2016: 122318 3208583 (0.013754s,0.234742s,0.248496s)
+redo: 122318 3208583 (0.000398s,0.00042s,0.000818s)
+
+Day 16:
+2016: "10100101010101101" "01100001101101001" (0.002867s,32.461865s,32.464732s)
+redo: "10100101010101101" "01100001101101001" (0.001661s,24.583399s,24.58506s)
+
+Day 17: The 2016 code was in Go.
+2016:  DDRRUDLRRD  488 (0m1.126s,0m0.650s)
+redo: "DDRRUDLRRD" 488 (0.000452s,0.165704s,0.166156s)
+
+Day 18: Redo is much faster by using bits instead of lists.
+2016: 1951 20002936 (0.006953s,44.856234s,44.863187s)
+redo: 1951 20002936 (0.000325s,0.679442s,0.679767s)
+
+Day 19:
+2016: 1834903 1420280 (0.000253s,5.710316s,5.710569s)
+redo: 1834903 1420280 (0.000157s,2.504922s,2.505079s)
+
+Day 20:
+2016: 22887907 109 (0.018564s,0.071164s,0.089728s)
+redo: 22887907 109 (0.015296s,0.058276s,0.073572s)
+
+Day 21:
+2016: "baecdfgh" "cegdahbf" (0.003763s,0.001408s,0.005171s)
+redo: "baecdfgh" "cegdahbf" (0.001212s,0.001409s,0.002621s)
+
+Day 22: Redo makes fewer assumptions about the input data, but still
+        assumes that the only possible moves are to move into the
+        empty node.
+2016: 946 195 (0.165061s,0.000047s,0.165108s)
+redo: 946 195 (0.732436s,3.78934s,4.521776s)
+
+Day 23: Figured out that the code decompiles to a factorial plus
+        an extra number that is extracted from the input for the redo,
+        while the 2016 code hard coded the extra number while
+        reimplementing the factorial code without recognizing that it
+        is a factorial.
+2016: 11760 479008320 (0.215136s,0.00017s,0.215306s)
+redo: 11760 479008320 (0.07854s,0.000177s,0.078717s)
+
+Day 24: Redo is slower since it uses a graph with all the
+        intersections instead of a graph with just the targets.
+2016: 462 676 (0.184562s,0.177108s,0.36167s)
+redo: 462 676 (1.235265s,2.431254s,3.666519s)
+
+Day 25: Figured out that the code decompiles to outputting the bits of
+        a plus an extra number that is extracted from the input for
+        the redo, while the 2016 did a brute-force search by
+        interpreting the input for one iteration of the outer loop.
+2016: 189 () (19.175562s,0.000029s,19.175591s)
+redo: 189 () (0.000114s,0.000045s,0.000159s)

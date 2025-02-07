@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300"
+     height="300" viewBox="-1 -1 2 2">
+  <rect x="-0.5" y="-0.5" width="1" height="1" fill="none"
+	stroke="black" stroke-width="0.02">
+    <animateTransform
+	attributeName="transform"
+	from="0" to="360" type="rotate" begin="0s" dur="6s"
+	repeatCount="indefinite"/>
+  </rect>
+  <circle cx="0" cy="0.5" r="0.03" fill="red">
+    <animate attributeName="cy" dur="6s" repeatCount="indefinite"
+	     values="-0.5;0.5;-0.5"/>
+  </circle>
+  <line x1="0" y1="-0.5" x2="0" y2="0.5" stroke="red" stroke-width="0.001"/>
+
+  <line x1="0" y1="-0.5" x2="0.433" y2="0.25" stroke="pink"
+	stroke-width="0.001"/>
+  <line x1="0" y1="-0.5" x2="-0.433" y2="0.25" stroke="pink"
+	stroke-width="0.001"/>
+  <line x1="-0.433" y1="0.25" x2="0.433" y2="0.25" stroke="pink"
+	stroke-width="0.001"/>
+  <circle cx="0" cy="0.5" r="0.03" fill="pink">
+    <animate attributeName="cx" dur="6s" repeatCount="indefinite"
+	     values="0;0.433;-0.433;0"/>
+    <animate attributeName="cy" dur="6s" repeatCount="indefinite"
+	     values="-0.5;-0.125;0.25;0.25;0.25;-0.125;-0.5"/>
+  </circle>
+  <text x="0" y="-0.8" fill="black" font-size="0.15" text-anchor="middle">
+    <tspan font-style="italic">L₁</tspan>=2,
+    <tspan font-style="italic">L₂</tspan>=3√3/2
+  </text>
+</svg>

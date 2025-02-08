@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 module AOC201705 where
 
 import Control.Monad.Primitive(PrimState)
@@ -34,7 +35,7 @@ aoc = AOC {
     }
 
 countJmps :: Int -> Int -> MVector (PrimState (ST s)) Int -> ST s Int
-countJmps count ip jmps
+countJmps !count !ip jmps
   | ip < 0 || ip >= Vector.length jmps = return count
   | otherwise = do
       offset <- Vector.read jmps ip
@@ -45,16 +46,19 @@ result jumps = runST $ do
     jmps <- thaw jumps
     countJmps 0 0 jmps
 
-countJmps2 :: Int -> Int -> MVector (PrimState (ST s)) Int -> ST s Int
-countJmps2 count ip jmps
-  | ip < 0 || ip >= Vector.length jmps = return count
-  | otherwise = do
-      offset <- Vector.read jmps ip
-      if offset >= 3
-        then write jmps ip (offset-1)
-        else write jmps ip (offset+1)
-      countJmps2 (count+1) (ip+offset) jmps
+countJmps2 :: MVector (PrimState (ST s)) Int -> ST s Int
+countJmps2 jmps = count 0 0
+  where
+    l = Vector.length jmps
+    count !n !ip
+      | ip < 0 || ip >= l = return n
+      | otherwise = do
+          offset <- Vector.read jmps ip
+          if offset >= 3
+            then write jmps ip (offset-1)
+            else write jmps ip (offset+1)
+          count (n+1) (ip+offset)
 
 result2 jumps = runST $ do
     jmps <- thaw jumps
-    countJmps2 0 0 jmps
+    countJmps2 jmps

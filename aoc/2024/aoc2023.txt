@@ -1,4 +1,5 @@
-Redo Advent of Code 2023 with cleaner and mostly faster code, except for day 21.
+Redo Advent of Code 2023 with cleaner and mostly faster code.  Redo of
+day 21 is unacceptably slow, though.
 
 Day 1:
 2023: 54388 53515 (0.005796s,0.01377s,0.019566s)
@@ -87,10 +88,10 @@ Day 20: Redo does not depend on the exact details of my input like
 2023: 739960225 231897990075517 (0.189416s,0.628573s,0.817989s)
 redo: 739960225 231897990075517 (0.213904s,0.648509s,0.862413s)
 
-Day 21: Failed to get the right answer for part 2 when trying to redo it.
-        Not motivated to track down where it's wrong.
+Day 21: Redo gets the answer after tracking down many fiddly fencepost
+        errors.  Don't know why it's so much slower.
 2023: 3562 592723929260582 (0.147751s,4.997018s,5.144769s)
-redo: 3562                 (0.478311s)
+redo: 3562 592723929260582 (0.486803s,285.602767s,286.08957s)
 
 Day 22:
 2023: 530 93292 (0.069922s,0.704216s,0.774138s)
@@ -103,7 +104,7 @@ redo: 2366 6682 (0.099874s,53.663775s,53.763649s)
 Day 24: Redo uses parallel processing for part 1 to go faster, and
         uses the direct solution for part 2, inverting the matrix
 	analytically rather than numerically as in the 2023 code.
-2023: 23760 888708704663413 % 1 (0.753289s,0.000969s,0.754258s)
+2023: 23760 888708704663413 (0.753289s,0.000969s,0.754258s)
 redo: 23760 888708704663413 (0.259254s,0.00146s,0.260714s)
 
 Day 25: Redo properly implements edge contraction in Karger's

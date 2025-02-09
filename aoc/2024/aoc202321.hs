@@ -1,9 +1,7 @@
 module AOC202321 where
 
-import Data.Array(Array,array,assocs,bounds,inRange,(!))
-import Data.Set(Set,elems,fromList,member,size)
-import Data.Map(Map,keys)
-import qualified Data.Map
+import Data.Array(assocs,bounds,(!))
+import Data.Bits(popCount,shiftL,shiftR,testBit,(.|.),(.&.))
 
 import AOC
 
@@ -38,19 +36,30 @@ aoc = AOC {
         }
     }
 
-parse input = (grid,start)
+parse :: String -> ([Integer],(Int,Int),Int)
+parse input = (bits,start,xmax+1)
   where
     grid = parse2da input
     [(start,'S')] = filter ((== 'S') . snd) $ assocs grid
+    ((0,0),(xmax,ymax)) = bounds grid
+    bits = [sum [2^x | x <- [0..xmax], grid!(x,y) /= '#'] | y <- [0..ymax]]
 
-step :: Array (Int,Int) Char -> Set (Int,Int) -> Set (Int,Int)
-step grid locs = fromList $ concatMap nextLocs $ elems locs
+startBits :: (Int,Int) -> Int -> [Integer]
+startBits (startX,startY) len =
+    [if y == startY then 2^startX else 0 | y <- [0..len-1]]
+
+step :: [Integer] -> [Integer] -> [Integer]
+step garden locs = zipWith (.&.) garden next
   where
-    nextLocs (x,y) = [xy | xy <- [(x+1,y),(x,y+1),(x-1,y),(x,y-1)],
-                           inRange (bounds grid) xy, grid!xy /= '#']
+    up = 0:locs
+    down = drop 1 locs ++ [0]
+    left = map (`shiftL` 1) locs
+    right = map (`shiftR` 1) locs
+    next = zipWith (.|.) (zipWith (.|.) up down) (zipWith (.|.) left right)
 
-result nsteps (grid,start) =
-    size $ head $ drop nsteps $ iterate (step grid) $ fromList [start]
+result nsteps (garden,start,len) =
+    sum $ map popCount $ head $ drop nsteps
+        $ iterate (step garden) $ startBits start len
 
 -- Like the example map, the map in my input is square with an odd side
 -- length, has no rocks on the outer edges, and has the start in the middle,
@@ -60,88 +69,72 @@ result nsteps (grid,start) =
 -- Unlike the example map, the map in my input has no rocks in middle column,
 -- and has no rocks in the middle in the middle row.
 parse2 input
-  | xmax /= ymax || odd xmax || even startX
-                 || startX*2 /= xmax || startY*2 /= ymax
-                 || 0 < length [() | t <- [0..xmax],
-                                     grid!(t,0) /= '.'
-                                       || grid!(t,ymax) /= '.'
-                                       || grid!(0,t) /= '.'
-                                       || grid!(xmax,t) /= '.']
-                 || 0 < length [() | t <- [1..startX],
-                                     grid!(startX-t,startY) /= '.'
-                                       || grid!(startX+t,startY) /= '.'
-                                       || grid!(startX,startY-t) /= '.'
-                                       || grid!(startX,startY+t) /= '.'] =
-      error "input does not fit assumptions"
-  | otherwise = (grid,start)
+  | even startX || startX /= startY || len /= startX*2+1
+                || len /= length garden
+                || head garden /= 2^len - 1 || last garden /= 2^len - 1
+                || garden !! startY /= 2^len - 1
+                || 0 < length [() | row <- garden,
+                                    not (testBit row startX)
+                                        || not (testBit row 0)
+                                        || not (testBit row (len-1))] =
+        error "input does not fit assumptions"
+  | otherwise = (garden,garden2h,garden2w,garden4x,start,len)
   where
-    ((0,0),(xmax,ymax)) = bounds grid
-    grid = parse2da input
-    [(start@(startX,startY),'S')] = filter ((== 'S') . snd) $ assocs grid
+    (garden,start@(startX,startY),len) = parse input
+    garden2h = garden++garden
+    garden4x = garden2w++garden2w
+    garden2w = [row .|. shiftL row len | row <- garden]
 
--- To simplify things, consider double tiles for the vertical and horizontal
--- strips and quadruple tiles for the corners so that the first step onto
--- each macro tile will be on an even step, eliminating the need to
--- distinguish between even and odd tiles.
-macroTile :: Int -> Int -> Array (Int,Int) Char -> Array (Int,Int) Char
-macroTile nx ny grid = array ((0,0),(nx*(xmax+1)-1,ny*(ymax+1)-1))
-                             [((x,y),grid!(x `mod` (xmax+1),y `mod` (ymax+1)))
-                              | x <- [0..nx*(xmax+1)-1],
-                                y <- [0..ny*(ymax+1)-1]]
-  where ((0,0),(xmax,ymax)) = bounds grid
-
-reachCount :: Array (Int,Int) Char -> (Int,Int) -> [(Int,Int)]
-reachCount grid start =
-    collect $ zip [0..] $ iterate (step grid) (fromList [start])
+reachCount :: [Integer] -> [Integer] -> [(Int,Int)]
+reachCount garden start = collect $ zip [0..] $ iterate (step garden) start
   where
     collect (_:(t,a):rest@(_:(_,b):_))
-      | a == b = [(t,size a)]
-      | otherwise = (t,size a) : collect rest
+      | a == b = [(t,sum (map popCount a))]
+      | otherwise = (t,sum (map popCount a)) : collect rest
 
-centerCount :: Array (Int,Int) Char -> (Int,Int) -> Int
-centerCount grid = snd . last . reachCount grid
+centerCount :: [Integer] -> [Integer] -> Int
+centerCount garden = snd . last . reachCount garden
 
-stripCount :: Array (Int,Int) Char -> (Int,Int) -> Int -> Int -> Int
-stripCount grid start len nsteps =
+stripCount :: [Integer] -> Int -> [Integer] -> Int -> Int
+stripCount garden len start nsteps =
     fullyReachable*fullCount
         + sum [reach | n <- [0..reachable-fullyReachable-1],
                        t <- [nsteps - (n+fullyReachable)*len],
                        Just reach <- [lookup t counts]]
   where
-    counts = reachCount grid start
+    counts = reachCount garden start
     (fullSteps,fullCount) = last counts
     reachable = nsteps `div` len + 1
     fullyReachable = (nsteps - fullSteps) `div` len + 1
 
-cornerCount :: Array (Int,Int) Char -> (Int,Int) -> Int -> Int -> Int
-cornerCount grid start len nsteps =
+cornerCount :: [Integer] -> Int -> [Integer] -> Int -> Int
+cornerCount garden len start nsteps =
     fullyReachable*(fullyReachable+1)*fullCount `div` 2
-        + sum [reach*(fullyReachable+n+1)
+        + sum [reach*(fullyReachable+1+n)
                | n <- [0..reachable-fullyReachable-1],
                  t <- [nsteps - (n+fullyReachable)*len],
                  Just reach <- [lookup t counts]]
   where
-    counts = reachCount grid start
+    counts = reachCount garden start
     (fullSteps,fullCount) = last counts
     reachable = nsteps `div` len + 1
     fullyReachable = (nsteps - fullSteps) `div` len + 1
 
-result2 nsteps ncpu (grid,start@(startX,startY)) =
-    stripCount vGrid (startX,0) len (nsteps-(startY+1))
-        + stripCount vGrid (startX,len-1) len (nsteps-(startY+1))
-        + stripCount hGrid (0,startY) len (nsteps-(startX+1))
-        + stripCount hGrid (len-1,startY) len (nsteps-(startX+1))
-        + cornerCount quadGrid (len-1,len-1) len (nsteps-2*(startX+1))
-        + cornerCount quadGrid (0,len-1) len (nsteps-2*(startX+1))
-        + cornerCount quadGrid (len-1,0) len (nsteps-2*(startX+1))
-        + cornerCount quadGrid (0,0) len (nsteps-2*(startX+1))
-        + centerCount grid start
+result2 nsteps ncpu
+        (g,g2h,g2w,g4x,start@(startX,startY),len) =
+    parallelMapReduce ncpu id sum
+        [centerCount g (startBits start len),
+         stripCount  g2h (2*len) (startBits (startX,0)        (2*len)) ns,
+         stripCount  g2h (2*len) (startBits (startX,2*len-1)  (2*len)) ns,
+         stripCount  g2w (2*len) (startBits (0,      startY)  len)     ns,
+         stripCount  g2w (2*len) (startBits (2*len-1,startY)  len)     ns,
+         cornerCount g4x (2*len) (startBits (0,      0)       (2*len)) nc,
+         cornerCount g4x (2*len) (startBits (0,      2*len-1) (2*len)) nc,
+         cornerCount g4x (2*len) (startBits (2*len-1,0)       (2*len)) nc,
+         cornerCount g4x (2*len) (startBits (2*len-1,2*len-1) (2*len)) nc]
   where
-    (_,(xmax,_)) = bounds grid
-    len = 2*(xmax+1)
-    hGrid = macroTile 2 1 grid
-    vGrid = macroTile 1 2 grid
-    quadGrid = macroTile 2 2 grid
+    ns = nsteps - (startX+1)
+    nc = nsteps - 2*(startX+1)
 
 {-
 -- Corner sectors for my input should be

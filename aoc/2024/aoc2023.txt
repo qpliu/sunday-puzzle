@@ -88,10 +88,12 @@ Day 20: Redo does not depend on the exact details of my input like
 2023: 739960225 231897990075517 (0.189416s,0.628573s,0.817989s)
 redo: 739960225 231897990075517 (0.213904s,0.648509s,0.862413s)
 
-Day 21: Redo gets the answer after tracking down many fiddly fencepost
-        errors.  Don't know why it's so much slower.
+Day 21: Redo uses bits instead of Set (Int,Int) as well as parallel
+        processing to go faster.  Getting this correct took tracking
+        down numerous fencepost errors while using a super slow
+        implementation (about 50 times slower than the 2023 code).
 2023: 3562 592723929260582 (0.147751s,4.997018s,5.144769s)
-redo: 3562 592723929260582 (0.486803s,285.602767s,286.08957s)
+redo: 3562 592723929260582 (0.065819s,0.529766s,0.595585s)
 
 Day 22:
 2023: 530 93292 (0.069922s,0.704216s,0.774138s)

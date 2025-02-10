@@ -1,8 +1,8 @@
 module AOC202420 where
 
-import Data.Array(Array,assocs)
-import qualified Data.Array
-import Data.Map(Map,fromList,member,(!))
+import Data.Array(Array,assocs,bounds,(!))
+import Data.IntMap(IntMap,fromList)
+import qualified Data.IntMap
 
 import AOC
 
@@ -32,48 +32,49 @@ aoc = AOC {
             }
         ],
     aocCode=ParallelCode {
-        pcodeParse=const parse2da,
-        pcodeParse2=const parse2da,
-        pcodeTest=result 2 cheats1,
-        pcodeTest2=result 50 cheats2,
-        pcodeResult=result 100 cheats1,
-        pcodeResult2=result 100 cheats2
+        pcodeParse=const parse,
+        pcodeParse2=const parse,
+        pcodeTest=result 2 2,
+        pcodeTest2=result 50 20,
+        pcodeResult=result 100 2,
+        pcodeResult2=result 100 20
         }
     }
 
-type Grid = Array (Int,Int) Char
-
-getStart = fst . head . filter ((== 'S') . snd) . assocs
-
-getEnd = fst . head . filter ((== 'E') . snd) . assocs
-
-makeTrail :: Grid -> [((Int,Int),Int)]
-makeTrail grid = walk (getStart grid) 0 (0,0)
+makeTrail :: Int -> Array (Int,Int) Char -> [(Int,Int)]
+makeTrail width grid = walk start 0 (0,0)
   where
-    end = getEnd grid
+    [(start,'S')] = filter ((== 'S') . snd) $ assocs grid
+    [(end,'E')] = filter ((== 'E') . snd) $ assocs grid
     walk xy@(x,y) t dxy
-      | xy == end = [(xy,t)]
-      | otherwise = (xy,t) : walk nxy (t+1) ndxy
+      | xy == end = [(x+width*y,t)]
+      | otherwise = (x+width*y,t) : walk nxy (t+1) ndxy
       where [(nxy,ndxy)] = [((x+dx,y+dy),ndxy)
                             | ndxy@(dx,dy) <- [(1,0),(-1,0),(0,1),(0,-1)],
                             dxy /= (-dx,-dy),
-                            grid Data.Array.! (x+dx,y+dy) /= '#']
+                            grid!(x+dx,y+dy) /= '#']
 
-countCheats :: Int -> [(Int,Int)] -> Map (Int,Int) Int -> ((Int,Int),Int)
-            -> Int
-countCheats threshold cheatTargets trail ((x,y),t) =
-    length $ [() | (dx,dy) <- cheatTargets,
-                   member (x+dx,y+dy) trail,
-                   trail!(x+dx,y+dy) >= t + abs dx + abs dy + threshold]
+parse input = (width,makeTrail width grid)
+  where
+    grid = parse2da input
+    ((0,0),(xmax,_)) = bounds grid
+    width = xmax+21 -- don't let cheats wrap around
 
-cheats1 :: [(Int,Int)]
-cheats1 =
-    [(2,0),(0,2),(-2,0),(0,-2)] -- diagonal cheats are not possible in my input
+countCheats :: IntMap Int -> [(Int,Int)] -> (Int,Int) -> Int
+countCheats trail cheats (xy,t) =
+    length $ [() | (dxy,dt) <- cheats,
+                   Just t2 <- [Data.IntMap.lookup (xy+dxy) trail],
+                   t + dt <= t2]
 
-cheats2 :: [(Int,Int)]
-cheats2 = [(dx,dy) | dx <- [-20..20], dy <- [-20..20], abs dx + abs dy <= 20]
+makeCheats :: Int -> Int -> Int -> [(Int,Int)]
+makeCheats threshold cheatSize width =
+    [(dx+width*dy,threshold + dt)
+     | dx <- [-cheatSize..cheatSize], dy <- [-cheatSize..cheatSize],
+       dt <- [abs dx + abs dy], dt > 1, dt <= cheatSize]
 
-result threshold cheatTargets ncpu grid =
-    parallelMapReduce ncpu
-        (countCheats threshold cheatTargets (fromList trail)) sum trail
-  where trail = makeTrail grid
+result :: Int -> Int -> Int -> (Int,[(Int,Int)]) -> Int
+result threshold cheatSize ncpu (width,trail) =
+    parallelMapReduce ncpu (countCheats table cheats) sum trail
+  where
+    cheats = makeCheats threshold cheatSize width 
+    table = fromList trail

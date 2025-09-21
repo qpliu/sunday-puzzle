@@ -44,7 +44,7 @@ func simulate(n, niters, ncpu int, r *rand.Rand) {
 	for _ = range ncpu {
 		count += <-ch
 	}
-	fmt.Printf("%d/%d=%f\n", count, niters*ncpu, float64(count)/float64(niters*ncpu))
+	fmt.Printf("%d: %f\n", n, float64(count)/float64(niters*ncpu))
 }
 
 func main() {
@@ -54,9 +54,8 @@ func main() {
 
 	{
 		const niters = 1000000
-		const n = 4
-		const nec = 10
-		simulate(n, niters, ncpu, r)
-		simulate(nec, niters, ncpu, r)
+		for n := range 11 {
+			simulate(n+1, niters, ncpu, r)
+		}
 	}
 }

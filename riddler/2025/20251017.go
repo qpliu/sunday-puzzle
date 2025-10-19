@@ -33,7 +33,8 @@ func simulate(niters, ncpu int, r *rand.Rand) {
 	fmt.Printf("%f\n", sum/float64(ncpu))
 }
 
-func ectrial(r *rand.Rand) float64 {
+func ectrial_incorrect(r *rand.Rand) float64 {
+	// incorrectly overweights phi = 0 and underweights phi = pi/2
 	phi := r.Float64() * math.Pi / 2
 	theta := r.Float64() * math.Pi / 2
 	sp, cp := math.Sincos(phi)
@@ -42,6 +43,31 @@ func ectrial(r *rand.Rand) float64 {
 	ry := 1 / (2 * sp * st)
 	rz := 1 / (2 * cp)
 	return min(rx, ry, rz)
+}
+
+func ectrial(r *rand.Rand) float64 {
+	for {
+		x := r.Float64()
+		y := r.Float64()
+		z := r.Float64()
+		r2 := x*x + y*y + z*z
+		if r2 > 1 {
+			continue
+		}
+		r := math.Sqrt(r2)
+		rho := math.Sqrt(x*x + y*y)
+
+		sinphi := rho / r
+		cosphi := z / r
+
+		sintheta := y / rho
+		costheta := x / rho
+
+		rx := 1 / (2 * sinphi * costheta)
+		ry := 1 / (2 * sinphi * sintheta)
+		rz := 1 / (2 * cosphi)
+		return min(rx, ry, rz)
+	}
 }
 
 func ecsimulate(niters, ncpu int, r *rand.Rand) {

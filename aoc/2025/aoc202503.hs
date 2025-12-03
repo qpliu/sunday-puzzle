@@ -29,20 +29,15 @@ aoc = AOC {
     }
 
 parse = map (map toDigit) . lines
-  where toDigit = (+ (0 - ord '0')) . ord
+  where toDigit c = ord c - ord '0'
 
-result = sum . map largestJoltage
-
-largestJoltage [] = 0
-largestJoltage [_] = 0
-largestJoltage (a:as) = max (largest1 a as) (largestJoltage as)
-  where largest1 a = maximum . map (+ (10 * a))
+result = sum . map (largestJoltage2 2)
 
 result2 = sum . map (largestJoltage2 12)
 
 largestJoltage2 ndigits digits
   | ndigits == 0 = 0
-  | otherwise = digit*10^(ndigits-1) + largestJoltage2 (ndigits-1) rest
+  | otherwise = digit*10^(ndigits-1) + largestJoltage2 (ndigits-1) nextDigits
   where
     digit = maximum (take (length digits - ndigits + 1) digits)
-    rest = drop 1 $ dropWhile (/= digit) digits
+    nextDigits = drop 1 $ dropWhile (/= digit) digits

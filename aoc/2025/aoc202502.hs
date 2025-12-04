@@ -1,5 +1,7 @@
 module AOC202502 where
 
+import Data.Set(fromList)
+
 import AOC
 
 aoc = AOC {
@@ -16,40 +18,44 @@ aoc = AOC {
     aocCode=Code {
         codeParse=parse,
         codeParse2=parse,
-        codeTest=result invalid,
-        codeTest2=result invalid2,
-        codeResult=result invalid,
-        codeResult2=result invalid2
+        codeTest=result (invalids 2),
+        codeTest2=result multiInvalids,
+        codeResult=result (invalids 2),
+        codeResult2=result multiInvalids
         }
     }
 
-parse = map abs . parseInts
-
--- This is very slow, though not intolerably slow.
--- About 2 seconds for part 1 and 8 seconds for part 2 for my input on
--- my computer.
-
--- Something faster would be to take the first half of the first number
--- and the first half of the last number and iterate over the first half
--- of the number, then filter out numbers made from duplicating the
--- the two halves that are smaller than the first number or bigger than
--- the last number.  Also need to skip numbers with odd number of
--- digits, since they are all valid.
--- And some generalization for using the first 1/n of digits for part 2.
-
--- This could also be done using parallelism.
-
-result :: (Int -> Bool) -> [Int] -> Int
-result _ [] = 0
-result test (a:b:rest) = result test rest + sum (filter test [a..b])
-
-invalid a = b == c
-  where (b,c) = splitAt (div (length (show a)) 2) (show a)
-
-invalid2 a = any (test (show a)) [1 .. div (length (show a)) 2]
+parse = toPairs . parseInts
   where
-    test a n = test2 (take n a) n (drop n a)
-    test2 pre n a
-      | pre == a = True
-      | take n a /= pre = False
-      | otherwise = test2 pre n (drop n a)
+    toPairs [] = []
+    toPairs (lo:hi:rest) = (lo,-hi):toPairs rest
+
+countDigits n
+  | n < 10 = 1
+  | otherwise = 1 + countDigits (div n 10)
+
+rangeStart n i
+  | mod ndigits n /= 0 = 10^(div ndigits n)
+  | otherwise = div i (10^(ndigits - div ndigits n))
+  where ndigits = countDigits i
+
+rangeEnd n i
+  | mod ndigits n /= 0 = 10^(div ndigits n) - 1
+  | otherwise = div i (10^(ndigits - div ndigits n))
+  where ndigits = countDigits i
+
+range n (a,b) = [rangeStart n a .. rangeEnd n b]
+
+invalids :: Int -> (Int,Int) -> [Int]
+invalids n (a,b) = [j | i <- range n (a,b), j <- [dup n i], j >= a, j <= b]
+
+dup n i = d n
+  where
+    ndigits = countDigits i
+    d n
+      | n <= 1 = i
+      | otherwise = i + 10^ndigits * d (n-1)
+
+multiInvalids (a,b) = concat [invalids n (a,b) | n <- [2..countDigits b]]
+
+result generateInvalids = sum . map (sum . fromList . generateInvalids)

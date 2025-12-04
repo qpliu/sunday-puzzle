@@ -1,7 +1,6 @@
 module AOC202504 where
 
-import Data.Map(delete,keys,member,size)
-import qualified Data.Map
+import Data.Bits(complement,popCount,shiftL,shiftR,xor,(.&.),(.|.))
 
 import AOC
 
@@ -35,21 +34,100 @@ aoc = AOC {
         }
     }
 
-parse = Data.Map.filter (== '@') . parse2d
-
-moveable grid = filter notBlocked $ keys grid
+parse :: String -> [Integer]
+parse = map (p 1 0) . lines
   where
-    notBlocked (x,y) =
-        4 > length [() | dx <- [-1,0,1], dy <- [-1,0,1], (dx,dy) /= (0,0),
-                         member (x+dx,y+dy) grid]
+    p bit bitset [] = bitset
+    p bit bitset ('@':rest) = p (shiftL bit 1) (bitset .|. bit) rest
+    p bit bitset (_:rest) = p (shiftL bit 1) bitset rest
 
-result = length . moveable
+moveable :: [Integer] -> [Integer]
+moveable bitsets = zipWith3 f bitsets (0:bitsets) (drop 1 bitsets ++ [0])
+  where
+    f b b2 b7 =
+        b .&. complement (    (b1 .&. b2 .&. b3 .&. b4)
+                          .|. (b1 .&. b2 .&. b3 .&. b5)
+                          .|. (b1 .&. b2 .&. b3 .&. b6)
+                          .|. (b1 .&. b2 .&. b3 .&. b7)
+                          .|. (b1 .&. b2 .&. b3 .&. b8)
+                          .|. (b1 .&. b2 .&. b4 .&. b5)
+                          .|. (b1 .&. b2 .&. b4 .&. b6)
+                          .|. (b1 .&. b2 .&. b4 .&. b7)
+                          .|. (b1 .&. b2 .&. b4 .&. b8)
+                          .|. (b1 .&. b2 .&. b5 .&. b6)
+                          .|. (b1 .&. b2 .&. b5 .&. b7)
+                          .|. (b1 .&. b2 .&. b5 .&. b8)
+                          .|. (b1 .&. b2 .&. b6 .&. b7)
+                          .|. (b1 .&. b2 .&. b6 .&. b8)
+                          .|. (b1 .&. b2 .&. b7 .&. b8)
+                          .|. (b1 .&. b3 .&. b4 .&. b5)
+                          .|. (b1 .&. b3 .&. b4 .&. b6)
+                          .|. (b1 .&. b3 .&. b4 .&. b7)
+                          .|. (b1 .&. b3 .&. b4 .&. b8)
+                          .|. (b1 .&. b3 .&. b5 .&. b6)
+                          .|. (b1 .&. b3 .&. b5 .&. b7)
+                          .|. (b1 .&. b3 .&. b5 .&. b8)
+                          .|. (b1 .&. b3 .&. b6 .&. b7)
+                          .|. (b1 .&. b3 .&. b6 .&. b8)
+                          .|. (b1 .&. b3 .&. b7 .&. b8)
+                          .|. (b1 .&. b4 .&. b5 .&. b6)
+                          .|. (b1 .&. b4 .&. b5 .&. b7)
+                          .|. (b1 .&. b4 .&. b5 .&. b8)
+                          .|. (b1 .&. b4 .&. b6 .&. b7)
+                          .|. (b1 .&. b4 .&. b6 .&. b8)
+                          .|. (b1 .&. b4 .&. b7 .&. b8)
+                          .|. (b1 .&. b5 .&. b6 .&. b7)
+                          .|. (b1 .&. b5 .&. b6 .&. b8)
+                          .|. (b1 .&. b5 .&. b7 .&. b8)
+                          .|. (b1 .&. b6 .&. b7 .&. b8)
+                          .|. (b2 .&. b3 .&. b4 .&. b5)
+                          .|. (b2 .&. b3 .&. b4 .&. b6)
+                          .|. (b2 .&. b3 .&. b4 .&. b7)
+                          .|. (b2 .&. b3 .&. b4 .&. b8)
+                          .|. (b2 .&. b3 .&. b5 .&. b6)
+                          .|. (b2 .&. b3 .&. b5 .&. b7)
+                          .|. (b2 .&. b3 .&. b5 .&. b8)
+                          .|. (b2 .&. b3 .&. b6 .&. b7)
+                          .|. (b2 .&. b3 .&. b6 .&. b8)
+                          .|. (b2 .&. b3 .&. b7 .&. b8)
+                          .|. (b2 .&. b4 .&. b5 .&. b6)
+                          .|. (b2 .&. b4 .&. b5 .&. b7)
+                          .|. (b2 .&. b4 .&. b5 .&. b8)
+                          .|. (b2 .&. b4 .&. b6 .&. b7)
+                          .|. (b2 .&. b4 .&. b6 .&. b8)
+                          .|. (b2 .&. b4 .&. b7 .&. b8)
+                          .|. (b2 .&. b5 .&. b6 .&. b7)
+                          .|. (b2 .&. b5 .&. b6 .&. b8)
+                          .|. (b2 .&. b5 .&. b7 .&. b8)
+                          .|. (b2 .&. b6 .&. b7 .&. b8)
+                          .|. (b3 .&. b4 .&. b5 .&. b6)
+                          .|. (b3 .&. b4 .&. b5 .&. b7)
+                          .|. (b3 .&. b4 .&. b5 .&. b8)
+                          .|. (b3 .&. b4 .&. b6 .&. b7)
+                          .|. (b3 .&. b4 .&. b6 .&. b8)
+                          .|. (b3 .&. b4 .&. b7 .&. b8)
+                          .|. (b3 .&. b5 .&. b6 .&. b7)
+                          .|. (b3 .&. b5 .&. b6 .&. b8)
+                          .|. (b3 .&. b5 .&. b7 .&. b8)
+                          .|. (b3 .&. b6 .&. b7 .&. b8)
+                          .|. (b4 .&. b5 .&. b6 .&. b7)
+                          .|. (b4 .&. b5 .&. b6 .&. b8)
+                          .|. (b4 .&. b5 .&. b7 .&. b8)
+                          .|. (b4 .&. b6 .&. b7 .&. b8)
+                          .|. (b5 .&. b6 .&. b7 .&. b8))
+      where
+        b1 = shiftR b2 1
+        b3 = shiftL b2 1
+        b4 = shiftR b 1
+        b5 = shiftL b 1
+        b6 = shiftR b7 1
+        b8 = shiftL b7 1
+
+result = sum . map popCount . moveable
 
 result2 n grid
-  | null removed = n
-  | otherwise = result2 (n + length removed) (foldr delete grid removed)
-  where removed = moveable grid
-
--- This is kind of slow, part 1 is about 0.18s and part 2 is about 2.91s.
--- The only idea I have to go faster is to use an Integer as bit set for
--- each row and somehow use bitwise ops to select the moveable rolls.
+  | removeCount == 0 = n
+  | otherwise = result2 (n + removeCount) (zipWith xor grid removals)
+  where
+    removals = moveable grid
+    removeCount = sum $ map popCount removals

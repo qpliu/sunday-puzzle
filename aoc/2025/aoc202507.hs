@@ -1,7 +1,7 @@
 module AOC202507 where
 
-import Data.Map(alter,empty,insert,member,toList,(!))
-import Data.Set(elems,fromList,size)
+import Data.List(nub)
+import Data.Map(alter,empty,insert,member,size,toList,(!))
 
 import AOC
 
@@ -32,8 +32,8 @@ aoc = AOC {
             }
         ],
     aocCode=Code {
-        codeParse=parse2d,
-        codeParse2=parse2d,
+        codeParse=addStart . parse2d,
+        codeParse2=addStart . parse2d,
         codeTest=result,
         codeTest2=result2,
         codeResult=result,
@@ -41,23 +41,24 @@ aoc = AOC {
         }
     }
 
-result manifold = size $ fromList splits
+addStart manifold =
+    (map fst $ filter ((== 'S') . snd) $ toList manifold,manifold)
+
+result (start,manifold) = size $ sendBeams empty start
   where
-    splits = sendBeams (map fst $ filter ((== 'S') . snd) $ toList manifold)
-
-    sendBeams beams
-      | null nextBeams = newSplits
-      | otherwise = newSplits ++ sendBeams (elems $ fromList nextBeams)
+    sendBeams splits beams
+      | null nextBeams = splits
+      | otherwise = sendBeams newSplits (nub nextBeams)
       where
-        (newSplits,nextBeams) = foldr sendBeam ([],[]) beams
-    sendBeam (x,y) (splitAcc,beamAcc)
-      | not $ member (x,y) manifold = (splitAcc,beamAcc)
-      | manifold!(x,y) == 'S' = (splitAcc,(x,y+1):beamAcc)
-      | manifold!(x,y) == '.' = (splitAcc,(x,y+1):beamAcc)
-      | manifold!(x,y) == '^' = ((x,y):splitAcc,(x-1,y):(x+1,y):beamAcc)
+        (newSplits,nextBeams) = foldr sendBeam (splits,[]) beams
+    sendBeam (x,y) (splits,beams)
+      | not $ member (x,y+1) manifold = (splits,beams)
+      | manifold!(x,y+1) == '.' = (splits,(x,y+1):beams)
+      | manifold!(x,y+1) == '^' = (insert (x,y) () splits,
+                                   (x-1,y+1):(x+1,y+1):beams)
 
-result2 manifold = sum $ sendBeams $ mergeBeams $ map (fmap (const 1))
-                                   $ filter ((== 'S') . snd) $ toList manifold
+result2 (start,manifold) =
+    sum $ sendBeams $ mergeBeams $ map (flip (,) 1) start
   where
     sendBeams beams
       | null nextBeams = beams

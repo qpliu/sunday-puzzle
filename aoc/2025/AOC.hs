@@ -183,6 +183,15 @@ parse2da = p 0 0 0 0 []
       | c == '\n' = p 0 (y+1) xmax ymax e cs
       | otherwise = p (x+1) y (max xmax x) (max ymax y) (((x,y),c):e) cs
 
+parse2ds :: (Char -> Bool) -> String -> Set (Int,Int)
+parse2ds member = Data.Set.fromList . p 0 0
+  where
+    p _ _ [] = []
+    p x y (c:cs)
+      | c == '\n' = p 0 (y+1) cs
+      | member c = (x,y) : p (x+1) y cs
+      | otherwise = p (x+1) y cs
+
 show2dm :: Bool -> Map (Int,Int) Char -> String
 show2dm includeSize m
   | xmax-xmin > 150 || ymax-ymin > 150 = gridSize

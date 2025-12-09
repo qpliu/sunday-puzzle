@@ -1,7 +1,7 @@
 module AOC202509 where
 
 import Data.List(nub,sort)
-import Data.Map(fromList,insert,member,toList,union,(!))
+import Data.Map(fromList,insert,findWithDefault,member,toList,union,(!))
 import Data.Tuple(swap)
 
 import AOC
@@ -46,8 +46,10 @@ result2 input =
                | (xc1,yc1) <- cpoints, (xc2,yc2) <- cpoints,
                  xc1 < xc2, yc1 /= yc2,
                  and [member (xc,yc) cgrid
-                      | xc <- [xc1..xc2], yc <- [min yc1 yc2 .. max yc1 yc2]],
-                 and [cgrid!(xc,yc) == '#'
+                      | xc <- [xc1..xc2], yc <- [yc1,yc2]],
+                 and [member (xc,yc) cgrid
+                      | xc <- [xc1,xc2], yc <- [min yc1 yc2 .. max yc1 yc2]],
+                 and [findWithDefault '.' (xc,yc) cgrid == '#'
                       | xc <- [xc1+1..xc2-1], yc <- [min yc1 yc2 + 1 .. max yc1 yc2 - 1]]]
   where
     xcompact = fromList $ zip (sort $ nub $ map fst input) [0..]

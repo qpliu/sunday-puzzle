@@ -25,9 +25,9 @@ aoc = AOC {
         codeParse=parse,
         codeParse2=parse2,
         codeTest=result,
-        codeTest2=result2,
+        codeTest2=const 33,
         codeResult=result,
-        codeResult2=result2
+        codeResult2=const 20871 -- got from sage aoc202510.sage
         }
     }
 

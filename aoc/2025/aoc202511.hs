@@ -1,6 +1,6 @@
 module AOC202511 where
 
-import Data.Map(Map,findWithDefault,fromList,toList,(!))
+import Data.Map(findWithDefault,fromList,toList,(!))
 
 import AOC
 
@@ -19,7 +19,7 @@ aoc = AOC {
                 "ggg: out",
                 "hhh: ccc fff iii",
                 "iii: out"
-            ],
+                ],
             testResult=Just "5",
             testResult2=Nothing
             },
@@ -38,7 +38,7 @@ aoc = AOC {
                 "fff: ggg hhh",
                 "ggg: out",
                 "hhh: out"
-            ],
+                ],
             testResult=Nothing,
             testResult2=Just "2"
             }
@@ -71,17 +71,15 @@ result2 graph = get ("svr",True,True)
     ways (k,outs)
       | outs == ["out"] = [((k,False,False),1)]
       | k == "dac" =
-          [((k,True,False),sum ([get (out,True,False) | out <- outs] ++
-                                [get (out,False,False) | out <- outs]))] ++
-          [((k,True,True),sum ([get (out,True,True) | out <- outs] ++
-                               [get (out,False,True) | out <- outs]))]
+          [((k,True,False),sum [get (out,True,False) | out <- outs] +
+                           sum [get (out,False,False) | out <- outs]),
+           ((k,True,True),sum [get (out,True,True) | out <- outs] +
+                          sum [get (out,False,True) | out <- outs])]
       | k == "fft" =
-          [((k,False,True),sum ([get (out,False,True) | out <- outs] ++
-                                [get (out,False,False) | out <- outs]))] ++
-          [((k,True,True),sum ([get (out,True,True) | out <- outs] ++
-                               [get (out,True,False) | out <- outs]))]
+          [((k,False,True),sum [get (out,False,True) | out <- outs] +
+                           sum [get (out,False,False) | out <- outs]),
+           ((k,True,True),sum [get (out,True,True) | out <- outs] +
+                          sum [get (out,True,False) | out <- outs])]
       | otherwise =
-          [((k,False,False),sum [get (out,False,False) | out <- outs]),
-           ((k,True,False),sum [get (out,True,False) | out <- outs]),
-           ((k,False,True),sum [get (out,False,True) | out <- outs]),
-           ((k,True,True),sum [get (out,True,True) | out <- outs])]
+          [((k,dac,fft),sum [get (out,dac,fft) | out <- outs])
+           | dac <- [True,False], fft <- [True,False]]

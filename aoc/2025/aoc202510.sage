@@ -53,11 +53,7 @@ def presses(str):
     v = p.new_variable(integer=True, nonnegative=True)
     p.set_objective(-sum([v[i] for i in range(len(switches))]))
     for i in range(len(goals)):
-        eq = 0
-        for j in range(len(switches)):
-            if i in switches[j]:
-                eq += v[j]
-        p.add_constraint(eq == goals[i])
+        p.add_constraint(sum([v[j] for j in range(len(switches)) if i in switches[j]]) == goals[i])
     return -p.solve()
 
 def test():

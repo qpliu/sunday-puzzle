@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"os"
 	"time"
@@ -208,6 +209,186 @@ func (in *Input) All() string {
 	return in.data[in.index:]
 }
 
+func GCD(x, y int) int {
+	for y != 0 {
+		x, y = y, MOD(x, y)
+	}
+	return x
+}
+
+func LCM(x, y int) int {
+	return x * y / GCD(x, y)
+}
+
+func MOD(x, y int) int {
+	if y < 0 {
+		return -((-x)%(-y) - y) % (-y)
+	} else {
+		return (x%y + y) % y
+	}
+}
+
+func EGCD(a, b int) (int, int) {
+	if a == 0 {
+		return 0, 1
+	}
+	x, y := EGCD(MOD(b, a), a)
+	return y - (b/a)*x, x
+}
+
+func Convergences(x, y [2]int) [2]int {
+	offset := x[0]
+	recurX := x[1]
+	firstY := y[0] - x[0]
+	recurY := y[1]
+	if firstY < 0 {
+		offset = y[0]
+		recurX = y[1]
+		firstY = x[0] - y[0]
+		recurY = x[1]
+	}
+	rY := recurY / GCD(recurX, recurY)
+	nx := 0
+	{
+		m, _ := EGCD(recurX, rY)
+		nx = MOD(MOD(m, rY)*firstY, rY)
+	}
+	recurXY := LCM(recurX, recurY)
+	nrecur := max(0, firstY-nx*recurX) / recurXY
+	if firstY%recurX == 0 {
+		return [2]int{offset + firstY, recurXY}
+	} else {
+		return [2]int{offset + nx*recurX + nrecur*recurXY, recurXY}
+	}
+}
+
+type priorityQueueItem[T any] struct {
+	value    T
+	priority int
+}
+
+type priorityQueueArray[T any] []*priorityQueueItem[T]
+
+func (pq priorityQueueArray[T]) Len() int {
+	return len(pq)
+}
+
+func (pq priorityQueueArray[T]) Swap(i, j int) {
+	pq[i], pq[j] = pq[j], pq[i]
+}
+
+func (pq priorityQueueArray[T]) Less(i, j int) bool {
+	return pq[i].priority > pq[j].priority
+}
+
+func (pq *priorityQueueArray[T]) Push(value any) {
+	item := value.(*priorityQueueItem[T])
+	*pq = append(*pq, item)
+}
+
+func (pq *priorityQueueArray[T]) Pop() any {
+	i := len(*pq) - 1
+	item := (*pq)[i]
+	(*pq)[i] = nil
+	*pq = (*pq)[:i]
+	return item
+}
+
+type PriorityQueue[T interface{ Priority() int }] struct {
+	pq priorityQueueArray[T]
+}
+
+func (pq *PriorityQueue[T]) Push(item T) {
+	heap.Push(&pq.pq, &priorityQueueItem[T]{
+		value:    item,
+		priority: item.Priority(),
+	})
+}
+
+func (pq *PriorityQueue[T]) Pop() (T, bool) {
+	if len(pq.pq) == 0 {
+		var zero T
+		return zero, false
+	}
+	return heap.Pop(&pq.pq).(*priorityQueueItem[T]).value, true
+}
+
+type AstarPath[ST comparable] interface {
+	Done() bool
+	Priority() int
+	State() ST
+	Neighbors() []AstarPath[ST]
+}
+
+func AstarSearch[ST comparable](start []AstarPath[ST]) AstarPath[ST] {
+	open := PriorityQueue[AstarPath[ST]]{}
+	for _, item := range start {
+		open.Push(item)
+	}
+	visited := map[ST]int{}
+	for {
+		path, ok := open.Pop()
+		if !ok {
+			return nil
+		}
+		if path.Done() {
+			return path
+		}
+		state := path.State()
+		priority := path.Priority()
+		visitedPriority, ok := visited[state]
+		if ok && priority <= visitedPriority {
+			continue
+		}
+		visited[state] = priority
+		for _, neighbor := range path.Neighbors() {
+			open.Push(neighbor)
+		}
+	}
+}
+
+func AstarSearchAll[ST comparable](start []AstarPath[ST]) []AstarPath[ST] {
+	open := PriorityQueue[AstarPath[ST]]{}
+	for _, item := range start {
+		open.Push(item)
+	}
+	visited := map[ST]int{}
+	done := []AstarPath[ST]{}
+	donePriority := 0
+	for {
+		path, ok := open.Pop()
+		if !ok {
+			return done
+		}
+		priority := path.Priority()
+		if len(done) > 0 {
+			if priority < donePriority {
+				return done
+			}
+		}
+		if path.Done() {
+			if len(done) == 0 {
+				donePriority = priority
+			}
+			done = append(done, path)
+			continue
+		}
+		state := path.State()
+		visitedPriority, ok := visited[state]
+		if ok && priority < visitedPriority {
+			continue
+		}
+		visited[state] = priority
+		for _, neighbor := range path.Neighbors() {
+			open.Push(neighbor)
+		}
+	}
+}
+
+func IntResult(result int) string {
+	return fmt.Sprintf("%d", result)
+}
+
 func runTest1(aocDay AOCDay) bool {
 	fail := false
 	aoc := aocDay.GetAOC()
@@ -295,10 +476,6 @@ func runDay(aocDay AOCDay) time.Duration {
 	}
 	fmt.Printf("Day %02d total time: %s\n", aoc.Day, totalTime)
 	return totalTime
-}
-
-func IntResult(result int) string {
-	return fmt.Sprintf("%d", result)
 }
 
 func main() {

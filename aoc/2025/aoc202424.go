@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"slices"
 )
 
 func init() {
@@ -104,11 +106,11 @@ func (aoc *aoc202424) parse(input *Input) (map[string]bool, map[string][3]string
 		op, _ := input.Word()
 		b, _ := input.Word()
 		input.Word()
-		w, ok := input.Word()
+		wire, ok := input.Word()
 		if !ok {
 			break
 		}
-		gates[w] = [3]string{a, op, b}
+		gates[wire] = [3]string{min(a, b), op, max(a, b)}
 	}
 	return wires, gates
 }
@@ -120,24 +122,24 @@ func (aoc *aoc202424) wire(wires map[string]bool, gates map[string][3]string, wi
 	gate := gates[wire]
 	a := aoc.wire(wires, gates, gate[0])
 	b := aoc.wire(wires, gates, gate[2])
-	w := false
+	v := false
 	switch gate[1] {
 	case "AND":
-		w = a && b
+		v = a && b
 	case "OR":
-		w = a || b
+		v = a || b
 	case "XOR":
-		w = a != b
+		v = a != b
 	}
-	wires[wire] = w
-	return w
+	wires[wire] = v
+	return v
 }
 
 func (aoc *aoc202424) Part1(input *Input) string {
 	wires, gates := aoc.parse(input)
 	result := 0
 	bit := 1
-	for z := 0; ; z++ {
+	for z := range len(gates) {
 		wire := fmt.Sprintf("z%02d", z)
 		if _, ok := gates[wire]; !ok {
 			break
@@ -151,5 +153,151 @@ func (aoc *aoc202424) Part1(input *Input) string {
 }
 
 func (aoc *aoc202424) Part2(input *Input) string {
-	return IntResult(0)
+	wires, gates := aoc.parse(input)
+	nbits := len(wires) / 2
+
+	// in my input, x and y only appear as X AND Y and X XOR Y
+	ands := make([]string, nbits)
+	xors := make([]string, nbits)
+	andIndex := map[string]int{}
+	xorIndex := map[string]int{}
+	for k, v := range gates {
+		if v[0][0] == 'x' && v[2][0] == 'y' {
+			bit, _ := InputString(v[0][1:]).Int()
+			if v[1] == "AND" {
+				ands[bit] = k
+				andIndex[k] = bit
+			} else if v[1] == "XOR" {
+				xors[bit] = k
+				xorIndex[k] = bit
+			}
+		}
+	}
+
+	swaps := map[string]bool{}
+	if "z00" != xors[0] {
+		swaps["z00"] = true
+		swaps[xors[0]] = true
+	}
+
+	// z = carryIn xor (x xor y)
+	// carryOut = (x and y) or (carryIn and (x xor y))
+
+	carryIns := make([]string, nbits)
+	for k, v := range gates {
+		if v[1] != "XOR" {
+			continue
+		}
+		if _, ok := xorIndex[k]; ok {
+			continue
+		}
+		carryIn := v[2]
+		i, ok := xorIndex[v[0]]
+		if !ok {
+			carryIn = v[0]
+			i, ok = xorIndex[v[2]]
+			if !ok {
+				continue
+			}
+		}
+		carryIns[i] = carryIn
+		z := fmt.Sprintf("z%02d", i)
+		if z != k {
+			swaps[z] = true
+			swaps[k] = true
+		}
+	}
+	if carryIns[1] != ands[0] {
+		swaps[carryIns[1]] = true
+		swaps[ands[0]] = true
+	}
+
+	carryAnds := make([]string, nbits)
+	for k, v := range gates {
+		if v[1] != "AND" {
+			continue
+		}
+		if _, ok := andIndex[k]; ok {
+			continue
+		}
+		carryIn := v[2]
+		i, ok := xorIndex[v[0]]
+		if !ok {
+			carryIn = v[0]
+			i, ok = xorIndex[v[2]]
+			if !ok {
+				continue
+			}
+		}
+		carryAnds[i] = k
+		if carryIns[i] == "" {
+			panic("bad data")
+		} else if carryIns[i] != carryIn {
+			swaps[carryIns[i]] = true
+			swaps[carryIn] = true
+		}
+	}
+
+	carryOuts := make([]string, nbits)
+	carryOuts[0] = ands[0]
+	for k, v := range gates {
+		if v[1] != "OR" {
+			continue
+		}
+		carryAnd := v[2]
+		i, ok := andIndex[v[0]]
+		if !ok {
+			carryAnd = v[0]
+			i, ok = andIndex[v[2]]
+			if !ok {
+				continue
+			}
+		}
+		carryOuts[i] = k
+		if carryAnds[i] == "" {
+			panic("bad data")
+		} else if carryAnds[i] != carryAnd {
+			swaps[carryAnds[i]] = true
+			swaps[carryAnd] = true
+		}
+	}
+	zlast := fmt.Sprintf("z%02d", nbits)
+	if carryOuts[nbits-1] != zlast {
+		swaps[zlast] = true
+		swaps[carryOuts[nbits-1]] = true
+	}
+
+	for i := range nbits {
+		if i == 0 || carryIns[i] != "" || carryOuts[i-1] == "" {
+			continue
+		}
+		carryIn := carryOuts[i-1]
+		for _, v := range gates {
+			j := -1
+			if v[0] == carryIn {
+				j = 2
+			} else if v[2] == carryIn {
+				j = 0
+			}
+			if j < 0 {
+				continue
+			}
+			swaps[xors[i]] = true
+			swaps[v[j]] = true
+			break
+		}
+	}
+
+	s := []string{}
+	for k := range swaps {
+		s = append(s, k)
+	}
+	slices.Sort(s)
+	buf := &bytes.Buffer{}
+	for _, swap := range s {
+		buf.WriteByte(',')
+		buf.WriteString(swap)
+	}
+	buf.ReadByte()
+	return buf.String()
 }

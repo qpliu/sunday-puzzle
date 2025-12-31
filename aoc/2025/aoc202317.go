@@ -43,104 +43,73 @@ type aoc202317 struct {
 	AOC
 }
 
-type aoc202317_state struct {
-	grid     map[XY]byte
-	goal     XY
-	minMoves int
-	maxMoves int
-	xyDir    XYDir
-	loss     int
-}
-
-func (s aoc202317_state) Done() bool {
-	return ToXY(s.xyDir) == s.goal
-}
-
-func (s aoc202317_state) Priority() int {
-	dx := s.xyDir[0] - s.goal[0]
-	dy := s.xyDir[1] - s.goal[1]
-	// there are no blocks with 0 loss
-	return -s.loss - max(dx, -dx) - max(dy, -dy)
-}
-
-func (s aoc202317_state) State() XYDir {
-	return s.xyDir
-}
-
-func (s aoc202317_state) Neighbors() []AstarPath[XYDir] {
-	n := []AstarPath[XYDir]{}
-	xyDir := s.xyDir
-	loss := s.loss
-	for i := range s.maxMoves {
-		xyDir = AdvanceXYDir(xyDir, 1)
-		block, ok := s.grid[ToXY(xyDir)]
-		if !ok {
-			break
-		}
-		loss += int(block - '0')
-		if i+1 >= s.minMoves {
-			n = append(n, aoc202317_state{
-				grid:     s.grid,
-				goal:     s.goal,
-				minMoves: s.minMoves,
-				maxMoves: s.maxMoves,
-				xyDir:    XYDirTurnL(xyDir),
-				loss:     loss,
-			}, aoc202317_state{
-				grid:     s.grid,
-				goal:     s.goal,
-				minMoves: s.minMoves,
-				maxMoves: s.maxMoves,
-				xyDir:    XYDirTurnR(xyDir),
-				loss:     loss,
-			})
-		}
+func (aoc *aoc202317) result(part1 bool, input *Input) string {
+	type path struct {
+		xyDir XYDir
+		loss  int
 	}
-	return n
+
+	w, h, grid := input.Grid()
+
+	goal := XY{w - 1, h - 1}
+	done := func(p path) bool {
+		return ToXY(p.xyDir) == goal
+	}
+
+	priority := func(p path) int {
+		dx := p.xyDir[0] - goal[0]
+		dy := p.xyDir[1] - goal[1]
+		// there are no blocks with 0 loss
+		return -p.loss - max(dx, -dx) - max(dy, -dy)
+	}
+
+	state := func(p path) XYDir {
+		return p.xyDir
+	}
+
+	var minMoves, maxMoves int
+	neighbors := func(p path) []path {
+		n := []path{}
+		xyDir := p.xyDir
+		loss := p.loss
+		for i := range maxMoves {
+			xyDir = AdvanceXYDir(xyDir, 1)
+			block, ok := grid[ToXY(xyDir)]
+			if !ok {
+				break
+			}
+			loss += int(block - '0')
+			if i+1 >= minMoves {
+				n = append(n, path{
+					xyDir: XYDirTurnL(xyDir),
+					loss:  loss,
+				}, path{
+					xyDir: XYDirTurnR(xyDir),
+					loss:  loss,
+				})
+			}
+		}
+		return n
+	}
+
+	start := []path{path{XYDir{0, 0, DirR}, 0}, path{XYDir{0, 0, DirD}, 0}}
+
+	if part1 {
+		minMoves, maxMoves = 1, 3
+	} else {
+		minMoves, maxMoves = 4, 10
+	}
+	p, ok := AstarSearch(start, done, priority, state, neighbors)
+	if !ok {
+		panic("bad input")
+	}
+	return IntResult(p.loss)
 }
 
 func (aoc *aoc202317) Part1(input *Input) string {
-	w, h, grid := input.Grid()
-	s := AstarSearch([]AstarPath[XYDir]{
-		aoc202317_state{
-			grid:     grid,
-			goal:     XY{w - 1, h - 1},
-			minMoves: 1,
-			maxMoves: 3,
-			xyDir:    XYDir{0, 0, DirR},
-			loss:     0,
-		},
-		aoc202317_state{
-			grid:     grid,
-			goal:     XY{w - 1, h - 1},
-			minMoves: 1,
-			maxMoves: 3,
-			xyDir:    XYDir{0, 0, DirD},
-			loss:     0,
-		},
-	})
-	return IntResult(s.(aoc202317_state).loss)
+	return aoc.result(true, input)
 }
 
 func (aoc *aoc202317) Part2(input *Input) string {
-	w, h, grid := input.Grid()
-	s := AstarSearch([]AstarPath[XYDir]{
-		aoc202317_state{
-			grid:     grid,
-			goal:     XY{w - 1, h - 1},
-			minMoves: 4,
-			maxMoves: 10,
-			xyDir:    XYDir{0, 0, DirR},
-			loss:     0,
-		},
-		aoc202317_state{
-			grid:     grid,
-			goal:     XY{w - 1, h - 1},
-			minMoves: 4,
-			maxMoves: 10,
-			xyDir:    XYDir{0, 0, DirD},
-			loss:     0,
-		},
-	})
-	return IntResult(s.(aoc202317_state).loss)
+	return aoc.result(false, input)
 }

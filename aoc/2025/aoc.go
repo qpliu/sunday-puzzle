@@ -296,14 +296,19 @@ func (pq *priorityQueueArray[T]) Pop() any {
 	return item
 }
 
-type PriorityQueue[T interface{ Priority() int }] struct {
-	pq priorityQueueArray[T]
+type PriorityQueue[T any] struct {
+	pq       priorityQueueArray[T]
+	priority func(T) int
+}
+
+func NewPriorityQueue[T any](priority func(T) int) PriorityQueue[T] {
+	return PriorityQueue[T]{priority: priority}
 }
 
 func (pq *PriorityQueue[T]) Push(item T) {
 	heap.Push(&pq.pq, &priorityQueueItem[T]{
 		value:    item,
-		priority: item.Priority(),
+		priority: pq.priority(item),
 	})
 }
 
@@ -322,8 +327,8 @@ type AstarPath[ST comparable] interface {
 	Neighbors() []AstarPath[ST]
 }
 
-func AstarSearch[ST comparable](start []AstarPath[ST]) AstarPath[ST] {
-	open := PriorityQueue[AstarPath[ST]]{}
+func AstarSearch[PATH any, ST comparable](start []PATH, done func(PATH) bool, priority func(PATH) int, state func(PATH) ST, neighbors func(PATH) []PATH) (PATH, bool) {
+	open := NewPriorityQueue[PATH](priority)
 	for _, item := range start {
 		open.Push(item)
 	}
@@ -331,57 +336,57 @@ func AstarSearch[ST comparable](start []AstarPath[ST]) AstarPath[ST] {
 	for {
 		path, ok := open.Pop()
 		if !ok {
-			return nil
+			return path, false
 		}
-		if path.Done() {
-			return path
+		if done(path) {
+			return path, true
 		}
-		state := path.State()
-		priority := path.Priority()
-		visitedPriority, ok := visited[state]
-		if ok && priority <= visitedPriority {
+		st := state(path)
+		prior := priority(path)
+		visitedPriority, ok := visited[st]
+		if ok && prior <= visitedPriority {
 			continue
 		}
-		visited[state] = priority
-		for _, neighbor := range path.Neighbors() {
+		visited[st] = prior
+		for _, neighbor := range neighbors(path) {
 			open.Push(neighbor)
 		}
 	}
 }
 
-func AstarSearchAll[ST comparable](start []AstarPath[ST]) []AstarPath[ST] {
-	open := PriorityQueue[AstarPath[ST]]{}
+func AstarSearchAll[PATH any, ST comparable](start []PATH, done func(PATH) bool, priority func(PATH) int, state func(PATH) ST, neighbors func(PATH) []PATH) []PATH {
+	open := NewPriorityQueue[PATH](priority)
 	for _, item := range start {
 		open.Push(item)
 	}
 	visited := map[ST]int{}
-	done := []AstarPath[ST]{}
+	donePaths := []PATH{}
 	donePriority := 0
 	for {
 		path, ok := open.Pop()
 		if !ok {
-			return done
+			return donePaths
 		}
-		priority := path.Priority()
-		if len(done) > 0 {
-			if priority < donePriority {
-				return done
+		prior := priority(path)
+		if len(donePaths) > 0 {
+			if prior < donePriority {
+				return donePaths
 			}
 		}
-		if path.Done() {
-			if len(done) == 0 {
-				donePriority = priority
+		if done(path) {
+			if len(donePaths) == 0 {
+				donePriority = prior
 			}
-			done = append(done, path)
+			donePaths = append(donePaths, path)
 			continue
 		}
-		state := path.State()
-		visitedPriority, ok := visited[state]
-		if ok && priority < visitedPriority {
+		st := state(path)
+		visitedPriority, ok := visited[st]
+		if ok && prior < visitedPriority {
 			continue
 		}
-		visited[state] = priority
-		for _, neighbor := range path.Neighbors() {
+		visited[st] = prior
+		for _, neighbor := range neighbors(path) {
 			open.Push(neighbor)
 		}
 	}
@@ -431,6 +436,10 @@ func AdvanceXY(xy XY, dir, count int) XY {
 
 func ToXY(xyDir XYDir) XY {
 	return [2]int{xyDir[0], xyDir[1]}
+}
+
+func ToXYDir(xy XY, dir int) XYDir {
+	return [3]int{xy[0], xy[1], dir}
 }
 
 func TurnL(dir int) int {

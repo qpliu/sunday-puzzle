@@ -2,7 +2,9 @@ package main
 
 import (
 	"container/heap"
+	"container/list"
 	"fmt"
+	"math/bits"
 	"os"
 	"time"
 	"unicode"
@@ -383,6 +385,194 @@ func AstarSearchAll[ST comparable](start []AstarPath[ST]) []AstarPath[ST] {
 			open.Push(neighbor)
 		}
 	}
+}
+
+const (
+	DirR = 1 << iota
+	DirD
+	DirL
+	DirU
+)
+
+type XY = [2]int
+type XYDir = [3]int
+
+func AdvanceXYDir(xyDir XYDir, count int) XYDir {
+	switch xyDir[2] {
+	case DirR:
+		xyDir[0] += count
+	case DirD:
+		xyDir[1] += count
+	case DirL:
+		xyDir[0] -= count
+	case DirU:
+		xyDir[1] -= count
+	default:
+		panic("?")
+	}
+	return xyDir
+}
+
+func AdvanceXY(xy XY, dir, count int) XY {
+	switch dir {
+	case DirR:
+		xy[0] += count
+	case DirD:
+		xy[1] += count
+	case DirL:
+		xy[0] -= count
+	case DirU:
+		xy[1] -= count
+	default:
+		panic("?")
+	}
+	return xy
+}
+
+func ToXY(xyDir XYDir) XY {
+	return [2]int{xyDir[0], xyDir[1]}
+}
+
+func TurnL(dir int) int {
+	switch dir {
+	case DirR:
+		return DirU
+	case DirD:
+		return DirR
+	case DirL:
+		return DirD
+	case DirU:
+		return DirL
+	default:
+		panic("?")
+	}
+}
+
+func TurnR(dir int) int {
+	switch dir {
+	case DirR:
+		return DirD
+	case DirD:
+		return DirL
+	case DirL:
+		return DirU
+	case DirU:
+		return DirR
+	default:
+		panic("?")
+	}
+}
+
+func XYDirTurnL(xyDir XYDir) XYDir {
+	xyDir[2] = TurnL(xyDir[2])
+	return xyDir
+}
+
+func XYDirTurnR(xyDir XYDir) XYDir {
+	xyDir[2] = TurnR(xyDir[2])
+	return xyDir
+}
+
+type Queue[T any] list.List
+
+func NewQueue[T any]() *Queue[T] {
+	return (*Queue[T])(list.New())
+}
+
+func (q *Queue[T]) Empty() bool {
+	return ((*list.List)(q)).Len() == 0
+}
+
+func (q *Queue[T]) Len() int {
+	return ((*list.List)(q)).Len()
+}
+
+func (q *Queue[T]) Enqueue(item T) {
+	((*list.List)(q)).PushFront(item)
+}
+
+func (q *Queue[T]) Dequeue() T {
+	return ((*list.List)(q)).Remove(((*list.List)(q)).Back()).(T)
+}
+
+// Can't do: type BitSet[T [...]uint64] T
+// Can't do: type BitSet[T [...]uint64] struct { bs T }
+// but perhaps a future version of Go will support it.
+// Could do:
+//  type BitSet[T interface{[1]uint64 | [2]uint64 | [4]uint64}] struct { bs T }
+// but then, cannot range over bs.bs.
+// Don't want to use reflection, since this has to be fast.
+
+type BitSet64 uint64
+
+func (bs BitSet64) Len() int {
+	return bits.OnesCount64(uint64(bs))
+}
+
+func (bs BitSet64) Empty() bool {
+	return bs.Len() == 0
+}
+
+func (bs BitSet64) Add(i int) BitSet64 {
+	bs |= BitSet64(1 << i)
+	return bs
+}
+
+func (bs BitSet64) Remove(i int) BitSet64 {
+	bs &^= BitSet64(1 << i)
+	return bs
+}
+
+func (bs BitSet64) Contains(i int) bool {
+	return bs&BitSet64(1<<i) != 0
+}
+
+type BitSet128 [2]uint64
+
+func (bs BitSet128) Len() int {
+	return bits.OnesCount64(bs[0]) + bits.OnesCount64(bs[1])
+}
+
+func (bs BitSet128) Empty() bool {
+	return bs.Len() == 0
+}
+
+func (bs BitSet128) Add(i int) BitSet128 {
+	bs[i/64] |= uint64(1 << (i % 64))
+	return bs
+}
+
+func (bs BitSet128) Remove(i int) BitSet128 {
+	bs[i/64] &^= uint64(1 << i)
+	return bs
+}
+
+func (bs BitSet128) Contains(i int) bool {
+	return bs[i/64]&uint64(i<<i) != 0
+}
+
+type BitSet256 [4]uint64
+
+func (bs BitSet256) Len() int {
+	return bits.OnesCount64(bs[0]) + bits.OnesCount64(bs[1]) + bits.OnesCount64(bs[2]) + bits.OnesCount64(bs[3])
+}
+
+func (bs BitSet256) Empty() bool {
+	return bs.Len() == 0
+}
+
+func (bs BitSet256) Add(i int) BitSet256 {
+	bs[i/64] |= uint64(1 << (i % 64))
+	return bs
+}
+
+func (bs BitSet256) Remove(i int) BitSet256 {
+	bs[i/64] &^= uint64(1 << i)
+	return bs
+}
+
+func (bs BitSet256) Contains(i int) bool {
+	return bs[i/64]&uint64(i<<i) != 0
 }
 
 func IntResult(result int) string {

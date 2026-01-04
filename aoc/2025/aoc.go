@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"container/heap"
 	"container/list"
 	"fmt"
+	"iter"
 	"math/bits"
 	"os"
 	"time"
@@ -92,6 +94,19 @@ func (in *Input) Word() (string, bool) {
 	return in.data[istart:in.index], true
 }
 
+type Seq[T any] = iter.Seq[T]
+type Seq2[T1 any, T2 any] = iter.Seq2[T1, T2]
+
+func (in *Input) Words() Seq[string] {
+	return func(yield func(string) bool) {
+		for word, ok := in.Word(); ok; word, ok = in.Word() {
+			if !yield(word) {
+				return
+			}
+		}
+	}
+}
+
 func (in *Input) Line() (string, bool) {
 	if in.index >= len(in.data) {
 		return "", false
@@ -105,6 +120,16 @@ func (in *Input) Line() (string, bool) {
 	return in.data[istart:iend], true
 }
 
+func (in *Input) Lines() Seq[string] {
+	return func(yield func(string) bool) {
+		for line, ok := in.Line(); ok; line, ok = in.Line() {
+			if !yield(line) {
+				return
+			}
+		}
+	}
+}
+
 func (in *Input) Paragraph() (string, bool) {
 	if in.index >= len(in.data) {
 		return "", false
@@ -116,6 +141,16 @@ func (in *Input) Paragraph() (string, bool) {
 	iend := in.index
 	in.index += 2
 	return in.data[istart:iend], true
+}
+
+func (in *Input) Paragraphs() Seq[string] {
+	return func(yield func(string) bool) {
+		for paragraph, ok := in.Paragraph(); ok; paragraph, ok = in.Paragraph() {
+			if !yield(paragraph) {
+				return
+			}
+		}
+	}
 }
 
 func (in *Input) Int() (int, bool) {
@@ -166,6 +201,16 @@ func (in *Input) Char() (byte, bool) {
 	return in.data[in.index-1], true
 }
 
+func (in *Input) Chars() Seq[byte] {
+	return func(yield func(byte) bool) {
+		for ch, ok := in.Char(); ok; ch, ok = in.Char() {
+			if !yield(ch) {
+				return
+			}
+		}
+	}
+}
+
 func (in *Input) Peek() (byte, bool) {
 	if in.index >= len(in.data) {
 		return 0, false
@@ -195,6 +240,14 @@ func (in *Input) Grid() (int, int, map[[2]int]byte) {
 }
 
 func (in *Input) Skip(str string) bool {
+	if in.LookingAt(str) {
+		in.index += len(str)
+		return true
+	}
+	return false
+}
+
+func (in *Input) LookingAt(str string) bool {
 	if in.index+len(str) > len(in.data) {
 		return false
 	}
@@ -203,7 +256,6 @@ func (in *Input) Skip(str string) bool {
 			return false
 		}
 	}
-	in.index += len(str)
 	return true
 }
 
@@ -320,13 +372,6 @@ func (pq *PriorityQueue[T]) Pop() (T, bool) {
 	return heap.Pop(&pq.pq).(*priorityQueueItem[T]).value, true
 }
 
-type AstarPath[ST comparable] interface {
-	Done() bool
-	Priority() int
-	State() ST
-	Neighbors() []AstarPath[ST]
-}
-
 func AstarSearch[PATH any, ST comparable](start []PATH, done func(PATH) bool, priority func(PATH) int, state func(PATH) ST, neighbors func(PATH) []PATH) (PATH, bool) {
 	open := NewPriorityQueue[PATH](priority)
 	for _, item := range start {
@@ -428,6 +473,19 @@ func AdvanceXY(xy XY, dir, count int) XY {
 		xy[0] -= count
 	case DirU:
 		xy[1] -= count
+	case DirR | DirD:
+		xy[0] += count
+		xy[1] += count
+	case DirL | DirD:
+		xy[0] -= count
+		xy[1] += count
+	case DirL | DirU:
+		xy[0] -= count
+		xy[1] -= count
+	case DirR | DirU:
+		xy[0] += count
+		xy[1] -= count
+	case 0:
 	default:
 		panic("?")
 	}
@@ -552,12 +610,12 @@ func (bs BitSet128) Add(i int) BitSet128 {
 }
 
 func (bs BitSet128) Remove(i int) BitSet128 {
-	bs[i/64] &^= uint64(1 << i)
+	bs[i/64] &^= uint64(1 << (i % 64))
 	return bs
 }
 
 func (bs BitSet128) Contains(i int) bool {
-	return bs[i/64]&uint64(i<<i) != 0
+	return bs[i/64]&uint64(1<<(i%64)) != 0
 }
 
 type BitSet256 [4]uint64
@@ -576,12 +634,243 @@ func (bs BitSet256) Add(i int) BitSet256 {
 }
 
 func (bs BitSet256) Remove(i int) BitSet256 {
-	bs[i/64] &^= uint64(1 << i)
+	bs[i/64] &^= uint64(1 << (i % 64))
 	return bs
 }
 
 func (bs BitSet256) Contains(i int) bool {
-	return bs[i/64]&uint64(i<<i) != 0
+	return bs[i/64]&uint64(1<<(i%64)) != 0
+}
+
+func OCR4x6(pixels []string) string {
+	chars := map[[6]string]byte{
+		[6]string{
+			".##.",
+			"#..#",
+			"#..#",
+			"####",
+			"#..#",
+			"#..#",
+		}: 'A',
+		[6]string{
+			"###.",
+			"#..#",
+			"###.",
+			"#..#",
+			"#..#",
+			"###.",
+		}: 'B',
+		[6]string{
+			".##.",
+			"#..#",
+			"#...",
+			"#...",
+			"#..#",
+			".##.",
+		}: 'C',
+		[6]string{
+			"###.",
+			"#..#",
+			"#..#",
+			"#..#",
+			"#..#",
+			"###.",
+		}: 'D',
+		[6]string{
+			"####",
+			"#...",
+			"####",
+			"#...",
+			"#...",
+			"####",
+		}: 'E',
+		[6]string{
+			"####",
+			"#...",
+			"###.",
+			"#...",
+			"#...",
+			"#...",
+		}: 'F',
+		[6]string{
+			".##.",
+			"#..#",
+			"#...",
+			"#.##",
+			"#..#",
+			".###",
+		}: 'G',
+		[6]string{
+			"#..#",
+			"#..#",
+			"####",
+			"#..#",
+			"#..#",
+			"#..#",
+		}: 'H',
+		[6]string{
+			"###.",
+			".#..",
+			".#..",
+			".#..",
+			".#..",
+			"###.",
+		}: 'I',
+		[6]string{
+			"..##",
+			"...#",
+			"...#",
+			"...#",
+			"#..#",
+			".##.",
+		}: 'J',
+		[6]string{
+			"#..#",
+			"#.#.",
+			"##..",
+			"#.#.",
+			"#..#",
+			"#..#",
+		}: 'K',
+		[6]string{
+			"#...",
+			"#...",
+			"#...",
+			"#...",
+			"#...",
+			"####",
+		}: 'L',
+		[6]string{
+			"#..#",
+			"####",
+			"#..#",
+			"#..#",
+			"#..#",
+			"#..#",
+		}: 'M',
+		[6]string{
+			"#..#",
+			"##.#",
+			"##.#",
+			"#.##",
+			"#.##",
+			"#..#",
+		}: 'N',
+		[6]string{
+			".##.",
+			"#..#",
+			"#..#",
+			"#..#",
+			"#..#",
+			".##.",
+		}: 'O',
+		[6]string{
+			"###.",
+			"#..#",
+			"#..#",
+			"###.",
+			"#...",
+			"#...",
+		}: 'P',
+		[6]string{
+			".##.",
+			"#..#",
+			"#..#",
+			"#..#",
+			"#.##",
+			".###",
+		}: 'Q',
+		[6]string{
+			"###.",
+			"#..#",
+			"#..#",
+			"###.",
+			"#.#.",
+			"#..#",
+		}: 'R',
+		[6]string{
+			".##.",
+			"#..#",
+			".#..",
+			"..#.",
+			"#..#",
+			".##.",
+		}: 'S',
+		[6]string{
+			"###.",
+			".#..",
+			".#..",
+			".#..",
+			".#..",
+			".#..",
+		}: 'T',
+		[6]string{
+			"#..#",
+			"#..#",
+			"#..#",
+			"#..#",
+			"#..#",
+			".##.",
+		}: 'U',
+		[6]string{
+			"#..#",
+			"#..#",
+			"#..#",
+			".##.",
+			".##.",
+			".##.",
+		}: 'V',
+		[6]string{
+			"#..#",
+			"#..#",
+			"#..#",
+			"#..#",
+			".##.",
+			".##.",
+		}: 'W',
+		[6]string{
+			"#..#",
+			"#..#",
+			".##.",
+			".##.",
+			"#..#",
+			"#..#",
+		}: 'X',
+		[6]string{
+			"#.#.",
+			"#.#.",
+			"#.#.",
+			".#..",
+			".#..",
+			".#..",
+		}: 'Y',
+		[6]string{
+			"####",
+			"...#",
+			"..#.",
+			".#..",
+			"#...",
+			"####",
+		}: 'Z',
+	}
+
+	if len(pixels) < 6 {
+		return ""
+	}
+
+	buf := &bytes.Buffer{}
+	i := 0
+	char := [6]string{}
+	for {
+		if i+4 > len(pixels[0]) {
+			return buf.String()
+		}
+		for r := range 6 {
+			char[r] = pixels[r][i : i+4]
+		}
+		buf.WriteByte(chars[char])
+		i += 5
+	}
 }
 
 func IntResult(result int) string {

@@ -1,10 +1,11 @@
 module AOC202216 where
 
-import Debug.Trace(traceShow,traceShowId)
-
-import Data.Map(Map,alter,delete,elems,filterWithKey,fromList,
-                insert,member,size,toList,(!))
+import Data.Array(Array,array,bounds,indices,(!))
+import Data.Bits(complement,popCount,setBit,testBit,(.|.))
+import Data.List(sort)
+import Data.Map(Map,fromList,insert,member,singleton,toList)
 import qualified Data.Map
+import Data.Tuple(swap)
 
 import AOC
 
@@ -38,102 +39,83 @@ aoc = AOC {
         }
     }
 
-type Graph = Map String (Int,[(Int,String)])
+type Graph = Array Int (Int,[(Int,Int)])
 
-parse = optimize . fromList . map (p . words) . lines
+parse = toGraph . removeZeros . toEdges . map (p . words) . lines
   where
     p ("Valve":valve:"has":"flow":rate:_:_:"to":_:valves) =
-        (valve,(head $ parseInts rate,map (((,) 1) . filter (/= ',')) valves))
-    splitPressures g = (Data.Map.map fst g,Data.Map.map snd g)
+        (valve,(head $ parseInts rate,map (filter (/= ',')) valves))
 
-optimize :: Graph -> Graph
-optimize graph =
-    foldr openValve graph $ map fst $ filter irrelevant $ toList graph
-  where irrelevant (valve,(flowRate,_)) = valve /= "AA" && flowRate == 0
-
-openValve :: String -> Graph -> Graph
-openValve valve graph = delete valve joinedGraph
+toEdges :: [(String,(Int,[String]))] -> [(String,(Int,[(String,Int)]))]
+toEdges valves = map toE valves
   where
-    joinedGraph = foldr join graph exits
-    exits = snd $ graph!valve
-    join (len,neighbor) g =
-        insert neighbor (neighborFlow,joinedNeighborNeighbors) g
+    graph1 = fromList $ map (fmap snd) valves
+    toE (valve,(flowRate,tunnels)) =
+        (valve,(flowRate,walk (singleton valve 0) $ map ((,) 1) tunnels))
+    walk edges [] = filter ((/= 0) . snd) $ toList edges
+    walk edges ((dist,dest):queue)
+      | member dest edges && dist > edges Data.Map.! dest = walk edges queue
+      | otherwise =
+          walk (insert dest dist edges)
+               (queue ++ map ((,) (dist+1)) (graph1 Data.Map.! dest))
+
+removeZeros :: [(String,(Int,[(String,Int)]))] -> [(String,(Int,[(String,Int)]))]
+removeZeros valves = map (fmap (fmap rm)) $ toList kept
+  where
+    kept = fromList $ filter keep valves
+    keep (name,(flowRate,_)) = flowRate /= 0 || name == "AA"
+    rm = filter ((`member` kept) . fst)
+
+toGraph :: [(String,(Int,[(String,Int)]))] -> Graph
+toGraph valves = array (0,length valves - 1) $ map toG valves
+  where
+    index = ((fromList $ map (swap . fmap fst) $ zip [0..] $ sort valves) Data.Map.!)
+    toG (name,(flowRate,tunnels)) =
+        (index name,(flowRate,map (fmap index . swap) tunnels))
+
+type Path = ((Int,Int,Int),Int) -- (State,released)
+type State = (Int,Int,Int) -- (timeLeft,openValves,location)
+
+search :: Int -> Int -> Graph -> Int
+search timeLimit openValves graph = finalReleased
+  where
+    Just (_,finalReleased) = 
+        astar heuristic neighbors toState done initialPaths
+
+    heuristic ((timeLeft,openValves,_),released) =
+      - released - sum [fst (graph!i)*timeLeft | i <- indices graph,
+                                                 not (testBit openValves i)]
+
+    toState = fst
+
+    done ((timeLeft,openValves,location),_) = timeLeft == 0
+
+    initialPaths = [((timeLimit,openValves,0),0)]
+
+    neighbors ((timeLeft,openValves,location),released)
+      | null moves = [((0,openValves,location),released)]
+      | otherwise = moves
       where
-        (neighborFlow,neighborNeighbors) = graph!neighbor
-        joinedNeighborNeighbors :: [(Int,String)]
-        joinedNeighborNeighbors =
-            foldr join1 (filter ((/= valve) . snd) neighborNeighbors) exits
-        join1 (len1,v1) nexits
-          | v1 == neighbor = nexits
-          | otherwise = join2 nexits
+        moves = [move dist dest | (dist,dest) <- snd (graph!location),
+                                  dist+1 < timeLeft,
+                                  not (testBit openValves dest)]
+        move dist dest = ((newTimeLeft,newOpenValves,dest),newReleased)
           where
-            join2 [] = [(len+len1,v1)]
-            join2 ((len2,v2):rest)
-              | v2 == v1 = (min len2 (len+len1),v1):rest
-              | otherwise = (len2,v2):join2 rest
+            newOpenValves = setBit openValves dest
+            newTimeLeft = timeLeft-dist-1
+            newReleased = fst (graph!dest)*newTimeLeft + released
 
-pressure :: Graph -> Int
-pressure = sum . map fst . elems
+result = search 30 1
 
-type Path = (Int,Int,String,Graph) -- (cost,time,location,graph)
-type State = (String,Graph)
-
-search :: Int -> Graph -> Int
-search timeLimit initialGraph = timeLimit*initialPressure - finalCost
+search2 graph openValves =
+    search 26 openValves1 graph + search 26 openValves2 graph
   where
-    initialPressure = pressure initialGraph
-    (finalCost,_,_,_) =
-        maybe (0,undefined,undefined,undefined) id $
-            astar heuristic neighbors toState done initialPaths
+    openValves1 = openValves .|. 1
+    openValves2 = complement openValves .|. 1
 
-    initialPaths :: [Path]
-    initialPaths = [(dt*initialPressure,dt,dest,graph)
-                    | (dt,dest) <- snd $ initialGraph!"AA"]
-      where graph = openValve "AA" initialGraph
-
-    heuristic :: Path -> Int
-    heuristic (cost,_,_,_) = cost
-
-    neighbors :: Path -> [Path]
-    neighbors (cost,time,valve,graph)
-      | size graph == 1 = [(cost+p,time+1,valve,openedGraph)]
-      | otherwise =
-            [(cost+p+dt*po,time+1+dt,neighbor,openedGraph)
-             | (nsteps,neighbor) <- snd (graph!valve),
-               dt <- [min (timeLimit-1-time) nsteps]] ++
-            [(cost+dt*p,time+dt,neighbor,graph)
-             | (nsteps,neighbor) <- snd (graph!valve),
-               dt <- [min (timeLimit-time) nsteps]]
-      where
-        p = pressure graph
-        po = pressure openedGraph
-        openedGraph = openValve valve graph
-
-    toState :: Path -> State
-    toState (_,_,valve,graph) = (valve,graph)
-
-    done :: Path -> Bool
-    done (_,time,_,graph) = time >= timeLimit || pressure graph == 0
-
-result = search 30
-
-divideGraph :: Int -> Graph -> (Graph,Graph)
-divideGraph index graph =
-    (optimize $ fromList $ map fst nodes,optimize $ fromList $ map snd nodes)
+result2 ncpu graph =
+    parallelMapReduce ncpu (search2 graph) maximum
+                      [4*i | i <- [0..2^(maxValve-1)-1],
+                             abs (popCount i - (maxValve `div` 2)) < 2]
   where
-    (_,nodes) = foldr divideNode (2*index,[]) $ toList graph
-    divideNode (valve,(rate,exits)) (i,nodeList)
-      | valve == "AA" =
-          (i,((valve,(rate,exits)),(valve,(rate,exits))):nodeList)
-      | i `mod` 2 == 0 =
-          (i `div` 2,((valve,(0,exits)),(valve,(rate,exits))):nodeList)
-      | otherwise =
-          (i `div` 2,((valve,(rate,exits)),(valve,(0,exits))):nodeList)
-
-divide :: Graph -> [(Graph,Graph)]
-divide graph = [divideGraph i graph | i <- [1..2^(size graph - 2)]]
-
-search2 timeLimit (graph1,graph2) =
-    search timeLimit graph1 + search timeLimit graph2
-
-result2 ncpu = parallelMapReduce ncpu (search2 26) maximum . divide
+    (_,maxValve) = bounds graph

@@ -21,13 +21,13 @@ aoc = AOC {
             testResult2=Just "33"
             }
         ],
-    aocCode=Code {
-        codeParse=parse,
-        codeParse2=parse2,
-        codeTest=result,
-        codeTest2=const 33,
-        codeResult=result,
-        codeResult2=const 20871 -- got from sage aoc202510.sage
+    aocCode=ParallelCode {
+        pcodeParse=const parse,
+        pcodeParse2=const parse2,
+        pcodeTest=result,
+        pcodeTest2=result2,
+        pcodeResult=result,
+        pcodeResult2=result2
         }
     }
 
@@ -42,7 +42,8 @@ parse = map (p . words) . lines
     plights bits bit ('.':rest) = plights bits (shiftL bit 1) rest
     pswitch = sum . map (shiftL 1) . parseInts
 
-result = sum . map countPresses
+result :: Int -> [(Int,[Int],[Int])] -> Int
+result ncpu = parallelMapReduce ncpu countPresses sum
 
 countPresses (0,_,_) = 0
 countPresses (goal,switches,_) = count 1 switches [] empty
@@ -54,42 +55,137 @@ countPresses (goal,switches,_) = count 1 switches [] empty
       | otherwise =
           count npresses rest (map (xor r) switches ++ queue) (insert r seen)
 
-{- way too slow code:
-
-parse2 = map (p . drop 1 . words) . lines
-  where p spec = (map parseInts (init spec),fromList $ zip [0..] $ parseInts (last spec))
-
-result2 = map countPresses2
-
-countPresses2 (switches,goal) =
-    minimum $ tryPresses 0 (Data.Map.map (const 0) goal) switches
-  where
-    maxPresses state switch = minimum [goal!s - state!s | s <- switch]
-    tryPresses npresses state []
-      | state == goal = [npresses]
-      | otherwise = []
-    tryPresses npresses state (switch:switches) =
-        concat [tryPresses (npresses+n) (foldr (adjust (+n)) state switch)
-                           switches
-                | n <- [0 .. maxPresses state switch]]
--}
-
+parse2 :: String -> [([[Int]],[Int])]
 parse2 = map (p . drop 1 . words) . lines
   where p spec = (map parseInts (init spec),parseInts (last spec))
 
-result2 = undefined
+result2 ncpu = parallelMapReduce ncpu countPresses2 sum
 
-buildMatrix (switches,goal) =
-    nub [[if elem i switch then 1 else 0 | switch <- switches] ++ [g]
-         | (i,g) <- zip [0..] goal]
-{-
-   In general, the number of unknowns is not equal to the number of equations.
+countPresses2 :: ([[Int]],[Int]) -> Int
+countPresses2 (buttons,joltages)
+  | null bsMatrix = bsPresses
+  | otherwise = bsPresses + bfPresses
+  where
+    initialMaxPresses = [minimum [j | (i,j) <- zip [0..] joltages,
+                                      i `elem` button]
+                         | button <- buttons]
+    initialMatrix =
+        [[if i `elem` button then 1 else 0 | button <- buttons]
+         | (i,joltage) <- zip [0..] joltages]
+    initialRHS = joltages
 
-   In my input, for every case where there are more joltages than switches,
-   it results in duplicate rows in the matrix, so there are never more
-   equations than unknowns.
+    (udMaxPresses,udMatrix,udRHS) =
+        upperDiagonalize initialMaxPresses initialMatrix initialRHS 0
 
-   Additional constraints: unknowns must be non-negative integers.
+    (bsPresses,bsMaxPresses,bsMatrix,bsRHS) =
+        backsubstitute 0 (reverse udMaxPresses)
+                         (reverse (map reverse udMatrix))
+                         (reverse udRHS)
+                         [] []
 
-   https://en.wikipedia.org/wiki/Linear_programming
--}
+    bfPresses = bruteForce bsMaxPresses bsMatrix bsRHS
+
+upperDiagonalize :: [Int] -> [[Int]] -> [Int] -> Int -> ([Int],[[Int]],[Int])
+upperDiagonalize maxPresses matrix rhs row
+  | row >= length matrix = (maxPresses,matrix,rhs)
+  | row >= length pivotRow && pivotRHS == 0 = upperDiagonalize maxPresses mat4 rhs4 row
+  | row >= length pivotRow = error "bad input"
+  | pivot /= 0 = upperDiagonalize maxPresses mat1Div rhs1Div (row+1)
+  | not (null pivotRowIndexes2) = upperDiagonalize maxPresses mat2 rhs2 row
+  | not (null pivotColIndexes3) = upperDiagonalize maxPresses3 mat3 rhs row
+  | head (drop row rhs) == 0 = upperDiagonalize maxPresses mat4 rhs4 row
+  | otherwise = error "bad input"
+  where
+    pivotRow = head $ drop row matrix
+    pivot = head $ drop row pivotRow
+    pivotRHS = head $ drop row rhs
+
+    mat1 = take (row+1) matrix ++ map udRow (drop (row+1) matrix)
+    rhs1 = take (row+1) rhs ++ map udRhs (drop (row+1) (zip matrix rhs))
+    udRow lowerRow = [pivot*l - a*p | (l,p) <- zip lowerRow pivotRow]
+      where a = head $ drop row lowerRow
+    udRhs (lowerRow,lowerRHS) = pivot*lowerRHS - a*pivotRHS
+      where a = head $ drop row lowerRow
+
+    (mat1Div,rhs1Div) = divideGCD mat1 rhs1
+    divideGCD [] [] = ([],[])
+    divideGCD (row:mat) (r:rhs)
+      | f == 0 = (row:matDiv,r:rhsDiv)
+      | otherwise = (map (`div` f) row:matDiv,r `div` f:rhsDiv)
+      where
+        (matDiv,rhsDiv) = divideGCD mat rhs
+        f = foldr gcd r row
+
+    pivotRowIndexes2 = [i | (i,lowerRow) <- drop (row+1) (zip [0..] matrix),
+                            head (drop row lowerRow) /= 0]
+    pivotRowIndex2 = head pivotRowIndexes2
+    mat2 = take row matrix ++ drop pivotRowIndex2 matrix
+                           ++ drop row (take pivotRowIndex2 matrix)
+    rhs2 = take row rhs ++ drop pivotRowIndex2 rhs
+                        ++ drop row (take pivotRowIndex2 rhs)
+
+    pivotColIndexes3 = [i | (i,coef) <- drop (row+1) (zip [0..] pivotRow),
+                            coef /= 0]
+    pivotColIndex3 = head pivotColIndexes3
+    mat3 = map shiftCols matrix
+    maxPresses3 = shiftCols maxPresses
+    shiftCols r = take row r ++ drop pivotColIndex3 r
+                             ++ drop row (take pivotColIndex3 r)
+
+    mat4 = take row matrix ++ drop (row+1) matrix
+    rhs4 = take row rhs ++ drop (row+1) rhs
+
+backsubstitute :: Int -> [Int] -> [[Int]] -> [Int] -> [[Int]] -> [Int] -> (Int,[Int],[[Int]],[Int])
+backsubstitute presses maxPresses [] [] topMatrix topRHS =
+    (presses,maxPresses,reverse topMatrix,reverse topRHS)
+backsubstitute presses maxPresses (row:matrix) (r:rhs) topMatrix topRHS
+  | length coefs == 1 = backsubstitute presses1 maxPresses1 mat1 rhs1 [] []
+  | otherwise =
+      backsubstitute presses maxPresses matrix rhs (row:topMatrix) (r:topRHS)
+  where
+    coefs = [(i,c) | (i,c) <- zip [0..] row, c /= 0]
+    [(col,coef)] = coefs
+    sol
+      | r `mod` coef /= 0 = error "bad input"
+      | r `div` coef < 0 = error "bad input"
+      | r `div` coef > head (drop col maxPresses) = error "bad input"
+      | otherwise = r `div` coef
+
+    presses1 = presses+sol
+    maxPresses1 = rmCol maxPresses
+    mat1 = map rmCol (reverse topMatrix) ++ map rmCol matrix
+    rhs1 = map subst (reverse (zip topMatrix topRHS)) ++ map subst (zip matrix rhs)
+
+    rmCol rs = take col rs ++ drop (col+1) rs
+    subst (rs,rhsVal) = rhsVal - sol*head (drop col rs)
+
+bruteForce :: [Int] -> [[Int]] -> [Int] -> Int
+bruteForce maxPresses mat rhs = foldr solve (sum maxPresses) freeVars
+  where
+    nFreeVars = length maxPresses - length mat
+    freeVars = gen (take nFreeVars maxPresses) (take nFreeVars maxPresses)
+      where
+        gen current maxes
+          | all (== 0) current = [current]
+          | otherwise = current : gen (next current maxes) maxes
+          where
+            next [] [] = []
+            next (c:cs) (m:ms)
+              | c > 0 = c-1 : cs
+              | otherwise = m : next cs ms
+    solve :: [Int] -> Int -> Int
+    solve sols best = subst (sum sols) sols mat rhs
+      where
+        subst current sols [] [] = min current best
+        subst current sols (row:mat) (r:rhs)
+          | current >= best = best
+          | any (/= 0) (drop (1 + length sols) row) = error "?"
+          | sol < 0 = best
+          | sol > head (drop (length sols) maxPresses) = best
+          | otherwise = subst (current+sol) (sols ++ [sol]) mat rhs
+          where
+            rhsSubst = r - sum (zipWith (*) row sols)
+            coef = head $ drop (length sols) row
+            sol
+              | rhsSubst `mod` coef /= 0 = best
+              | otherwise = rhsSubst `div` coef

@@ -1,6 +1,6 @@
 module AOC202219 where
 
-import Data.Set(Set,fromList,insert,maxView)
+import Data.Set(Set,insert,maxView,singleton)
 
 import AOC
 
@@ -27,6 +27,71 @@ aoc = AOC {
     }
 
 parse = map parseInts . lines
+
+-- (ore,orebots,clay,claybots,obsidian,obsidianbots,geodes,timeLeft)
+type State = (Int,Int,Int,Int,Int,Int,Int,Int,Int)
+
+production :: Int -> [Int] -> Int
+production timeLimit [_,oreOre,clyOre,obsOre,obsCly,geoOre,geoObs] =
+    search $ singleton (0,(0,1,0,0,0,0,0,timeLimit))
+  where
+    search queue
+      | timeLeft == 0 = geo
+      | otherwise = search $ foldr insert queue1
+                           $ makeOre ++ makeCly ++ makeObs ++ makeGeo ++ wait
+      where
+        Just ((_,(ore,oreBots,cly,clyBots,
+                  obs,obsBots,geo,timeLeft)),queue1) = maxView queue
+
+        projection = geo + timeLeft*(timeLeft-1)`div`2
+
+        maxOreBots
+          | obsBots >= geoObs = geoOre
+          | clyBots >= obsCly = max obsOre geoOre
+          | otherwise = maximum [geoOre,obsOre,clyOre,oreOre]
+
+        makeOre
+          | oreBots >= maxOreBots || dt >= timeLeft = []
+          | otherwise = [(projection,(ore+dt*oreBots-oreOre,oreBots+1,
+                                      cly+dt*clyBots,clyBots,
+                                      obs+dt*obsBots,obsBots,
+                                      geo,timeLeft-dt))]
+          where dt = maximum [(oreOre-ore+oreBots-1) `div` oreBots, 0] + 1
+
+        makeCly
+          | oreBots >= obsCly || dt >= timeLeft = []
+          | otherwise = [(projection,(ore+dt*oreBots-clyOre,oreBots,
+                                      cly+dt*clyBots,clyBots+1,
+                                      obs+dt*obsBots,obsBots,
+                                      geo,timeLeft-dt))]
+          where dt = maximum [(clyOre-ore+oreBots-1) `div` oreBots, 0] + 1
+
+        makeObs
+          | clyBots == 0 || obsBots >= geoObs || dt >= timeLeft = []
+          | otherwise = [(projection,(ore+dt*oreBots-obsOre,oreBots,
+                                      cly+dt*clyBots-obsCly,clyBots,
+                                      obs+dt*obsBots,obsBots+1,
+                                      geo,timeLeft-dt))]
+          where dt = maximum [dtOre, dtCly, 0] + 1
+                dtOre = (obsOre-ore+oreBots-1) `div` oreBots
+                dtCly = (obsCly-cly+clyBots-1) `div` clyBots
+
+        makeGeo
+          | obsBots == 0 || dt >= timeLeft = []
+          | otherwise = [(projection+timeLeft-dt,
+                          (ore+dt*oreBots-geoOre,oreBots,
+                           cly+dt*clyBots,clyBots,
+                           obs+dt*obsBots-geoObs,obsBots,
+                           geo+timeLeft-dt,timeLeft-dt))]
+          where dt = maximum [dtOre, dtObs, 0] + 1
+                dtOre = (geoOre-ore+oreBots-1) `div` oreBots
+                dtObs = (geoObs-obs+obsBots-1) `div` obsBots
+
+        wait
+          | null makeOre && null makeCly && null makeObs && null makeGeo =
+                [(geo,(0,0,0,0,0,0,geo,0))]
+          | otherwise = []
+{-
 
 -- Looking at the input data, it doesn't make sense to have more than 4
 -- ore robots, and probably no more than 2.  The maximum number of ore
@@ -101,6 +166,7 @@ production timeLimit [_,oreOre,clyOre,obsOre,obsCly,geoOre,geoObs] = finalGeo
                 (obs+obsBots,obsBots,ore >= obsOre && cly >= obsCly),
                 (cly+clyBots,clyBots,ore >= clyOre),
                 (ore+oreBots,oreBots,ore >= oreOre),time+1)]
+-}
 
 qualityLevel :: [Int] -> Int
 qualityLevel blueprint@(idNumber:_) = idNumber*production 24 blueprint

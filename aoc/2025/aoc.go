@@ -193,6 +193,16 @@ func (in *Input) Ints() []int {
 	return ints
 }
 
+func (in *Input) IntSeq() Seq[int] {
+	return func(yield func(int) bool) {
+		for i, ok := in.Int(); ok; i, ok = in.Int() {
+			if !yield(i) {
+				return
+			}
+		}
+	}
+}
+
 func (in *Input) Char() (byte, bool) {
 	if in.index >= len(in.data) {
 		return 0, false
@@ -639,6 +649,30 @@ func (bs BitSet256) Remove(i int) BitSet256 {
 }
 
 func (bs BitSet256) Contains(i int) bool {
+	return bs[i/64]&uint64(1<<(i%64)) != 0
+}
+
+type BitSet512 [8]uint64
+
+func (bs BitSet512) Len() int {
+	return bits.OnesCount64(bs[0]) + bits.OnesCount64(bs[1]) + bits.OnesCount64(bs[2]) + bits.OnesCount64(bs[3]) + bits.OnesCount64(bs[4]) + bits.OnesCount64(bs[5]) + bits.OnesCount64(bs[6]) + bits.OnesCount64(bs[7])
+}
+
+func (bs BitSet512) Empty() bool {
+	return bs.Len() == 0
+}
+
+func (bs BitSet512) Add(i int) BitSet512 {
+	bs[i/64] |= uint64(1 << (i % 64))
+	return bs
+}
+
+func (bs BitSet512) Remove(i int) BitSet512 {
+	bs[i/64] &^= uint64(1 << (i % 64))
+	return bs
+}
+
+func (bs BitSet512) Contains(i int) bool {
 	return bs[i/64]&uint64(1<<(i%64)) != 0
 }
 

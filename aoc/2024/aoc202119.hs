@@ -1,5 +1,7 @@
 module AOC202119 where
 
+import Data.List(sort)
+import Data.Map(Map,alter,empty,findWithDefault,mergeWithKey,toList)
 import Data.Set(Set,elems,fromList,intersection,size,unions)
 import qualified Data.Set
 
@@ -151,83 +153,96 @@ aoc = AOC {
             testResult2=Just "3621"
             }
         ],
-    aocCode=ParallelCode {
-        pcodeParse=const parse,
-        pcodeParse2=const parse,
-        pcodeTest=result,
-        pcodeTest2=result2,
-        pcodeResult=result,
-        pcodeResult2=result2
+    aocCode=Code {
+        codeParse=parse,
+        codeParse2=parse,
+        codeTest=result,
+        codeTest2=result2,
+        codeResult=result,
+        codeResult2=result2
         }
     }
 
+parse :: String -> [Set [Int]]
 parse = p . lines
   where
     p [] = []
-    p (_:items) = (fromList $ map parseInts beacons) : p (drop 1 rest)
+    p (_:items) = fromList (map parseInts beacons) : p (drop 1 rest)
       where (beacons,rest) = span (not . null) items
 
-orientations :: [Set [Int] -> Set [Int]]
-orientations = id : map Data.Set.map [
-                            \ [x,y,z] -> [-x,-z,-y],
-    \ [x,y,z] -> [x,-z,y],  \ [x,y,z] -> [-x,-y,z],
-    \ [x,y,z] -> [x,z,-y],  \ [x,y,z] -> [-x,y,-z],
-    \ [x,y,z] -> [x,-y,-z], \ [x,y,z] -> [-x,z,y],
+pairs :: [a] -> [(a,a)]
+pairs [] = []
+pairs (a:as) = map ((,) a) as ++ pairs as
 
-    \ [x,y,z] -> [y,z,x],   \ [x,y,z] -> [-y,-x,-z],
-    \ [x,y,z] -> [y,-x,z],  \ [x,y,z] -> [-y,-z,x],
-    \ [x,y,z] -> [y,x,-z],  \ [x,y,z] -> [-y,z,-x],
-    \ [x,y,z] -> [y,-z,-x], \ [x,y,z] -> [-y,x,z],
+canonicalDiff :: (Num a, Ord a) => ([a],[a]) -> [a]
+canonicalDiff (a,b) = sort $ map abs $ zipWith (-) a b
 
-    \ [x,y,z] -> [z,x,y],   \ [x,y,z] -> [-z,-y,-x],
-    \ [x,y,z] -> [z,-y,x],  \ [x,y,z] -> [-z,-x,y],
-    \ [x,y,z] -> [z,y,-x],  \ [x,y,z] -> [-z,x,-y],
-    \ [x,y,z] -> [z,-x,-y], \ [x,y,z] -> [-z,y,x]
-    ]
-
-translations :: Set [Int] -> Set [Int] -> [[Int]]
-translations reference target =
-    elems $ fromList [[xr-xt,yr-yt,zr-zt]
-                      | [xr,yr,zr] <- drop 11 $ elems reference,
-                        [xt,yt,zt] <- drop 11 $ elems target]
-
-translate :: Set [Int] -> [Int] -> Set [Int]
-translate points [x0,y0,z0] =
-    Data.Set.map (\ [x,y,z] -> [x+x0,y+y0,z+z0]) points
-
-connect :: Int -> [Set [Int]] -> [([Int],Set [Int])]
-connect ncpu (scanner:scanners) =
-    conn [([0,0,0],scanner)] [(scanner)] []
-         (map (flip map orientations . (flip ($))) scanners)
+canonicalDiffs :: Set [Int] -> Map [Int] [([Int],[Int])]
+canonicalDiffs = foldr collect empty . pairs . elems
   where
-    conn done _ [] [] = done
-    conn done [] failed [] =
-        error ("no connection:"++show (length done,length failed))
-    conn done references failed (beaconOrientations:queue) =
-        connReference references
+    collect pair = alter (Just . maybe [pair] (pair:)) (canonicalDiff pair)
+
+connect :: Set [Int] -> Map [Int] [([Int],[Int])] -> [Set [Int]] -> [(Set [Int],Map [Int] [([Int],[Int])])] -> [(Set [Int],Map [Int] [([Int],[Int])])] -> [([Int],Set [Int])]
+connect pivot pcdiffs pivots [] [] = []
+connect _ _ (pivot:pivots) [] unconnected =
+    connect pivot (canonicalDiffs pivot) pivots unconnected []
+connect pivot pcdiffs pivots (scanner@(beacons,cdiffs):scanners) unconnected
+  | commonCdiffs < 66 =
+      connect pivot pcdiffs pivots scanners (scanner:unconnected)
+  | otherwise =
+      (offset,remappedBeacons) : connect pivot pcdiffs (remappedBeacons:pivots)
+                                         scanners unconnected
+  where
+    commonCdiffs =
+        sum $ mergeWithKey merge (const empty) (const empty) pcdiffs cdiffs
       where
-        connReference [] =
-            conn done references (beaconOrientations:failed) queue
-        connReference (reference:references)
-          | null connections = connReference references
-          | otherwise = conn nextDone (map snd nextDone) [] (failed++queue)
-          where
-            nextDone = (head connections:done)
-            connections =
-                parallelMapReduce ncpu connection concat beaconOrientations
-            connection beacons =
-                [(translation,translatedBeacons)
-                 | translation <- translations reference beacons,
-                   translatedBeacons <- [translate beacons translation],
-                   size (intersection reference translatedBeacons) >= 12]
+        merge _ a b = Just $ min (length a) (length b)
+    ((offset,remappedBeacons):_) =
+        [(offs,rmBeacons)
+         | (pcdiff,ppairs) <- toList pcdiffs,
+           (pbeacon1,pbeacon2) <- ppairs,
+           (beacon1,beacon2) <- findWithDefault [] pcdiff cdiffs,
+           (b1,b2) <- [(beacon1,beacon2),(beacon2,beacon1)],
+           rotate <- rotations,
+           (ob1,ob2) <- [(rotate b1,rotate b2)],
+           diff ob1 ob2 == diff pbeacon1 pbeacon2,
+           offs <- [diff pbeacon1 ob1],
+           rmBeacons <- [Data.Set.map (remap rotate offs) beacons],
+           size (intersection rmBeacons pivot) >= 12]
 
-result :: Int -> [Set [Int]] -> Int
-result ncpu = size . unions . map snd . connect ncpu
+rotations :: [[Int] -> [Int]]
+rotations =
+    [\ [x,y,z] -> [x,y,z],     \ [x,y,z] -> [x,z,-y],
+     \ [x,y,z] -> [x,-y,-z],   \ [x,y,z] -> [x,-z,y],
+     \ [x,y,z] -> [-x,y,-z],   \ [x,y,z] -> [-x,-z,-y],
+     \ [x,y,z] -> [-x,-y,z],   \ [x,y,z] -> [-x,z,y],
+     \ [x,y,z] -> [y,-x,z],    \ [x,y,z] -> [y,z,x],
+     \ [x,y,z] -> [y,x,-z],    \ [x,y,z] -> [y,-z,-x],
+     \ [x,y,z] -> [-y,-x,-z],  \ [x,y,z] -> [-y,-z,x],
+     \ [x,y,z] -> [-y,x,z],    \ [x,y,z] -> [-y,z,-x],
+     \ [x,y,z] -> [z,y,-x],    \ [x,y,z] -> [z,-x,-y],
+     \ [x,y,z] -> [z,-y,x],    \ [x,y,z] -> [z,x,y],
+     \ [x,y,z] -> [-z,y,x],    \ [x,y,z] -> [-z,x,-y],
+     \ [x,y,z] -> [-z,-y,-x],  \ [x,y,z] -> [-z,-x,y]]
 
-maxDistance :: Int -> [[Int]] -> Int
-maxDistance ncpu points = maximum [abs (x1-x2) + abs (y1-y2) + abs (z1-z2)
-                                   | [x1,y1,z1] <- points,
-                                     [x2,y2,z2] <- points]
+remap :: ([Int] -> [Int]) -> [Int] -> [Int] -> [Int]
+remap rotate translate = zipWith (+) translate . rotate
 
-result2 :: Int -> [Set [Int]] -> Int
-result2 ncpu = maxDistance ncpu . map fst . connect ncpu
+diff :: [Int] -> [Int] -> [Int]
+diff a b = zipWith (-) a b
+
+mapScanners :: [Set [Int]] -> [([Int],Set [Int])]
+mapScanners (pivot:scanners) =
+    ([0,0,0],pivot) : connect pivot pcdiffs [] scannersWithCDiffs []
+  where
+    pcdiffs = canonicalDiffs pivot
+    scannersWithCDiffs = zip scanners $ map canonicalDiffs scanners
+
+result :: [Set [Int]] -> Int
+result = size . unions . map snd . mapScanners
+
+mdist :: ([Int],[Int]) -> Int
+mdist (a,b) = sum $ map abs $ zipWith (-) a b
+
+result2 :: [Set [Int]] -> Int
+result2 = maximum . map mdist . pairs . map fst . mapScanners

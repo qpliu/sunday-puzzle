@@ -6,6 +6,7 @@ import (
 	"container/list"
 	"fmt"
 	"iter"
+	"math/big"
 	"math/bits"
 	"os"
 	"time"
@@ -281,7 +282,10 @@ func GCD(x, y int) int {
 }
 
 func LCM(x, y int) int {
-	return x * y / GCD(x, y)
+	g := GCD(x, y)
+	x /= g
+	y /= g
+	return x * y * g
 }
 
 func MOD(x, y int) int {
@@ -301,29 +305,74 @@ func EGCD(a, b int) (int, int) {
 }
 
 func Convergences(x, y [2]int) [2]int {
-	offset := x[0]
-	recurX := x[1]
-	firstY := y[0] - x[0]
-	recurY := y[1]
-	if firstY < 0 {
-		offset = y[0]
-		recurX = y[1]
-		firstY = x[0] - y[0]
-		recurY = x[1]
+	offset := big.NewInt(int64(x[0]))
+	recurX := big.NewInt(int64(x[1]))
+	firstY := big.NewInt(int64(y[0] - x[0]))
+	recurY := big.NewInt(int64(y[1]))
+	if firstY.Sign() < 0 {
+		offset.SetInt64(int64(y[0]))
+		recurX.SetInt64(int64(y[1]))
+		firstY.SetInt64(int64(x[0] - y[0]))
+		recurY.SetInt64(int64(x[1]))
 	}
-	rY := recurY / GCD(recurX, recurY)
-	nx := 0
+
+	// rY := recurY / GCD(recurX, recurY)
+	rY := big.NewInt(0)
+	rY.Div(recurY, rY.GCD(nil, nil, recurX, recurY))
+
+	nx := big.NewInt(0)
 	{
-		m, _ := EGCD(recurX, rY)
-		nx = MOD(MOD(m, rY)*firstY, rY)
+		var egcd func(x, y, a, b *big.Int)
+		egcd = func(x, y, a, b *big.Int) {
+			if a.Sign() == 0 {
+				x.SetInt64(0)
+				y.SetInt64(1)
+				return
+			}
+			tmp := big.NewInt(0)
+			tmp.Mod(b, a)
+			egcd(x, y, tmp, a)
+			tmp.Div(b, a)
+			tmp.Mul(tmp, x)
+			tmp.Sub(y, tmp)
+			y.Set(x)
+			x.Set(tmp)
+		}
+
+		// m, _ := EGCD(recurX, rY)
+		// nx = MOD(MOD(m, rY)*firstY, rY)
+		m := nx
+		egcd(m, big.NewInt(0), recurX, rY)
+		m.Mod(m, rY)
+		m.Mul(m, firstY)
+		m.Mod(m, rY)
 	}
-	recurXY := LCM(recurX, recurY)
-	nrecur := max(0, firstY-nx*recurX) / recurXY
-	if firstY%recurX == 0 {
-		return [2]int{offset + firstY, recurXY}
+
+	// recurXY := LCM(recurX, recurY)
+	recurXY := big.NewInt(0)
+	recurXY.Mul(recurX, recurY)
+	recurXY.Div(recurXY, big.NewInt(0).GCD(nil, nil, recurX, recurY))
+
+	// nrecur := max(0, firstY-nx*recurX) / recurXY
+	nrecur := big.NewInt(0)
+	nrecur.Mul(nx, recurX)
+	nrecur.Sub(firstY, nrecur)
+	nrecur.Div(nrecur, recurXY)
+	if nrecur.Sign() < 0 {
+		nrecur.SetInt64(0)
+	}
+
+	if big.NewInt(0).Mod(firstY, recurX).Sign() == 0 {
+		// return [2]int{offset + firstY, recurXY}
+		offset.Add(offset, firstY)
 	} else {
-		return [2]int{offset + nx*recurX + nrecur*recurXY, recurXY}
+		// return [2]int{offset + nx*recurX + nrecur*recurXY, recurXY}
+		nx.Mul(nx, recurX)
+		offset.Add(offset, nx)
+		nrecur.Mul(nrecur, recurXY)
+		offset.Add(offset, nrecur)
 	}
+	return [2]int{int(offset.Int64()), int(recurXY.Int64())}
 }
 
 type priorityQueueItem[T any] struct {

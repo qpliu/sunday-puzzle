@@ -111,7 +111,6 @@ func (aoc *aoc202209) follow(head, tail XY, dir, count int) (int, int) {
 				return DirR | DirU, count - 1
 			}
 		default:
-			println("<", head[0], ",", head[1], ":", tail[0], ",", tail[1], ">") // DO NOT COMMIT
 			panic("?")
 		}
 	case DirD:

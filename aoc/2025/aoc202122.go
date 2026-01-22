@@ -185,23 +185,16 @@ func (aoc *aoc202122) reboot(input *Input) [][6]int {
 		z1, _ := input.Int()
 		z2, _ := input.Int()
 		cuboid := [6]int{x1, x2, y1, y2, z1, z2}
-		// BEGIN DO NOT COMMIT
-		// print(setting, ":", aoc.cubes(cuboid))
-		// n := 0
-		// END DO NOT COMMIT
 		for _, c := range cuboids {
 			for _, cd := range aoc.subtract(c, cuboid) {
 				if aoc.cubes(cd) > 0 {
 					tmp = append(tmp, cd)
-					// n += aoc.cubes(cd) // DO NOT COMMIT
 				}
 			}
 		}
 		if setting == "on" {
 			tmp = append(tmp, cuboid)
-			// n += aoc.cubes(cuboid) // DO NOT COMMIT
 		}
-		// println(",", n) // DO NOT COMMIT
 		cuboids, tmp = tmp, cuboids
 		tmp = tmp[:0]
 	}

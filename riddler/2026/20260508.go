@@ -9,10 +9,11 @@ import (
 func trial(r *rand.Rand) float64 {
 	g1 := r.Float64() * 12
 	g2 := r.Float64() * 12
-	pitcher := min(g1, g2)
-	g1 = max(g1-pitcher, g2-pitcher)
+	pour := min(g1, g2)
+	pitcher := 2 * pour
+	g1 = max(g1-pour, g2-pour)
 	g2 = r.Float64() * 12
-	return pitcher + min(g1, g2)
+	return pitcher + 2*min(g1, g2)
 }
 
 func simulate(niter int, r *rand.Rand) {
@@ -39,19 +40,19 @@ func ectrial(r *rand.Rand) float64 {
 	g3 := r.Float64() * 12
 	g1, g2 = max(g1, g2), min(g1, g2)
 	g2, g3 = max(g2, g3), min(g2, g3)
-	pitcher := g3
+	pitcher := 3 * g3
 
 	g1 -= g3
 	g2 -= g3
 	g3 = r.Float64() * 12
 	g1, g2 = max(g1, g2), min(g1, g2)
 	g2, g3 = max(g2, g3), min(g2, g3)
-	pitcher += g3
+	pitcher += 3 * g3
 
 	g1 -= g3
 	g2 -= g3
 	g3 = r.Float64() * 12
-	return pitcher + min(g1, g2, g3)
+	return pitcher + 3*min(g1, g2, g3)
 }
 
 func ecsimulate(niter int, r *rand.Rand) {

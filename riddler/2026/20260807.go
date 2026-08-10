@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
+	"slices"
 )
 
 func trial(ignoreTies bool, r *rand.Rand) int {
-	g := 0
 	for {
+		g := 0
 		for range 162 {
 			if r.Intn(2) == 0 {
 				g++
@@ -39,8 +40,8 @@ func simulate(ignoreTies bool, niter int, r *rand.Rand) {
 	fmt.Printf("%f\n", sum/float64(runtime.NumCPU()))
 }
 
-func ectrial(r *rand.Rand) int {
-	wins := [30]int{}
+func ectrial(wins []int, r *rand.Rand) {
+	clear(wins)
 	for i := range wins {
 		for j := range wins[i+1:] {
 			for range 5 {
@@ -52,29 +53,40 @@ func ectrial(r *rand.Rand) int {
 			}
 		}
 	}
-	m := 0
-	for _, w := range wins {
-		m = max(m, w)
-	}
-	return m
+	slices.Sort(wins)
 }
 
-func ecsimulate(niter int, r *rand.Rand) {
-	ch := make(chan float64)
+func ecsimulate(niter, nteams int, r *rand.Rand) {
+	ch := make(chan []float64)
 	for range runtime.NumCPU() {
 		go func(r *rand.Rand) {
-			total := 0
+			total := make([]float64, nteams)
+			wins := make([]int, nteams)
 			for range niter {
-				total += ectrial(r)
+				ectrial(wins, r)
+				for i, w := range wins {
+					total[i] += float64(w)
+				}
 			}
-			ch <- float64(total) / float64(niter)
+			for i := range total {
+				total[i] /= float64(niter)
+			}
+			ch <- total
 		}(rand.New(rand.NewSource(int64(r.Uint64()))))
 	}
-	sum := float64(0)
+	sums := make([]float64, nteams)
 	for range runtime.NumCPU() {
-		sum += <-ch
+		for i, w := range <-ch {
+			sums[i] += w
+		}
 	}
-	fmt.Printf("%f\n", sum/float64(runtime.NumCPU()))
+	fmt.Printf("w_avg[%d] = [", nteams)
+	sep := ""
+	for _, sum := range sums {
+		fmt.Printf("%s%f", sep, sum/float64(runtime.NumCPU()))
+		sep = ","
+	}
+	fmt.Printf("]\n")
 }
 
 func main() {
@@ -84,5 +96,8 @@ func main() {
 	const niter = 500000
 	simulate(false, niter, r)
 	simulate(true, niter, r)
-	ecsimulate(niter, r)
+	for i := range 29 {
+		nteams := i + 2
+		ecsimulate(niter, nteams, r)
+	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/bits"
 	"math/rand"
 	"runtime"
 )
@@ -293,10 +294,44 @@ func simulate(niter int, r *rand.Rand) {
 	}
 }
 
+func calculateB5() {
+	b := [1 << 25]bool{}
+	for i := range 1 << 25 {
+		if bingo5(uint64(i)) {
+			b[i] = true
+		}
+	}
+	num := [25]int{}
+	denom := [25]int{}
+	for i := range 1 << 25 {
+		if b[i] {
+			continue
+		}
+		n := bits.OnesCount(uint(i))
+		for j := range 25 {
+			k := i | (1 << j)
+			if k == i {
+				continue
+			}
+			denom[n]++
+			if b[k] {
+				num[n]++
+			}
+		}
+	}
+	for i := range num {
+		if denom[i] != 0 {
+			fmt.Printf("b5[%d] = %d/%d\n", i, num[i], denom[i])
+		}
+	}
+}
+
 func main() {
 	const seed = 20260904
 	r := rand.New(rand.NewSource(seed))
 
 	const niter = 1000000
 	simulate(niter, r)
+
+	calculateB5()
 }

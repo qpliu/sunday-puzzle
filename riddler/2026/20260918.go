@@ -6,43 +6,29 @@ import (
 	"runtime"
 )
 
-const (
-	ABC = 0
-	ACB = 1
-	BAC = 2
-	BCA = 3
-	CAB = 4
-	CBA = 5
-)
-
-var (
-	swaps [6][3]int
-)
-
-func init() {
-	swaps[ABC] = [3]int{BAC, CBA, ACB}
-	swaps[ACB] = [3]int{CAB, BCA, ABC}
-	swaps[BAC] = [3]int{ABC, CAB, BCA}
-	swaps[BCA] = [3]int{CBA, ACB, BAC}
-	swaps[CAB] = [3]int{ACB, BAC, CBA}
-	swaps[CBA] = [3]int{BCA, ABC, CAB}
-}
-
 func trial(r *rand.Rand) (int, int) {
-	state := ABC
-	visited := 1 << ABC
+	state := [3]byte{'A', 'B', 'C'}
+	visited := map[[3]byte]bool{}
+	visited[state] = true
 	count := 0
 	returned := 0
 	all6 := 0
 	for returned == 0 || all6 == 0 {
 		count++
-		state = swaps[state][r.Intn(3)]
-		if returned == 0 && state == ABC {
+		i := r.Intn(3)
+		j := r.Intn(2)
+		if j >= i {
+			j++
+		}
+		state[i], state[j] = state[j], state[i]
+		if returned == 0 && state == [3]byte{'A', 'B', 'C'} {
 			returned = count
 		}
-		visited |= 1 << state
-		if all6 == 0 && visited == 0x3f {
-			all6 = count
+		if all6 == 0 {
+			visited[state] = true
+			if len(visited) == 6 {
+				all6 = count
+			}
 		}
 	}
 	return returned, all6
